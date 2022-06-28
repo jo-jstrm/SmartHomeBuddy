@@ -1,6 +1,6 @@
 {
   "name": "smart-home-buddy",
-  "productName": "Smart Home Buddy",
+  "productName": "SmartHomeBuddy",
   "version": "0.0.0",
   "description": "Discover devices on your network based on the network traffic.",
   "main": ".webpack/main",
