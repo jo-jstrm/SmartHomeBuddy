@@ -24,3 +24,5 @@ requires = ["setuptools",
             "wheel",
             "cython"]
 
+[tool.black]
+line-length = 99
