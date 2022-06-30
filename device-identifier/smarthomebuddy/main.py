@@ -5,7 +5,7 @@ logger.setLevel(logging.INFO)
 
 
 def main():
-    logging.info('Started Python backend.')
+    logging.info('Started Python device-identifier.')
 
 
 if __name__ == '__main__':

@@ -8,4 +8,3 @@ const root = createRoot(container);
 const myText:Props = { text: "Hello from React" }
 
 root.render(displayText(myText));
-
