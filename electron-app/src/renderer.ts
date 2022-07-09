@@ -26,7 +26,7 @@
  * ```
  */
 
-import './index.scss';
+import './static/index.scss';
 import './index.tsx';
 import './app'
 
