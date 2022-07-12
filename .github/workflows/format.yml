@@ -12,8 +12,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: psf/black@stable
         with:
-          options: "--check --verbose --line-length 99"
-          src: "./backend"
+          options: "--verbose --line-length 99"
+          src: "./device-identifier"
   format-electron-app-with-prettier:
     runs-on: ubuntu-latest
     steps:
@@ -22,8 +22,9 @@ jobs:
         with:
           # Make sure the actual branch is checked out when running on pull requests
           ref: ${{ github.head_ref }}
-      - name: Prettify code
+      - name: Prettify electron app code
         uses: creyD/prettier_action@v4.2
         with:
           # This part is also where you can pass other options, for example:
-          #prettier_options: --write **/*.{js,md} # TODO
+          working_directory: device-identifier/
+          prettier_options: --write **/*.{ts, tsx, js, jsx, html, css, scss, sass}
