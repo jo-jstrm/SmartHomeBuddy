@@ -27,4 +27,4 @@ jobs:
         with:
           # This part is also where you can pass other options, for example:
           # working_directory: "electron-app/" # Has a bug as of 07/2022
-          prettier_options: --write **/*.{ts, tsx, js, jsx, html, css, scss, sass}
+          prettier_options: --write "**/*.{ts, tsx, js, jsx, html, css, scss, sass}"
