@@ -1,19 +1,20 @@
-// import { createRoot } from 'react-dom/client';
-// import { displayText, Props } from './components/displayText'
-//
-// // Notice the ! -> https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#updates-to-client-rendering-apis
-// const container = document.getElementById('root')!
-// const root = createRoot(container);
-//
-// const myText:Props = { text: "Hello from React" }
-//
-// root.render(displayText(myText));
-
 import * as React from 'react';
-import Dashboard from './components/dashboard/Dashboard';
+import Frame from "./components/Frame";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import Dashboard from "./components/dashboard/Dashboard";
+import Devices from "./components/devices/Devices";
+
+
 
 export default function App() {
     return (
-        <Dashboard />
+        <BrowserRouter>
+            <Frame />
+            <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/devices" element={<Devices />} />
+            </Routes>
+        </BrowserRouter>
     );
 }
