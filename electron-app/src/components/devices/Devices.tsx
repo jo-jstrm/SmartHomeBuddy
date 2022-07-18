@@ -1,21 +1,36 @@
 import * as React from 'react';
 import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Paper from '@mui/material/Paper';
 import Copyright from "../common/Copyright";
 import Device from './Device';
+import Title from "../common/Title";
+import {Stack} from "@mui/material";
+import {Smartphone} from "@mui/icons-material";
+
+const deviceList = [
+    {
+        name: "Amazon Echo Dot",
+        icon: <Smartphone />,
+        status: "Identified"
+    },
+    {
+        name: "Google Home Mini",
+        icon: <Smartphone />,
+        status: "Running"
+    }
+]
 
 export default function Devices () {
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={3}>
-                {/* Recent Orders */}
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
-                        <Device/>
-                    </Paper>
-                </Grid>
-            </Grid>
+                <Title>Devices</Title>
+                <Stack spacing={1}>
+                    {deviceList.map((device) => {
+                        const {name, icon, status} = device;
+                        return (
+                            <Device name={name} icon={icon} status={status} />
+                        );
+                    })}
+                </Stack>
             <Copyright sx={{ pt: 4 }} />
         </Container>
     );

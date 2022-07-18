@@ -7,7 +7,7 @@ import Deposits from './Deposits';
 import Orders from './Orders';
 import Copyright from "../common/Copyright";
 
-export default function Dashboard() {
+export default function Home() {
   return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Grid container spacing={3}>

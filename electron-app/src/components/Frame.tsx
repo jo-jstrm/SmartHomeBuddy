@@ -15,6 +15,8 @@ import {MainNavBarItems, secondaryListItems} from './listItems';
 import Devices from "./devices/Devices";
 import {Drawer} from "./Drawer";
 import {AppBar} from "./AppBar";
+import {Route, Routes} from "react-router-dom";
+import Home from "./home/Home";
 
 const mdTheme = createTheme();
 
@@ -95,7 +97,11 @@ function FrameContent() {
                     }}
                 >
                     <Toolbar />
-                    <Devices />
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/home" element={<Home />} />
+                        <Route path="/devices" element={<Devices />} />
+                    </Routes>
                 </Box>
             </Box>
         </ThemeProvider>

@@ -5,7 +5,6 @@ import ListItemText from '@mui/material/ListItemText';
 import ListSubheader from '@mui/material/ListSubheader';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import Dashboard from './dashboard/Dashboard'
 import {DeviceUnknown} from "@mui/icons-material";
 import {useNavigate} from "react-router-dom";
 
@@ -13,9 +12,9 @@ export function MainNavBarItems () {
     const navigate = useNavigate();
     const drawerItems = [
         {
-            text: "Dashboard",
+            text: "Home",
             icon: <DashboardIcon/>,
-            onClick: () => navigate('/dashboard')
+            onClick: () => navigate('/home')
         },
         {
             text: "Identified Devices",
@@ -33,7 +32,7 @@ export function MainNavBarItems () {
                         <ListItemIcon>{icon}</ListItemIcon>
                         <ListItemText primary={text} />
                     </ListItemButton>
-                )
+                );
             })}
         </React.Fragment>
     );
