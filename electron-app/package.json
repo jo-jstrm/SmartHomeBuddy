@@ -118,9 +118,13 @@
   "dependencies": {
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
+    "@grpc/proto-loader": "^0.7.0",
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.8.7",
+    "@protobuf-ts/plugin": "^2.7.0",
     "electron-squirrel-startup": "^1.0.0",
+    "google-protobuf": "^3.20.1",
+    "grpc": "^1.24.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.3.0",
