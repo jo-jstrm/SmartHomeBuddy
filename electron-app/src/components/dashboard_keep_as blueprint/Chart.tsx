@@ -8,7 +8,7 @@ import {
   Label,
   ResponsiveContainer,
 } from "recharts";
-import Title from "./Title";
+import Title from "../common/Title";
 
 // Generate Sales Data
 function createData(time: string, amount?: number) {
