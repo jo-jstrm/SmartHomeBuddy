@@ -1,5 +1,5 @@
 {
-  "name": "smart-home-buddy",
+  "name": "smarthomebuddy",
   "productName": "SmartHomeBuddy",
   "version": "0.0.0",
   "description": "Discover devices on your network based on the network traffic.",
@@ -19,12 +19,15 @@
   "license": "GPLv3",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "appCopyright": "GPLv3"
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "ui"
+            "description": "Identify vulnerabilities in your network from IoT devices.",
+            "iconURL": "media/app-icons/icon.ico"
           }
         },
         {
@@ -34,12 +37,36 @@
           ]
         },
         {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
+          "name": "@electron-forge/maker-flatpak",
+          "config": {
+            "options": {
+              "categories": [
+                "Network",
+                "System"
+              ],
+              "description": "Identify vulnerabilities in your network from IoT devices.",
+              "genericName": "Network Device Identifier",
+              "icon": "media/app-icons/background.png",
+              "productName": "SmartHomeBuddy"
+            }
+          }
         },
         {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
+          "name": "@electron-forge/maker-deb",
+          "config": {
+            "bin": "SmartHomeBuddy",
+            "categories": [
+              "Network",
+              "System"
+            ],
+            "description": "Identify vulnerabilities in your network from IoT devices.",
+            "genericName": "Network Device Identifier",
+            "homepage": "https://github.com/jo-jstrm/SmartHomeBuddy",
+            "icon": "media/app-icons/background.png",
+            "maintainer": "Tobias Becher and Johannes Jestram",
+            "name": "smarthomebuddy",
+            "productName": "SmartHomeBuddy"
+          }
         }
       ],
       "plugins": [
@@ -65,6 +92,7 @@
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.64",
     "@electron-forge/maker-deb": "^6.0.0-beta.64",
+    "@electron-forge/maker-flatpak": "^6.0.0-beta.64",
     "@electron-forge/maker-rpm": "^6.0.0-beta.64",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.64",
     "@electron-forge/maker-zip": "^6.0.0-beta.64",
@@ -76,6 +104,7 @@
     "@vercel/webpack-asset-relocator-loader": "^1.7.0",
     "css-loader": "^6.7.1",
     "electron": "19.0.6",
+    "electron-builder": "^23.1.0",
     "eslint": "^8.18.0",
     "eslint-plugin-import": "^2.26.0",
     "fork-ts-checker-webpack-plugin": "^7.2.11",

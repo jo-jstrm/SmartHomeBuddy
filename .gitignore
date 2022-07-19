@@ -108,7 +108,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+device-identifier/build/
 develop-eggs/
 dist/
 downloads/
