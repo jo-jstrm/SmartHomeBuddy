@@ -26,7 +26,9 @@
  * ```
  */
 
-import './static/index.scss';
-import './index.tsx';
+import "./static/index.scss";
+import "./index.tsx";
 
-console.log('👋 This message is being logged by "renderer.js", included via webpack');
+console.log(
+  '👋 This message is being logged by "renderer.js", included via webpack'
+);
