@@ -1,4 +1,5 @@
 import grpc
+import logging
 from concurrent import futures
 from .proto.heartbeat_pb2_grpc import HeartbeatServicer, add_HeartbeatServicer_to_server
 

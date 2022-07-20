@@ -1,8 +1,12 @@
 import logging
 
-from rpc.proto.heartbeat_pb2_grpc import HeartbeatServicer
+import rpc.proto.heartbeat_pb2_grpc as heartbeat_pb2_grpc
+from rpc.proto.heartbeat_pb2 import HeartbeatResponse
 
 
-class HeartbeatServicer(HeartbeatServicer):
-    def send_heartbeat(self, request, context) -> None:
-        logging.info("Python Server got a response.")
+class HeartbeatServicer(heartbeat_pb2_grpc.HeartbeatServicer):
+    def GetHeartbeat(self, request, context) -> None:
+        logging.info("Python Server got a heartbeat request.")
+        response = HeartbeatResponse()
+        response.alive = True
+        return response
