@@ -1,5 +1,5 @@
 [project]
-name = "smarthomebuddy"
+name = "shbdeviceidentifier"
 version = "0.0.0"
 authors = [
   { name="Tobias Becher", email="author@example.com" },
