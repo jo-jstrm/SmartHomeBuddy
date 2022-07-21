@@ -42,7 +42,7 @@ npx grpc_tools_node_protoc \
       --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
       --proto_path $TS_SRC_DIR \
       $TS_SRC_DIR/*.proto
-echo "Generating Typescript Interfaces.."
+echo "Generating Typescript Interfaces..."
 npx grpc_tools_node_protoc \
       --ts_out $TS_DST_DIR \
       --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \

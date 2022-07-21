@@ -17,12 +17,8 @@ def _get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
+def app() -> None:
     _set_log_level()
     logging.info("Started Python device-identifier.")
     args = _get_args()
     run_rpc_server()
-
-
-if __name__ == "__main__":
-    main()
