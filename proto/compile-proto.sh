@@ -3,7 +3,7 @@
 export PY_SRC_DIR=shbdeviceidentifier/rpc/proto
 export PY_DST_DIR=../device-identifier/$PY_SRC_DIR
 export TS_SRC_DIR=../proto/$PY_SRC_DIR
-export TS_DST_DIR=src/proto
+export TS_DST_DIR=src/rpc/proto
 export VENV_DIR=../device-identifier/.venv/bin/activate
 export TS_CD_PATH=../electron-app
 
@@ -26,10 +26,25 @@ echo "Generating Python scripts..."
 source $VENV_DIR
 # The Python auto-generation is a bit quirky regarding the auto generated import statements.
 # See https://github.com/grpc/grpc/issues/9575 for details.
-python3 -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. $PY_SRC_DIR/*.proto
+python3 -m grpc_tools.protoc \
+              --python_out=. \
+              --grpc_python_out=. \
+              --proto_path . \
+              $PY_SRC_DIR/*.proto
 mv $PY_SRC_DIR/*.py $PY_DST_DIR
-echo "Generating Typescript scripts..."
-cd $TS_CD_PATH || exit 1
+echo "Generating Javascript scripts..."
 # Must cd to electron-app due to node packages
+cd $TS_CD_PATH || exit 1
 # Install with `cd electron-app && npm install`
-npx protoc --ts_out $TS_DST_DIR --proto_path $TS_SRC_DIR $TS_SRC_DIR/*.proto
+npx grpc_tools_node_protoc \
+      --js_out=import_style=commonjs,binary:$TS_DST_DIR \
+      --grpc_out=$TS_DST_DIR \
+      --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
+      --proto_path $TS_SRC_DIR \
+      $TS_SRC_DIR/*.proto
+echo "Generating Typescript Interfaces.."
+npx grpc_tools_node_protoc \
+      --ts_out $TS_DST_DIR \
+      --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
+      --proto_path $TS_SRC_DIR \
+      $TS_SRC_DIR/*.proto
