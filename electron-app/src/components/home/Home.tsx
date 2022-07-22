@@ -6,7 +6,7 @@ import Chart from "./Chart";
 import Deposits from "./Deposits";
 import Orders from "./Orders";
 import Copyright from "../common/Copyright";
-import {Heartbeat} from "./Heartbeat";
+import { Heartbeat } from "./Heartbeat";
 
 export default function Home() {
   return (

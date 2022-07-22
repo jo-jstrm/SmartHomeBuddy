@@ -6,21 +6,20 @@ import Title from "../common/Title";
 import { Stack } from "@mui/material";
 import { Smartphone } from "@mui/icons-material";
 
-
 export default function Devices() {
-    const deviceList = [
-        {
-            name: "Amazon Echo Dot",
-            icon: <Smartphone />,
-            status: "Identified",
-        },
-        {
-            name: "Google Home Mini",
-            icon: <Smartphone />,
-            status: "Running",
-        },
-    ];
-    return (
+  const deviceList = [
+    {
+      name: "Amazon Echo Dot",
+      icon: <Smartphone />,
+      status: "Identified",
+    },
+    {
+      name: "Google Home Mini",
+      icon: <Smartphone />,
+      status: "Running",
+    },
+  ];
+  return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Title>Devices</Title>
       <Stack spacing={1}>

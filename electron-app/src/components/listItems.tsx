@@ -14,12 +14,12 @@ export function MainNavBarItems() {
     {
       text: "Home",
       icon: <DashboardIcon />,
-      onClick: () => navigate("/home")
+      onClick: () => navigate("/home"),
     },
     {
       text: "Identified Devices",
       icon: <DeviceUnknown />,
-      onClick: () => navigate("/devices")
+      onClick: () => navigate("/devices"),
     },
   ];
 

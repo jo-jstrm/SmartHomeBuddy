@@ -32,5 +32,5 @@ module.exports = {
     //   "assert": false,
     //   "url": false,
     // }
-  }
+  },
 };
