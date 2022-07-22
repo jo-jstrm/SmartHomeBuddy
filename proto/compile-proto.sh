@@ -1,11 +1,17 @@
 #!/bin/bash
+
+# Prerequisites:
+# Install node stuff with `cd electron-app && npm install`
+# Install protobuf-compiler
+# Install grpcio-tools in your python venv.
+
 # All relative to electron-app/, because we always start at SmartHomeBuddy/proto
-export PY_SRC_DIR=shbdeviceidentifier/rpc/proto
-export PY_DST_DIR=../device-identifier/$PY_SRC_DIR
-export TS_SRC_DIR=../proto/$PY_SRC_DIR
-export TS_DST_DIR=src/rpc/proto
-export VENV_DIR=../device-identifier/.venv/bin/activate
-export TS_CD_PATH=../electron-app
+export PY_SRC_DIR="shbdeviceidentifier/rpc/proto"
+export PY_DST_DIR="../device-identifier/$PY_SRC_DIR"
+export TS_SRC_DIR="../proto/$PY_SRC_DIR"
+export TS_DST_DIR="src/rpc/proto"
+export VENV_DIR="../device-identifier/.venv/bin/activate"
+export TS_CD_PATH="../electron-app"
 
 # Make the script work from within the most common dirs
 if [ $(basename "$(pwd)") = "SmartHomeBuddy" ]; then
@@ -20,8 +26,6 @@ else
 fi
 
 cd $PY_CD_PATH || exit 1
-# Install protoc with `sudo apt install protobuf-compiler`.
-# Install grpcio-tools in your python venv.
 echo "Generating Python scripts..."
 source $VENV_DIR
 # The Python auto-generation is a bit quirky regarding the auto generated import statements.
@@ -32,19 +36,14 @@ python3 -m grpc_tools.protoc \
               --proto_path . \
               $PY_SRC_DIR/*.proto
 mv $PY_SRC_DIR/*.py $PY_DST_DIR
-echo "Generating Javascript scripts..."
 # Must cd to electron-app due to node packages
 cd $TS_CD_PATH || exit 1
-# Install with `cd electron-app && npm install`
+echo "Generating Javascript and corresponding Typescript Interfaces..."
 npx grpc_tools_node_protoc \
-      --js_out=import_style=commonjs,binary:$TS_DST_DIR \
-      --grpc_out=$TS_DST_DIR \
-      --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
-      --proto_path $TS_SRC_DIR \
-      $TS_SRC_DIR/*.proto
-echo "Generating Typescript Interfaces..."
-npx grpc_tools_node_protoc \
-      --ts_out $TS_DST_DIR \
+      --proto_path=$TS_SRC_DIR \
       --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts \
-      --proto_path $TS_SRC_DIR \
-      $TS_SRC_DIR/*.proto
+      --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin \
+      --js_out=import_style=commonjs:$TS_DST_DIR \
+      --ts_out=service=grpc-node,mode=grpc-js:$TS_DST_DIR \
+      --grpc_out=grpc_js:$TS_DST_DIR \
+      "$TS_SRC_DIR"/*.proto

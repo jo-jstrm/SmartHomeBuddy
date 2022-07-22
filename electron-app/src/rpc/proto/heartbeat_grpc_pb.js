@@ -1,7 +1,7 @@
 // GENERATED CODE -- DO NOT EDIT!
 
 'use strict';
-var grpc = require('grpc');
+var grpc = require('@grpc/grpc-js');
 var heartbeat_pb = require('./heartbeat_pb.js');
 
 function serialize_HeartbeatRequest(arg) {
