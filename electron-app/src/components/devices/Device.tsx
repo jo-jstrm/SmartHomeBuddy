@@ -23,8 +23,12 @@ export default function Device(props: {
     <DeviceContent key={props.index}>
       <Stack key={"device stack"} direction="row" alignItems="center" gap={1}>
         {props.icon}
-        <Typography key={"device name"} variant="h5">{props.name}</Typography>
-        <Typography key={"device status"} variant="body1">{props.status}</Typography>
+        <Typography key={"device name"} variant="h5">
+          {props.name}
+        </Typography>
+        <Typography key={"device status"} variant="body1">
+          {props.status}
+        </Typography>
       </Stack>
     </DeviceContent>
   );

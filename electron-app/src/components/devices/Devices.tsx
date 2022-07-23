@@ -25,7 +25,9 @@ export default function Devices() {
       <Stack spacing={1}>
         {deviceList.map((device, index) => {
           const { name, icon, status } = device;
-          return <Device index={index} name={name} icon={icon} status={status} />;
+          return (
+            <Device index={index} name={name} icon={icon} status={status} />
+          );
         })}
       </Stack>
       <Copyright sx={{ pt: 4 }} />
