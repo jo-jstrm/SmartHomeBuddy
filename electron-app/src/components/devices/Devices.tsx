@@ -24,9 +24,9 @@ export default function Devices() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Title>Devices</Title>
       <Stack spacing={1}>
-        {deviceList.map((device) => {
+        {deviceList.map((device, index) => {
           const { name, icon, status } = device;
-          return <Device name={name} icon={icon} status={status} />;
+          return <Device index={index} name={name} icon={icon} status={status} />;
         })}
       </Stack>
       <Copyright sx={{ pt: 4 }} />

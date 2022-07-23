@@ -12,6 +12,8 @@ export function callHeartbeatServer(): Promise<any> {
     heartbeatRequest.setCount(1);
     return new Promise<boolean>((accept, reject) => {
         client.getHeartbeat(heartbeatRequest, (err: ServiceError | null, response: HeartbeatResponse | undefined) => {
+                if (response) console.log("Response: ", response.toString())
+                if (err) console.log("Error: ", err.toString())
                 if (!err) {
                     console.log("Device identifier's heartbeat server is healthy.\n", err);
                     accept(true);
@@ -22,14 +24,4 @@ export function callHeartbeatServer(): Promise<any> {
             }
         );
     });
-}
-
-export function getHeartbeat(): string {
-    let heartbeat;
-    let res = callHeartbeatServer()
-        .then((result) => {return result})
-        .catch(() => {console.log("Error from callHeartbeatServer.")});
-    console.log("getHeartbeat -> res: ", res.toString())
-    if (!heartbeat) return "Device Identifier is not running.";
-    return "Device Identifier is up and running.";
 }
