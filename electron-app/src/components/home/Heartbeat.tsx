@@ -15,7 +15,7 @@ export function Heartbeat() {
         setIdentifierStatus("Device Identifier is alive.");
       })
       .catch((err: Error) => {
-        console.error("Catch: " + err.toString())
+        console.error("Catch: " + err.toString());
         setIdentifierStatus("No response from Device Identifier.");
       });
   };

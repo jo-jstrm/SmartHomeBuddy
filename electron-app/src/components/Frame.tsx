@@ -60,7 +60,7 @@ function FrameContent() {
             </IconButton>
           </Toolbar>
         </AppBar>
-        <Drawer open={open} toggleDrawer={toggleDrawer}/>
+        <Drawer open={open} toggleDrawer={toggleDrawer} />
         <Box
           component="main"
           sx={{

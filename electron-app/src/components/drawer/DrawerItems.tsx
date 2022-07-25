@@ -8,7 +8,6 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import { DeviceUnknown } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
-
 export function MainNavBarItems() {
   const navigate = useNavigate();
   const drawerItems = [
@@ -38,7 +37,6 @@ export function MainNavBarItems() {
     </React.Fragment>
   );
 }
-
 
 export const secondaryListItems = (
   <React.Fragment>
