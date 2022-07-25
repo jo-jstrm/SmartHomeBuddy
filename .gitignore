@@ -231,3 +231,6 @@ dmypy.json
 # Packet Capture files
 /device-identifier/shbdeviceidentifier/pcaps/*
 !/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
+
+# Python unit tests
+/device-identifier/shbdeviceidentifier/tests/
