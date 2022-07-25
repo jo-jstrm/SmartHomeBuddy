@@ -11,12 +11,11 @@ export function Heartbeat() {
   );
   const checkHeartbeat = () => {
     callHeartbeatServer()
-      .then((response) => {
-        setIdentifierStatus(
-          "Device Identifier is alive: " + response.getAlive().toString()
-        );
+      .then(() => {
+        setIdentifierStatus("Device Identifier is alive.");
       })
-      .catch(() => {
+      .catch((err: Error) => {
+        console.error("Catch: " + err.toString())
         setIdentifierStatus("No response from Device Identifier.");
       });
   };
