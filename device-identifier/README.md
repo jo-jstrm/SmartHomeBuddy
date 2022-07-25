@@ -1,0 +1,8 @@
+# Device Identifier
+*Python*
+
+This package provides all data collection and machine learning related capabilites. The connection with the GUI ist realized thorugh RPCs.
+
+## Development Setup
+- Install package with `cd backend && pip install .`
+- Run with `python -m shbdeviceidentifier`

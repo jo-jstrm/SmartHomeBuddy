@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message HeartbeatRequest {
+  int32 count = 1;
+}
+
+message HeartbeatResponse {
+  bool alive = 1;
+}
+
+service Heartbeat {
+  rpc GetHeartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
