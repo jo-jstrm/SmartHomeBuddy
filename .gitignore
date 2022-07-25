@@ -227,3 +227,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Packet Capture files
+/device-identifier/shbdeviceidentifier/pcaps/*
+!/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
