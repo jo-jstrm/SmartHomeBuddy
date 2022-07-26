@@ -25,7 +25,7 @@
  *  });
  * ```
  */
-import {runDeviceIdentifier} from "./rpc/DeviceIdentifier";
+import { runDeviceIdentifier } from "./rpc/DeviceIdentifier";
 import "./static/index.scss";
 import "./index.tsx";
 
@@ -33,4 +33,4 @@ console.log(
   '👋 This message is being logged by "renderer.js", included via webpack'
 );
 
-runDeviceIdentifier()
+runDeviceIdentifier();
