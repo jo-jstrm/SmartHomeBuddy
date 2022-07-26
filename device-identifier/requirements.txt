@@ -1,3 +1,4 @@
 grpcio
 grpcio-tools
 grpcio-reflection
+pyinstaller
