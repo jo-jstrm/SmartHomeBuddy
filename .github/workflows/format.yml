@@ -3,7 +3,7 @@ name: Format Code
 on:
   pull_request:
     branches: [main, develop]
-  push:
+  # push:
 
 jobs:
   format-python-with-black:
