@@ -1,9 +1,12 @@
 # You can generate an API token from the "API Tokens Tab" in the UI
 from typing import List
 
+import logging
 import pyshark
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
+
+log = logging.getLogger("identifier")
 
 token = "S_bFseW7ihLwo_rhz_BK_4OBSOGHarpQwiKxHs3JRiqcX31zoNoIGByCZV61yCjPYxngbNXAEh988brX9gg1Yg=="  # TODO secure
 org = "smarthomebuddy"
@@ -16,7 +19,7 @@ def collect_traffic():
     ...
 
 
-def read_pcap(filepath: str, tags: dict = None, fields: dict = None) -> bool:
+def read_pcap(filepath: str, measurement: str = "packet") -> bool:
     cap = pyshark.FileCapture(filepath)
 
     # create influx db Line Protocol sequence
@@ -26,39 +29,54 @@ def read_pcap(filepath: str, tags: dict = None, fields: dict = None) -> bool:
         line = ""
 
         # measurement
-        line += "packet"
+        line += measurement
 
         # tags
-        if tags:
-            line += "," + ",".join([f"{k}={v}" for k, v in sorted(tags.items())])
+        tags = {
+            "ip_src": "None",
+            "ip_dst": "None",
+            "tcp_src": "None",
+            "tcp_dst": "None",
+            "udp_src": "None",
+            "udp_dst": "None",
+        }
+        layer_names = [l.layer_name for l in packet.layers]
+        ## first layer (usually IP)
+        if "ip" in layer_names:
+            tags["ip_src"] = packet.ip.src
+            tags["ip_dst"] = packet.ip.dst
+        ## second layer (usually TCP or UDP)
+        if "tcp" in layer_names:
+            tags["tcp_src"] = packet.tcp.port
+            tags["tcp_dst"] = packet.tcp.dstport
+        elif "udp" in  layer_names:
+            tags["udp_src"] = packet.udp.port
+            tags["udp_dst"] = packet.udp.dstport
+
+        line += "," + ",".join([f"{k}={v}" for k, v in sorted(tags.items())])
         line += " "  # end tag-set (or measurement if no tag-set is present)
 
         # fields
-        if not fields:
-            fields = {
-                # first layer (usually IP)
-                f"{packet.layers[1].layer_name}_src": packet.layers[1].src,
-                f"{packet.layers[1].layer_name}_dst": packet.layers[1].dst,
-                # second layer (usually TCP/UDP)
-                f"{packet.layers[2].layer_name}_src": packet.layers[2].src,
-                f"{packet.layers[2].layer_name}_dst": packet.layers[2].dst,
-                # third layer (usually DATA)
-                f"{packet.layers[3].layer_name}_len": packet.layers[3].data_len  # TODO: check if this is correct
-            }
+        fields = {
+            "data_len": "0"
+        }
+        ## third layer (usually data)
+        if "DATA" in layer_names:
+            # access through attribute not possible, bc of pyshark implementation (capitalized layer name)
+            fields["data_len"] = packet.layers[layer_names.index("DATA")].data_len
+
         line += ",".join([f"{k}={v}" for k, v in sorted(fields.items())])
         line += " "  # end fields-set
 
-        # timestamp
-        line += packet.sniff_timestamp
-
-        print(line)
+        # timestamp converted to nanoseconds from seconds (see influxdb timestamp precision (default: ns))
+        line += packet.sniff_timestamp.replace(".", "")
 
         data.append(line)
 
     try:
         write_to_influxdb(data)
     except Exception as e:
-        print(e)
+        log.debug(e)
         return False
     return True
 
