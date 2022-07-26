@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PY_DIR := device-identifier
 VENV_DIR := .venv/bin/activate
 
-start:
+start-local:
 	cd $(PY_DIR) && \
 		source $(VENV_DIR) && \
 		python -m shbdeviceidentifier \
@@ -10,10 +10,15 @@ start:
 	cd electron-app && \
 		npm start
 
-electron:
+start-electron-local:
 	cd electron-app && \
 		npm start
 
-deviceidentifier:
-	cd device-identifier && \
-		python -m shbdeviceidentifier
+start-device-identifier-local:
+	cd $(PY_DIR) && \
+		source $(VENV_DIR) && \
+		python -m shbdeviceidentifier \
+
+dist-device-identifier:
+	 cd device-identifier && \
+	 	pyinstaller cli.py &&

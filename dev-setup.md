@@ -21,3 +21,6 @@ Linux: None
 
 Windows
 - pypiwin32 for pyinstaller: `pip install pypiwin32`
+
+## Additional Info
+- If you have orphaned python processes running, run `kill $(pgrep -f 'python -m shbdeviceidentifier')`
