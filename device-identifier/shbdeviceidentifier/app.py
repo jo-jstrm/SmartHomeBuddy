@@ -1,12 +1,9 @@
 import logging
 import argparse
 from .rpc.server import run_rpc_server
+from .collect_traffic import read_pcap
 
-
-def _set_log_level() -> None:
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-
+log = logging.getLogger()
 
 def _get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SmartHomeBuddie's device identifier.")
@@ -18,7 +15,9 @@ def _get_args() -> argparse.Namespace:
 
 
 def app() -> None:
-    _set_log_level()
-    logging.info("Started Python device-identifier.")
+    log.setLevel(logging.INFO)
+
+    log.info("Started Python device-identifier.")
     args = _get_args()
-    run_rpc_server()
+    # run_rpc_server() TODO temporarily disabled
+
