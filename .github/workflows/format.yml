@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: psf/black@stable
         with:
-          options: "--verbose --line-length 99"
+          options: "--verbose"
           src: "./device-identifier"
   format-electron-app-with-prettier:
     runs-on: ubuntu-latest
