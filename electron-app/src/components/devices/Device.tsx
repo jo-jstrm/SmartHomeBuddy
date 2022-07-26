@@ -17,13 +17,18 @@ export default function Device(props: {
   name: string;
   icon: any;
   status: string;
+  index: number;
 }) {
   return (
-    <DeviceContent>
-      <Stack direction="row" alignItems="center" gap={1}>
+    <DeviceContent key={props.index}>
+      <Stack key={"device stack"} direction="row" alignItems="center" gap={1}>
         {props.icon}
-        <Typography variant="h5">{props.name}</Typography>
-        <Typography variant="body1">{props.status}</Typography>
+        <Typography key={"device name"} variant="h5">
+          {props.name}
+        </Typography>
+        <Typography key={"device status"} variant="body1">
+          {props.status}
+        </Typography>
       </Stack>
     </DeviceContent>
   );

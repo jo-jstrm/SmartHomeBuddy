@@ -6,6 +6,7 @@ import Chart from "./Chart";
 import Deposits from "./Deposits";
 import Orders from "./Orders";
 import Copyright from "../common/Copyright";
+import { Heartbeat } from "./Heartbeat";
 
 export default function Home() {
   return (
@@ -43,6 +44,7 @@ export default function Home() {
             <Orders />
           </Paper>
         </Grid>
+        <Heartbeat />
       </Grid>
       <Copyright sx={{ pt: 4 }} />
     </Container>

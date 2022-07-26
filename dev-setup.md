@@ -1,21 +1,23 @@
 # Local Development Setup
 
-## electron-app
-Required tools: nodeJS, React, npm, electron, webpack, SASS
 
-1. `cd electron-app`
-2. `npm install`
-3. `npm start`
+## electron-app
+- `make electronapp` or `cd electron-app && npm install && npm start`
 
 ## device-identifier
-*Python*
+- `make deviceidentifier` or `cd device-identifier && source .venv/bin/activate && python -m shbdeviceidentifier`
 
-General
+## Requirements
+All OSs
 - Python 3.8 including distutils
-- Packages from requirements.txt
+- Packages from `device-identifier/requirements.txt`
+- node with npm
+- optional: 
+  - make
+  - protoc: if you want to compile the proto files
+    - Download from Github for newest version
 
-Linux:
-- libzmq3-dev: `sudo apt-get install libzmq3-dev`
+Linux: None
 
 Windows
 - pypiwin32 for pyinstaller: `pip install pypiwin32`

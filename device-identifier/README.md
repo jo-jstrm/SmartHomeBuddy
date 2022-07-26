@@ -5,3 +5,4 @@ This package provides all data collection and machine learning related capabilit
 
 ## Development Setup
 - Install package with `cd backend && pip install .`
+- Run with `python -m shbdeviceidentifier`
