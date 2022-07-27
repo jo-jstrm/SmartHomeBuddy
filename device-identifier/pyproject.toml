@@ -1,0 +1,28 @@
+[project]
+name = "shbdeviceidentifier"
+version = "0.0.0"
+authors = [
+  { name="Tobias Becher", email="author@example.com" },
+  { name="Johannes Jestram", email="jambalaya_jo@posteo.ch" }
+]
+description = "Backend to SmartHomeBuddy"
+readme = "README.md"
+# license = { file="LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GPLv3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jo-jstrm/SmartHomeBuddy"
+"Bug Tracker" = "https://github.com/jo-jstrm/SmartHomeBuddy/issues"
+
+[build-system]
+requires = ["setuptools",
+            "wheel",
+            "cython"]
+
+[tool.black]
+line-length = 120
