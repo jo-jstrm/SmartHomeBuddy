@@ -4,7 +4,6 @@ import grpc
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
-from shbdeviceidentifier.app import logger_wraps
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 
 
@@ -15,7 +14,6 @@ class HeartbeatService(heartbeat_pb2_grpc.HeartbeatServicer):
         return response
 
 
-@logger_wraps()
 def run_rpc_server() -> None:
     port = 8090
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
