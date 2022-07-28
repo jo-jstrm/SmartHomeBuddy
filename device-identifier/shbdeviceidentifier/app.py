@@ -172,11 +172,12 @@ def start(ctx):
 @app.command("stop")
 @pass_ctx
 @logger_wraps()
-def start(ctx):
+def stop(ctx):
     """
     Stops the RPC server.
     """
     ctx.server_task.cancel()
+    logger.success("RPC server stopped.")
 
 
 @app.command("collect")
@@ -207,6 +208,7 @@ def read(ctx, file_path, file_type):
 
 @app.command("identify")
 @click.option("-f", "--file_path", type=click.Path(), required=False, default="")
+@click.option("-o", "--out", type=click.Path(), required=False, default="influx")  # TODO: refactor
 @pass_ctx
 @logger_wraps()
 def identify(ctx, file_path):
