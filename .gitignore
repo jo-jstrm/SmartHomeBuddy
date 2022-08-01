@@ -234,3 +234,7 @@ dmypy.json
 
 # Python unit tests
 /device-identifier/shbdeviceidentifier/tests/
+
+# Database files / binaries
+InfluxData/
+!InfluxData/influxdb/LICENSE
