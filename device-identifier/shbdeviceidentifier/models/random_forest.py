@@ -1,7 +1,7 @@
-from shbdeviceidentifier.model import Model
+from shbdeviceidentifier.models import MLModel
 
 
-class RandomForestClassifier(Model):
+class RandomForestClassifier(MLModel):
     """
     Random Forest Classifier
     """

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 
-class Model(ABC):
+class MLModel(ABC):
     name: str = None
     version: str = None
     description: str = None
@@ -24,4 +25,9 @@ class Model(ABC):
     @abstractmethod
     def load(self, path: str) -> None:
         ...
-   
+
+
+@dataclass
+class TrafficData:
+    """ Retrieves traffic data from the database. """
+    ...
