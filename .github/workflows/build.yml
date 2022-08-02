@@ -4,7 +4,7 @@ on:
     branches: [main, develop]
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
