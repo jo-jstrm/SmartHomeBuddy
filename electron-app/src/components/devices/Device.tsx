@@ -1,8 +1,10 @@
 import * as React from "react";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { Grid } from "@mui/material";
+import IconButton from '@mui/material/IconButton';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 export const DeviceContent = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -21,15 +23,31 @@ export default function Device(props: {
 }) {
   return (
     <DeviceContent key={props.index}>
-      <Stack key={"device stack"} direction="row" alignItems="center" gap={1}>
-        {props.icon}
-        <Typography key={"device name"} variant="h5">
-          {props.name}
-        </Typography>
-        <Typography key={"device status"} variant="body1">
-          {props.status}
-        </Typography>
-      </Stack>
+      <Grid container spacing={1} alignItems="center">
+        <Grid item key="icon" xs={1}>
+          {props.icon}
+        </Grid>
+        <Grid item key="device-name" xs={6}>
+          <Typography variant="h5">
+            {props.name}
+          </Typography>
+        </Grid>
+        <Grid item key="device-ip-adress" xs={2}>
+          <Typography variant="body1">
+            IP address
+          </Typography>
+        </Grid>
+        <Grid item key="device-status" xs={2}>
+          <Typography variant="body1">
+            {props.status}
+          </Typography>
+        </Grid>
+        <Grid item key="refresh-button" xs={1}>
+          <IconButton aria-label="refresh button" size="medium">
+            <RefreshIcon/>
+          </IconButton>
+        </Grid>
+      </Grid>
     </DeviceContent>
   );
 }
