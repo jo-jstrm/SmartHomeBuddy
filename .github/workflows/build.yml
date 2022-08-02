@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: 16
       - name: install dependencies
-        run: npm ci
+        run: cd electron-app && \
+             npm ci
       - name: build
-        run: npm make
+        run: cd electron-app && \
+             npm make
