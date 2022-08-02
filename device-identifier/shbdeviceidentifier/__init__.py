@@ -1,1 +1,1 @@
-from shbdeviceidentifier.app import app
+from shbdeviceidentifier import __main__
