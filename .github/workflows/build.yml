@@ -21,4 +21,4 @@ jobs:
       - name: install dependencies
         run: npm ci
       - name: build
-        run: npm make
+        run: npm run make
