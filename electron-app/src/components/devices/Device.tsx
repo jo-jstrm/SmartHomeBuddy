@@ -3,8 +3,8 @@ import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { Grid } from "@mui/material";
-import IconButton from '@mui/material/IconButton';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import IconButton from "@mui/material/IconButton";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 export const DeviceContent = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -28,23 +28,17 @@ export default function Device(props: {
           {props.icon}
         </Grid>
         <Grid item key="device-name" xs={6}>
-          <Typography variant="h5">
-            {props.name}
-          </Typography>
+          <Typography variant="h5">{props.name}</Typography>
         </Grid>
         <Grid item key="device-ip-adress" xs={2}>
-          <Typography variant="body1">
-            IP address
-          </Typography>
+          <Typography variant="body1">IP address</Typography>
         </Grid>
         <Grid item key="device-status" xs={2}>
-          <Typography variant="body1">
-            {props.status}
-          </Typography>
+          <Typography variant="body1">{props.status}</Typography>
         </Grid>
         <Grid item key="refresh-button" xs={1}>
           <IconButton aria-label="refresh button" size="medium">
-            <RefreshIcon/>
+            <RefreshIcon />
           </IconButton>
         </Grid>
       </Grid>
