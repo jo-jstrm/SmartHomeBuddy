@@ -6,7 +6,9 @@ on:
 jobs:
   release:
     runs-on: ${{ matrix.os }}
-
+    defaults:
+      run:
+        working-directory: ./electron-app
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -17,8 +19,6 @@ jobs:
         with:
           node-version: 16
       - name: install dependencies
-        run: cd electron-app && \
-             npm ci
+        run: npm ci
       - name: build
-        run: cd electron-app && \
-             npm make
+        run: npm make
