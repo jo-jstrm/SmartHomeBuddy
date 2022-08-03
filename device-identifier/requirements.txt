@@ -3,3 +3,4 @@ grpcio-tools
 grpcio-reflection
 pyshark
 influxdb-client
+sqlalchemy

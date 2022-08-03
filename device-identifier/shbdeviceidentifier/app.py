@@ -1,9 +1,10 @@
-import logging
 import argparse
-from .rpc.server import run_rpc_server
-from .collect_traffic import read_pcap
+import logging
+
+from .db import Database
 
 log = logging.getLogger("identifier")
+
 
 def _get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SmartHomeBuddie's device identifier.")
@@ -19,7 +20,7 @@ def app() -> None:
 
     log.info("Started Python device-identifier.")
     args = _get_args()
-    # run_rpc_server() TODO temporarily disabled
 
-    print(read_pcap("shbdeviceidentifier/pcaps/dummy.pcap"))  # DEBUG
-
+    db = Database()
+    if db.check_InfluxDB_connection():
+        db.stop_InfluxDB()
