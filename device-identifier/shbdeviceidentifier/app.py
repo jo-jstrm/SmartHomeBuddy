@@ -24,5 +24,3 @@ def app() -> None:
     db = Database()
     if db.check_InfluxDB_connection():
         db.stop_InfluxDB()
-        if db.check_InfluxDB_connection():
-            db.stop_InfluxDB(kill=True)

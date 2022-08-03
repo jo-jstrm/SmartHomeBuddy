@@ -1,9 +1,14 @@
+# for classes that are generic in stubs but not at runtime see
+# https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
+from __future__ import annotations
+
 import os
 import sqlite3
 import subprocess
 from pathlib import Path
 from sqlite3 import Error
-from typing import Union, Type
+from subprocess import Popen
+from typing import Union
 
 from influxdb import InfluxDBClient
 from loguru import logger
@@ -180,7 +185,7 @@ class Database:
         }
 
     @staticmethod
-    def start_InfluxDB(binary_path=influxdb_binary) -> Union[Type[subprocess.Popen], None]:
+    def start_InfluxDB(binary_path=influxdb_binary) -> Union[None, Popen[bytes], Popen]:
         try:
             influx_process = subprocess.Popen(binary_path)
             logger.debug("InfluxDB started successfully.")
