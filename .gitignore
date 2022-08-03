@@ -238,3 +238,5 @@ dmypy.json
 # Database files / binaries
 InfluxData/*
 !/InfluxData/cli_setup.txt
+SQLite/*
+!/SQLite/cli_setup.txt
