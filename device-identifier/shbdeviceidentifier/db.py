@@ -114,7 +114,7 @@ class Database:
 
         sql_create_influxdb_table = """CREATE TABLE influxdb (
                                            id integer PRIMARY KEY,
-                                           user_id integer NOT NULL,
+                                           user_id integer NOT NULL UNIQUE,
                                            token VARCHAR,
                                            bucket VARCHAR,
                                            url VARCHAR,
