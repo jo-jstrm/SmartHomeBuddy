@@ -60,12 +60,12 @@ jobs:
           curl --remote-name --silent ${{ env.influxdb_full_url}}
           mkdir -p InfluxData/influxdb-client
           curl --remote-name --silent ${{ env.influxdb_client_full_url }}
-      - name: Unpack on Linux
+      - name: Unpack InfluxDB on Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |          
           tar xzvf ${{ env.influxdb_archive }}          
           tar xzvf ${{ env.influxdb_client_archive }}
-      - name: Unpack on Windows
+      - name: Unpack InfluxDB on Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |          
           unzip ${{ env.influxdb_archive }}          
