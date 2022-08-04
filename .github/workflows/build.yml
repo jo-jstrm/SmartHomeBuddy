@@ -63,7 +63,7 @@ jobs:
         run: |          
           tar xzvf ${{ env.influxdb_archive }}
           ls
-          mv influxdb2_linux_amd/* InfluxData/influxdb
+          mv influxdb2_linux_amd64/* InfluxData/influxdb
           tar xzvf ${{ env.influxdb_client_archive }} 
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Unpack for Windows
