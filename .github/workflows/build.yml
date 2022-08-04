@@ -44,29 +44,29 @@ jobs:
         run: |
           mkdir -p InfluxData/influxdb
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
-          tar xvzf ${{ influxdb_version }}
-          mv ${{ influxdb_version }}/* InfluxData/influxdb
+          tar xvzf ${{ matrix.influxdb_version }}
+          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb-client
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
-          tar xvzf ${{ influxdb_client_version }}
-          mv ${{ influxdb_client_version }}/* InfluxData/influxdb-client
+          tar xvzf ${{ matrix.influxdb_client_version }}
+          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Get InfluxDB for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
-          unzip ${{ influxdb_version }}
-          mv ${{ influxdb_version }}/* InfluxData/influxdb
+          unzip ${{ matrix.influxdb_version }}
+          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb-client
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
-          unzip ${{ influxdb_client_version }}
-          mv ${{ influxdb_client_version }}/* InfluxData/influxdb-client
+          unzip ${{ matrix.influxdb_client_version }}
+          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node }}
