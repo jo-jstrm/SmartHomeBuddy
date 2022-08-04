@@ -21,7 +21,11 @@
     "forge": {
       "packagerConfig": {
         "appCopyright": "GPLv3",
-        "extraResource": "../device-identifier/dist/cli"
+        "extraResource": [
+          "../device-identifier/dist/cli",
+          "../InfluxData/influxdb",
+          "../InfluxData/influxdb-client"
+        ]
       },
       "makers": [
         {
