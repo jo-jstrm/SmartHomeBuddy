@@ -44,12 +44,19 @@ export default function Devices() {
           alignItems="center"
           spacing={2}
         >
-        {deviceList.map((device, index) => {
-          const { name, icon, status, mac, action } = device;
-          return (
-            <Device index={index} name={name} icon={icon} status={status} mac={mac} action={action}/>
-          );
-        })}
+          {deviceList.map((device, index) => {
+            const { name, icon, status, mac, action } = device;
+            return (
+              <Device
+                index={index}
+                name={name}
+                icon={icon}
+                status={status}
+                mac={mac}
+                action={action}
+              />
+            );
+          })}
         </Grid>
       </Paper>
       <Copyright sx={{ pt: 4 }} />
