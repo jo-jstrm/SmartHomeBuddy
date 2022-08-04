@@ -38,44 +38,44 @@ jobs:
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
-          echo ::set-env name=influxdb_archive::${{ matrix.influxdb_version }}.tar.gz
-          echo ::set-env name=influxdb_full_url::${{ env.INFLUXDB_URL }}/$influxdb_archive
-          echo ::set-env name=influxdb_client_archive::${{ matrix.influxdb_client_version }}.tar.gz
-          echo ::set-env name=influxdb_client_full_url::${{ env.INFLUXDB_URL }}/$influxdb_client_archive
+          echo "influxdb_archive=${{ matrix.influxdb_version }}.tar.gz" >> $GITHUB_ENV
+          echo "influxdb_full_url=${{ env.INFLUXDB_URL }}/$influxdb_archive" >> $GITHUB_ENV
+          echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.tar.gz" >> $GITHUB_ENV
+          echo "influxdb_client_full_url=${{ env.INFLUXDB_URL }}/$influxdb_client_archive" >> $GITHUB_ENV
       - name: Get InfluxDB for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb
-          wget $influxdb_full_url
-          tar xvzf $influxdb_archive
+          wget ${{ env.influxdb_full_url}}
+          tar xvzf ${{ env.influxdb_archive }}
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb-client
-          wget $influxdb_client_full_url
-          tar xvzf $influxdb_client_archive
+          wget ${{ env.influxdb_client_full_url }}
+          tar xvzf ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Set Windows Environment Variables
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
-          echo ::set-env name=influxdb_archive::${{ matrix.influxdb_version }}.zip
-          echo ::set-env name=influxdb_full_url::${{ env.INFLUXDB_URL }}/$influxdb_archive
-          echo ::set-env name=influxdb_client_archive::${{ matrix.influxdb_client_version }}.zip
-          echo ::set-env name=influxdb_client_full_url::${{ env.INFLUXDB_URL }}/$influxdb_client_archive
+          echo "influxdb_archive=${{ matrix.influxdb_version }}.zip" >> $GITHUB_ENV
+          echo "influxdb_full_url=${{ env.INFLUXDB_URL }}/$influxdb_archive" >> $GITHUB_ENV
+          echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.zip" >> $GITHUB_ENV
+          echo "influxdb_client_full_url=${{ env.INFLUXDB_URL }}/$influxdb_client_archive" >> $GITHUB_ENV
       - name: Get InfluxDB for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb
-          wget $influxdb_full_url
-          unzip $influxdb_client_archive
+          wget ${{ env.influxdb_full_url }}
+          unzip ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb-client
-          wget $influxdb_full_url
-          unzip $influxdb_client_archive
+          wget ${{ env.influxdb_full_url }}
+          unzip ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - uses: actions/setup-node@master
         with:
