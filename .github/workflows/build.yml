@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     env:
       INFLUXDB_URL: https://dl.influxdata.com/influxdb/releases
     strategy:
@@ -53,7 +56,6 @@ jobs:
           echo "influxdb_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
           echo "influxdb_client_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
       - name: Get InfluxDB and Client
-        shell: bash
         run: |
           mkdir -p InfluxData/influxdb
           wget --quiet ${{ env.influxdb_full_url}}
@@ -68,7 +70,6 @@ jobs:
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Unpack for Windows
         if: ${{ matrix.os_family == 'Windows'}}
-        shell: bash
         run: |          
           unzip ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
