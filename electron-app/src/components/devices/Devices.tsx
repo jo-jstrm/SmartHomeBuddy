@@ -4,9 +4,9 @@ import Copyright from "../common/Copyright";
 import Title from "../common/Title";
 import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
+import Device from "./Device";
 import Paper from "@mui/material/Paper";
+import Grid from "@mui/material/Grid";
 
 export default function Devices() {
   const deviceList = [
@@ -28,68 +28,30 @@ export default function Devices() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Title>Devices</Title>
-      {deviceList.map((device, index) => {
-        const { name, icon, status, mac, action } = device;
-        return (
-          <Paper
-            sx={{
-              p: 2,
-              margin: 2,
-              flexGrow: 1,
-              backgroundColor: (theme) =>
-                theme.palette.mode === "dark" ? "#1A2027" : "#fff",
-            }}
-          >
-            <Grid
-              container
-              direction="row"
-              justifyContent="left"
-              alignItems="center"
-              spacing={2}
-            >
-              <Grid item xs={1} justifyContent="left">
-                {icon}
-              </Grid>
-              <Grid
-                item
-                xs={10}
-                container
-                direction="column"
-                justifyContent="flex-start"
-                spacing={1}
-              >
-                <Grid
-                  item
-                  xs
-                  container
-                  justifyContent="flex-start"
-                  alignItems="center"
-                  spacing={1}
-                >
-                  <Grid item>
-                    <Typography variant="subtitle1">{name}</Typography>
-                  </Grid>
-                  <Grid item>
-                    <Typography variant="body2" color="text.secondary">
-                      {mac}
-                    </Typography>
-                  </Grid>
-                </Grid>
-                <Grid item xs container direction="row" spacing={1}>
-                  <Grid item xs>
-                    <Typography gutterBottom variant="body1">
-                      {status}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Grid>
-              <Grid item xs={1} justifyContent="right">
-                {action}
-              </Grid>
-            </Grid>
-          </Paper>
-        );
-      })}
+      <Paper
+        sx={{
+          p: 2,
+          margin: 2,
+          flexGrow: 1,
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "#1A2027" : "#fff",
+        }}
+      >
+        <Grid
+          container
+          direction="row"
+          justifyContent="left"
+          alignItems="center"
+          spacing={2}
+        >
+        {deviceList.map((device, index) => {
+          const { name, icon, status, mac, action } = device;
+          return (
+            <Device index={index} name={name} icon={icon} status={status} mac={mac} action={action}/>
+          );
+        })}
+        </Grid>
+      </Paper>
       <Copyright sx={{ pt: 4 }} />
     </Container>
   );
