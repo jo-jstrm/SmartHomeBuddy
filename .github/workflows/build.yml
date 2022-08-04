@@ -40,28 +40,28 @@ jobs:
           cd device-identifier
           pyinstaller cli.py
       - name: Get InfluxDB for Linux
-        if: ${{ os.os_family == 'Linux'}}
+        if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
           tar xvzf ${{ influxdb_version }}
           mv ${{ influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Linux
-        if: ${{ os.os_family == 'Linux'}}
+        if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb-client
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
           tar xvzf ${{ influxdb_client_version }}
           mv ${{ influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Get InfluxDB for Windows
-        if: ${{ os.os_family == 'Windows'}}
+        if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
           unzip ${{ influxdb_version }}
           mv ${{ influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Windows
-        if: ${{ os.os_family == 'Windows'}}
+        if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb-client
           wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
