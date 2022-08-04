@@ -55,9 +55,9 @@ jobs:
       - name: Get InfluxDB and Client
         run: |
           mkdir -p InfluxData/influxdb
-          wget ${{ env.influxdb_full_url}}
+          wget --quiet ${{ env.influxdb_full_url}}
           mkdir -p InfluxData/influxdb-client
-          wget ${{ env.influxdb_client_full_url }}
+          wget --quiet ${{ env.influxdb_client_full_url }}
       - name: Unpack for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |          
