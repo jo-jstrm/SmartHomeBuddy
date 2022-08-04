@@ -1,13 +1,13 @@
 name: Build
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, workflows]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      influx_url: https://dl.influxdata.com/influxdb/releases/
+      INFLUXDB_URL: https://dl.influxdata.com/influxdb/releases
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-latest]
@@ -16,15 +16,11 @@ jobs:
           - os: ubuntu-22.04
             os_family: Linux
             influxdb_version: influxdb2-2.3.0-linux-amd64
-            influxdb_archive: influxdb2-2.3.0-linux-amd64.tar.gz
             influxdb_client_version: influxdb2-client-2.3.0-linux-amd64
-            influxdb_client_archive: influxdb2-client-2.3.0-linux-amd64.tar.gz
           - os: windows-latest
             os_family: Windows
             influxdb_version: influxdb2-2.3.0-windows-amd64
-            influxdb_archive: influxdb2-2.3.0-windows-amd64.zip
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
-            influxdb_client_archive: influxdb2-client-2.3.0-windows-amd64.tar.gz
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
@@ -39,33 +35,47 @@ jobs:
         run: |
           cd device-identifier
           pyinstaller cli.py
+      - name: Set Linux Environment Variables
+        if: ${{ matrix.os_family == 'Linux'}}
+        run: |
+          echo ::set-env name=influxdb_archive::${{ matrix.influxdb_version }}.tar.gz
+          echo ::set-env name=influxdb_full_url::${{ env.INFLUXDB_URL }}/$influxdb_archive
+          echo ::set-env name=influxdb_client_archive::${{ matrix.influxdb_client_version }}.tar.gz
+          echo ::set-env name=influxdb_client_full_url::${{ env.INFLUXDB_URL }}/$influxdb_client_archive
       - name: Get InfluxDB for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb
-          wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
-          tar xvzf ${{ matrix.influxdb_version }}
+          wget $influxdb_full_url
+          tar xvzf $influxdb_archive
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           mkdir -p InfluxData/influxdb-client
-          wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
-          tar xvzf ${{ matrix.influxdb_client_version }}
+          wget $influxdb_client_full_url
+          tar xvzf $influxdb_client_archive
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
+      - name: Set Windows Environment Variables
+        if: ${{ matrix.os_family == 'Windows'}}
+        run: |
+          echo ::set-env name=influxdb_archive::${{ matrix.influxdb_version }}.zip
+          echo ::set-env name=influxdb_full_url::${{ env.INFLUXDB_URL }}/$influxdb_archive
+          echo ::set-env name=influxdb_client_archive::${{ matrix.influxdb_client_version }}.zip
+          echo ::set-env name=influxdb_client_full_url::${{ env.INFLUXDB_URL }}/$influxdb_client_archive
       - name: Get InfluxDB for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb
-          wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
-          unzip ${{ matrix.influxdb_version }}
+          wget $influxdb_full_url
+          unzip $influxdb_client_archive
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
       - name: Get InfluxDB Client for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           mkdir -p InfluxData/influxdb-client
-          wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
-          unzip ${{ matrix.influxdb_client_version }}
+          wget $influxdb_full_url
+          unzip $influxdb_client_archive
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - uses: actions/setup-node@master
         with:
