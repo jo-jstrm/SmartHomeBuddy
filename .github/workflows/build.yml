@@ -41,9 +41,16 @@ jobs:
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
-          echo "influxdb_archive=${{ matrix.influxdb_version }}.tar.gz" >> $GITHUB_ENV
-          echo "influxdb_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
+          echo "influxdb_archive=${{ matrix.influxdb_version }}.tar.gz" >> $GITHUB_ENV          
           echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.tar.gz" >> $GITHUB_ENV
+      - name: Set Windows Environment Variables
+        if: ${{ matrix.os_family == 'Windows'}}
+        run: |
+          echo "influxdb_archive=${{ matrix.influxdb_version }}.zip" >> $GITHUB_ENV          
+          echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.zip" >> $GITHUB_ENV
+      - name: Set Derived Environment Variables
+        run: |
+          echo "influxdb_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
           echo "influxdb_client_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
       - name: Get InfluxDB for Linux
         if: ${{ matrix.os_family == 'Linux'}}
@@ -59,13 +66,6 @@ jobs:
           wget ${{ env.influxdb_client_full_url }}
           tar xvzf ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - name: Set Windows Environment Variables
-        if: ${{ matrix.os_family == 'Windows'}}
-        run: |
-          echo "influxdb_archive=${{ matrix.influxdb_version }}.zip" >> $GITHUB_ENV
-          echo "influxdb_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
-          echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.zip" >> $GITHUB_ENV
-          echo "influxdb_client_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
       - name: Get InfluxDB for Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
