@@ -4,19 +4,21 @@ VENV_DIR := .venv/bin/activate
 INFLUXDB_DIR := InfluxData/influxdb
 INFLUXDB_CLIENT_DIR := InfluxData/influxdb-client
 
-start-local: start-influxdb-local start-device-identifier-local	start-electron-local
+start-dev: start-influxdb-dev start-device-identifier-dev start-electron-dev
 
-start-electron-local:
+start-electron-dev:
 	cd electron-app && \
 		npm start
 
-start-device-identifier-local:
+start-device-identifier-dev:
 	cd $(PY_DIR) && \
 		source $(VENV_DIR) && \
+		python -m pip install --upgrade pip && \
+		python -m pip install -r requirements.txt
 		python -m shbdeviceidentifier \
 		& # Run in the background
 
-start-influxdb-local:
+start-influxdb-dev:
 	cd $(INFLUXDB_DIR) && \
 		./influxd \
 		& # Run in the background
