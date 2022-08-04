@@ -20,10 +20,12 @@ jobs:
             os_family: Linux
             influxdb_version: influxdb2-2.3.0-linux-amd64
             influxdb_client_version: influxdb2-client-2.3.0-linux-amd64
+            influxdb_unarchived_name: influxdb2_linux_amd64
           - os: windows-latest
             os_family: Windows
             influxdb_version: influxdb2-2.3.0-windows-amd64
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
+            influxdb_unarchived_name: influxdb2_windows_amd64
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
@@ -55,23 +57,23 @@ jobs:
       - name: Get InfluxDB and Client
         run: |
           mkdir -p InfluxData/influxdb
-          curl -O ${{ env.influxdb_full_url}}
+          curl --remote-name --silent ${{ env.influxdb_full_url}}
           mkdir -p InfluxData/influxdb-client
-          curl -O ${{ env.influxdb_client_full_url }}
-      - name: Unpack for Linux
+          curl --remote-name --silent ${{ env.influxdb_client_full_url }}
+      - name: Unpack on Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |          
-          tar xzvf ${{ env.influxdb_archive }}
-          mv influxdb2_linux_amd64/* InfluxData/influxdb
-          tar xzvf ${{ env.influxdb_client_archive }} 
-          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - name: Unpack for Windows
+          tar xzvf ${{ env.influxdb_archive }}          
+          tar xzvf ${{ env.influxdb_client_archive }}
+      - name: Unpack on Windows
         if: ${{ matrix.os_family == 'Windows'}}
         run: |          
+          unzip ${{ env.influxdb_archive }}          
           unzip ${{ env.influxdb_client_archive }}
-          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
-          unzip ${{ env.influxdb_client_archive }}
-          mv influxdb2_windows_amd64/* InfluxData/influxdb-client
+      - name: Move InfluxDB Files
+        run: |
+          mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
+          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node }}
