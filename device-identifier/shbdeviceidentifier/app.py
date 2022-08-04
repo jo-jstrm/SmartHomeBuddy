@@ -148,7 +148,7 @@ def app(ctx, debug, silent, verbose, version_flag):
     figlet = Figlet(font='smslant', justify='left')  # choose btw: small, stampatello, smslant
     click.echo(figlet.renderText('SmartHomeBuddy'))
 
-    run_rpc_server()
+    # run_rpc_server()
     ctx.server_running = True
     logger.success("RPC server started.")
 
@@ -211,7 +211,7 @@ def read(ctx, file_path, file_type):
 @click.option("-o", "--out", type=click.Path(), required=False, default="influx")  # TODO: refactor
 @pass_ctx
 @logger_wraps()
-def identify(ctx, file_path):
+def identify(ctx, file_path, out):
     """
     Identifies a device.
     """
