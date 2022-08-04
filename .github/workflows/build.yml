@@ -52,34 +52,26 @@ jobs:
         run: |
           echo "influxdb_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
           echo "influxdb_client_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
-      - name: Get InfluxDB for Linux
-        if: ${{ matrix.os_family == 'Linux'}}
+      - name: Get InfluxDB and Client
         run: |
           mkdir -p InfluxData/influxdb
           wget ${{ env.influxdb_full_url}}
-          tar xvzf ${{ env.influxdb_archive }}
-          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
-      - name: Get InfluxDB Client for Linux
-        if: ${{ matrix.os_family == 'Linux'}}
-        run: |
           mkdir -p InfluxData/influxdb-client
           wget ${{ env.influxdb_client_full_url }}
-          tar xvzf ${{ env.influxdb_client_archive }}
+      - name: Unpack for Linux
+        if: ${{ matrix.os_family == 'Linux'}}
+        run: |          
+          tar xzf ${{ env.influxdb_archive }}
+          mv influxdb2_linux_amd/* InfluxData/influxdb
+          tar xzf ${{ env.influxdb_client_archive }} 
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - name: Get InfluxDB for Windows
+      - name: Unpack for Windows
         if: ${{ matrix.os_family == 'Windows'}}
-        run: |
-          mkdir -p InfluxData/influxdb
-          wget ${{ env.influxdb_full_url }}
+        run: |          
           unzip ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
-      - name: Get InfluxDB Client for Windows
-        if: ${{ matrix.os_family == 'Windows'}}
-        run: |
-          mkdir -p InfluxData/influxdb-client
-          wget ${{ env.influxdb_full_url }}
           unzip ${{ env.influxdb_client_archive }}
-          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
+          mv influxdb2_windows_amd64/* InfluxData/influxdb-client
       - uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node }}
