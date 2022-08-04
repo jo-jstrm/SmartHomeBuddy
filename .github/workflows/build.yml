@@ -15,16 +15,16 @@ jobs:
         include:
           - os: ubuntu-22.04
             os_family: Linux
-            influx_version: influxdb2-2.3.0-linux-amd64
-            influx_archive: influxdb2-2.3.0-linux-amd64.tar.gz
-            influx_client_version: influxdb2-client-2.3.0-linux-amd64
-            influx_client_archive: influxdb2-client-2.3.0-linux-amd64.tar.gz
+            influxdb_version: influxdb2-2.3.0-linux-amd64
+            influxdb_archive: influxdb2-2.3.0-linux-amd64.tar.gz
+            influxdb_client_version: influxdb2-client-2.3.0-linux-amd64
+            influxdb_client_archive: influxdb2-client-2.3.0-linux-amd64.tar.gz
           - os: windows-latest
             os_family: Windows
-            influx_version: influxdb2-2.3.0-windows-amd64
-            influx_archive: influxdb2-2.3.0-windows-amd64.zip
-            influx_client_version: influxdb2-client-2.3.0-windows-amd64
-            influx_client_archive: influxdb2-client-2.3.0-windows-amd64.tar.gz
+            influxdb_version: influxdb2-2.3.0-windows-amd64
+            influxdb_archive: influxdb2-2.3.0-windows-amd64.zip
+            influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
+            influxdb_client_archive: influxdb2-client-2.3.0-windows-amd64.tar.gz
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
