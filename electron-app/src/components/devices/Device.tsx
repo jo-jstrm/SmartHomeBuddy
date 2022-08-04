@@ -1,35 +1,56 @@
 import * as React from "react";
-import Paper from "@mui/material/Paper";
-import { styled } from "@mui/material/styles";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-
-export const DeviceContent = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(2),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  elevation: 2,
-}));
+import { Grid } from "@mui/material";
 
 export default function Device(props: {
   name: string;
   icon: any;
   status: string;
   index: number;
+  mac: string;
+  action: any;
 }) {
   return (
-    <DeviceContent key={props.index}>
-      <Stack key={"device stack"} direction="row" alignItems="center" gap={1}>
+    <React.Fragment>
+      <Grid item xs={1} justifyContent="left">
         {props.icon}
-        <Typography key={"device name"} variant="h5">
-          {props.name}
-        </Typography>
-        <Typography key={"device status"} variant="body1">
-          {props.status}
-        </Typography>
-      </Stack>
-    </DeviceContent>
+      </Grid>
+      <Grid
+        item
+        xs={10}
+        container
+        direction="column"
+        justifyContent="flex-start"
+        spacing={1}
+      >
+        <Grid
+          item
+          xs
+          container
+          justifyContent="flex-start"
+          alignItems="center"
+          spacing={1}
+        >
+          <Grid item>
+            <Typography variant="subtitle1">{props.name}</Typography>
+          </Grid>
+          <Grid item>
+            <Typography variant="body2" color="text.secondary">
+              {props.mac}
+            </Typography>
+          </Grid>
+        </Grid>
+        <Grid item xs container direction="row" spacing={1}>
+          <Grid item xs>
+            <Typography gutterBottom variant="body1">
+              {props.status}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid item xs={1} justifyContent="right">
+        {props.action}
+      </Grid>
+    </React.Fragment>
   );
 }
