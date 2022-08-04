@@ -50,9 +50,10 @@ jobs:
           echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.zip" >> $GITHUB_ENV
       - name: Set Derived Environment Variables
         run: |
-          echo "influxdb_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
-          echo "influxdb_client_full_url=${{ env.influxdb_step_url }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
+          echo "influxdb_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
+          echo "influxdb_client_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
       - name: Get InfluxDB and Client
+        shell: bash
         run: |
           mkdir -p InfluxData/influxdb
           wget --quiet ${{ env.influxdb_full_url}}
@@ -62,12 +63,12 @@ jobs:
         if: ${{ matrix.os_family == 'Linux'}}
         run: |          
           tar xzvf ${{ env.influxdb_archive }}
-          ls
           mv influxdb2_linux_amd64/* InfluxData/influxdb
           tar xzvf ${{ env.influxdb_client_archive }} 
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Unpack for Windows
         if: ${{ matrix.os_family == 'Windows'}}
+        shell: bash
         run: |          
           unzip ${{ env.influxdb_client_archive }}
           mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
