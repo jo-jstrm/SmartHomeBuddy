@@ -4,3 +4,4 @@ grpcio-reflection
 pyshark
 influxdb-client
 sqlalchemy
+pyinstaller

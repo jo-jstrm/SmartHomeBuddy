@@ -25,4 +25,4 @@ requires = ["setuptools",
             "cython"]
 
 [tool.black]
-line-length = 99
+line-length = 120

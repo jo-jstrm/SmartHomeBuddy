@@ -2,10 +2,10 @@
   "name": "smarthomebuddy",
   "productName": "SmartHomeBuddy",
   "version": "0.0.0",
-  "description": "Discover devices on your network based on the network traffic.",
+  "description": "Identify vulnerabilities in your network from IoT devices.",
   "main": ".webpack/main",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "DEV_MODE=true electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -20,7 +20,8 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "appCopyright": "GPLv3"
+        "appCopyright": "GPLv3",
+        "extraResource": "../device-identifier/dist/cli"
       },
       "makers": [
         {
@@ -35,21 +36,6 @@
           "platforms": [
             "darwin"
           ]
-        },
-        {
-          "name": "@electron-forge/maker-flatpak",
-          "config": {
-            "options": {
-              "categories": [
-                "Network",
-                "System"
-              ],
-              "description": "Identify vulnerabilities in your network from IoT devices.",
-              "genericName": "Network Device Identifier",
-              "icon": "media/app-icons/background.png",
-              "productName": "SmartHomeBuddy"
-            }
-          }
         },
         {
           "name": "@electron-forge/maker-deb",
