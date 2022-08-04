@@ -61,9 +61,10 @@ jobs:
       - name: Unpack for Linux
         if: ${{ matrix.os_family == 'Linux'}}
         run: |          
-          tar xzf ${{ env.influxdb_archive }}
+          tar xzvf ${{ env.influxdb_archive }}
+          ls
           mv influxdb2_linux_amd/* InfluxData/influxdb
-          tar xzf ${{ env.influxdb_client_archive }} 
+          tar xzvf ${{ env.influxdb_client_archive }} 
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
       - name: Unpack for Windows
         if: ${{ matrix.os_family == 'Windows'}}
