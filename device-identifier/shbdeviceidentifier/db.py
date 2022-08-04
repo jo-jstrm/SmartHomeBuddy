@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import sqlite3
 import subprocess
 from pathlib import Path
@@ -16,8 +17,20 @@ from loguru import logger
 
 # noinspection PyPep8Naming
 class Database:
+    # SQLite database file path
     db_file = Path("../SQLite/main.db")
-    influxdb_binary = Path("../InfluxData/influxdb/influxd.exe")
+
+    # InfluxDB database file path
+    system = platform.system()
+    if system == 'Linux':
+        binary_name = 'influxd'
+    elif system == 'Windows':
+        binary_name = 'influxd.exe'
+    else:
+        logger.error(f"Unsupported system: {system}. Please use Linux or Windows. "
+                     f"Alternatively, start the influxdb server manually.")
+    influxdb_binary = Path("../InfluxData/influxdb/", binary_name)
+
     default_username = "user"
     influx_process = None
 
