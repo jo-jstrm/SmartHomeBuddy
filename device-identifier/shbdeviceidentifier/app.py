@@ -1,11 +1,9 @@
-import logging
 import argparse
-from .rpc.server import run_rpc_server
+import logging
 
+from .db import Database
 
-def _set_log_level() -> None:
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+log = logging.getLogger("identifier")
 
 
 def _get_args() -> argparse.Namespace:
@@ -18,7 +16,11 @@ def _get_args() -> argparse.Namespace:
 
 
 def app() -> None:
-    _set_log_level()
-    logging.info("Started Python device-identifier.")
+    log.setLevel(logging.DEBUG)
+
+    log.info("Started Python device-identifier.")
     args = _get_args()
-    run_rpc_server()
+
+    db = Database()
+    if db.check_InfluxDB_connection():
+        db.stop_InfluxDB()
