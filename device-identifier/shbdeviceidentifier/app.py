@@ -3,7 +3,7 @@ import os
 import sys
 from dataclasses import dataclass
 from functools import partial
-from importlib.metadata import version as version
+from importlib import metadata
 
 import click
 from loguru import logger
@@ -112,7 +112,7 @@ class Context:
     def __init__(self):
         self.verbose = False
         self.home = os.getcwd()
-        self.version = version("shbdeviceidentifier")
+        self.version = metadata.version("shbdeviceidentifier")
         self.latest_capture_file = ""
         self.server_running = False
 
