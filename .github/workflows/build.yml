@@ -38,9 +38,6 @@ jobs:
         run: |
           cd device-identifier
           pyinstaller cli.py
-      - name: Convert Job-Level to Step-Level Environment Variables
-        run: |
-          echo "influxdb_step_url=${{ env.INFLUXDB_URL }}" >> $GITHUB_ENV
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
@@ -58,7 +55,7 @@ jobs:
       - name: Get InfluxDB and Client
         run: |
           mkdir -p InfluxData/influxdb
-          curl -O --quiet ${{ env.influxdb_full_url}}
+          curl -O ${{ env.influxdb_full_url}}
           mkdir -p InfluxData/influxdb-client
           curl -O ${{ env.influxdb_client_full_url }}
       - name: Unpack for Linux
