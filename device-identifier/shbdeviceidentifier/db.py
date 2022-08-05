@@ -91,19 +91,20 @@ class Database:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
+        # Needs to match the order of the sql_add_user_influxdb query
         search_user_credentials = (
-            "SELECT username, token, org, bucket, url"
-            "FROM users u JOIN influxdb i on u.id = i.user_id"
+            "SELECT user_id, token, bucket, org, url "
+            "FROM users u JOIN influxdb i on u.id = i.user_id "
             "WHERE user_id = ? OR username = ?"
         )
 
         search_user_credentials_params = (user_id, username)
 
         query_result = self.query_SQLiteDB(search_user_credentials, search_user_credentials_params)
-        if query_result and query_result[0][0] == username:
+        if query_result:
             return query_result[0]
         else:
-            logger.error(f"Could not find credentials for user {username}.")
+            logger.warning(f"Could not find credentials for user id '{user_id}' or user '{username}'.")
             logger.debug(f"Query result: {query_result}.")
 
     def _get_SQLite_connection(self) -> sqlite3.Connection:
@@ -120,28 +121,21 @@ class Database:
         Sets up the InfluxDB database.
         """
 
-        # add configurations to sqlite db
-        sql_add_user_influxdb = """INSERT INTO influxdb (user_id, token, bucket, org, url)
+        sql_add_user_influxdb = """INSERT OR IGNORE INTO influxdb (user_id, token, bucket, org, url)
                             VALUES(?,?,?,?,?);"""
+
         sql_find_user = """SELECT id FROM users WHERE username = ?"""
 
-        conn = self._get_SQLite_connection()
-        if conn:
-            # find and add user_id to values
-            user_id: str = self.query_SQLiteDB(sql_find_user, (self.default_username,))[0][0]
-            sql_add_user_influxdb_values = self._get_influxdb_credentials(self.default_username)
-            sql_add_user_influxdb_values["user_id"] = user_id
-            # match the INSERT stmt tuple
-            sql_add_user_influxdb_values = (
-                sql_add_user_influxdb_values["user_id"],
-                sql_add_user_influxdb_values["token"],
-                sql_add_user_influxdb_values["bucket"],
-                sql_add_user_influxdb_values["org"],
-                sql_add_user_influxdb_values["url"]
-            )
-            # add user credentials to influxdb table
-            if self.query_SQLiteDB(sql_add_user_influxdb, sql_add_user_influxdb_values):
-                logger.debug(f"User credentials added successfully for {(self.default_username, user_id)}.")
+        # find user values in sqlite db
+        user_id = self.query_SQLiteDB(sql_find_user, (self.default_username,))[0][0]
+        sql_add_user_influxdb_values = self._get_influxdb_credentials(
+            user_id=user_id,
+            username=self.default_username
+        )
+
+        # add user credentials to influxdb table
+        if self.query_SQLiteDB(sql_add_user_influxdb, sql_add_user_influxdb_values):
+            logger.debug(f"User credentials added successfully for {(self.default_username, user_id)}.")
 
     def _setup_SQLite_db(self):
         """
@@ -149,16 +143,16 @@ class Database:
         """
         # engine = create_engine("sqlite+pysqlite://"+db_file, echo=False, future=True)
 
-        sql_create_users_table = """CREATE TABLE users (
+        sql_create_users_table = """CREATE TABLE IF NOT EXISTS users (
                                                id integer PRIMARY KEY,
                                                username VARCHAR NOT NULL UNIQUE
                                            );"""
 
-        sql_add_user = """INSERT INTO users (username)
+        sql_add_user = """INSERT OR IGNORE INTO users (username)
                                VALUES(?);"""
         sql_add_user_values = (self.default_username,)
 
-        sql_create_influxdb_table = """CREATE TABLE influxdb (
+        sql_create_influxdb_table = """CREATE TABLE IF NOT EXISTS influxdb (
                                            id integer PRIMARY KEY,
                                            user_id integer NOT NULL UNIQUE,
                                            token VARCHAR,
@@ -229,8 +223,7 @@ class Database:
                 return res
 
             except Error as e:
-                logger.debug(e)
-                return None
+                logger.error(e)
 
     def start_InfluxDB(self) -> Union[None, Popen[bytes], Popen]:
         try:
