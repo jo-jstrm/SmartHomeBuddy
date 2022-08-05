@@ -1,10 +1,11 @@
-name: Build
+name: Release
 on:
   push:
-    branches: [main, develop, workflows]
-
+    branches: [main]
+    tags:
+      - 'v*'
 jobs:
-  build:
+  release:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -62,12 +63,12 @@ jobs:
           curl --remote-name --silent ${{ env.influxdb_client_full_url }}
       - name: Unpack InfluxDB on Linux
         if: ${{ matrix.os_family == 'Linux'}}
-        run: |          
+        run: |
           tar xzvf ${{ env.influxdb_archive }}          
           tar xzvf ${{ env.influxdb_client_archive }}
       - name: Unpack InfluxDB on Windows
         if: ${{ matrix.os_family == 'Windows'}}
-        run: |          
+        run: |
           unzip ${{ env.influxdb_archive }}          
           unzip ${{ env.influxdb_client_archive }}
       - name: Move InfluxDB Files
@@ -85,3 +86,9 @@ jobs:
         run: |
           cd electron-app
           npm run make
+      - name: Publish Draft Release on GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd electron-app
+          npm run publish

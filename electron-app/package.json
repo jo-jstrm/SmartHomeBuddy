@@ -59,6 +59,19 @@
           }
         }
       ],
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "jo-jstrm",
+              "name": "SmartHomeBuddy"
+            },
+            "prerelease": false,
+            "draft": true
+          }
+        }
+      ],
       "plugins": [
         [
           "@electron-forge/plugin-webpack",
