@@ -225,6 +225,17 @@ class Database:
             except Error as e:
                 logger.error(e)
 
+    def query(self, query: str, params: dict = None, bind_params: dict = None, db='i') -> Union[list, None]:
+        """
+        Convenience function for querying the SQLite and InfluxDB databases.
+        Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
+        Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
+        """
+        if db == 'i':
+            return self.query_InfluxDB(query, params, bind_params)
+        elif db == 's':
+            return self.query_SQLiteDB(query, params)
+
     def start_InfluxDB(self) -> Union[None, Popen[bytes], Popen]:
         try:
             with open(self.influx_log_path, "wb") as influx_log:
