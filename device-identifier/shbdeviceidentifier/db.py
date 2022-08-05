@@ -31,6 +31,7 @@ class Database:
         logger.error(f"Unsupported system: {system}. Please use Linux or Windows. "
                      f"Alternatively, start the influxdb server manually.")
     influxdb_binary_path = Path("InfluxData/influxdb/", binary_name).resolve()
+    influx_log_path = Path("device-identifier/shbdeviceidentifier/logs/influx.log").resolve()
 
     default_username = "user"
     influx_process = None
@@ -40,15 +41,18 @@ class Database:
 
     def __init__(
             self,
-            db_file: Path = db_file,
-            influxdb_binary: Path = influxdb_binary_path,
+            db_file=db_file,
+            influxdb_binary_path=influxdb_binary_path,
+            influx_log_path=influx_log_path,
             default_username=default_username,
             host=host,
             port=port
     ):
         # Handle file paths to make sure they exist and are absolute
-        self.db_file = db_file if isinstance(db_file, Path) else Path(db_file)
-        self.influxdb_binary_path = influxdb_binary if isinstance(influxdb_binary, Path) else Path(influxdb_binary)
+        self.influx_log_path = influx_log_path if isinstance(influx_log_path, Path) else Path(influx_log_path).resolve()
+        self.db_file = db_file if isinstance(db_file, Path) else Path(db_file).resolve()
+        self.influxdb_binary_path = influxdb_binary_path if isinstance(influxdb_binary_path, Path) else Path(
+            influxdb_binary_path).resolve()
         if not self.db_file.is_file():
             logger.error(f"Database file {self.db_file} does not exist."
                          f" Please supply a valid database file."
@@ -57,8 +61,11 @@ class Database:
             logger.error(f"InfluxDB binary {self.influxdb_binary_path} does not exist. "
                          f"Please check your installation path."
                          f" Current working directory: {os.getcwd()}")
-        self.db_file = self.db_file.resolve()
-        self.influxdb_binary_path = self.influxdb_binary_path.resolve()
+        if not self.influx_log_path.is_file():
+            logger.error(f"InfluxDB log file {self.influx_log_path} does not exist."
+                         f" Please check your log directory."
+                         f" Default log directory is 'device-identifier/shbdeviceidentifier/logs/influx.log'"
+                         f" Current working directory: {os.getcwd()}")
 
         self.default_username = default_username
 
@@ -98,9 +105,8 @@ class Database:
         conn = None
         try:
             conn = sqlite3.connect(self.db_file)
-            logger.debug(f"Connected to SQLite database at {self.db_file}.")
         except Error as e:
-            logger.debug(e)
+            logger.debug(f"Failed to connect to SQLite database at {self.db_file}. \n{e}")
         return conn
 
     def _setup_InfluxDB_db(self):
@@ -116,7 +122,7 @@ class Database:
         conn = self._get_SQLite_connection()
         if conn:
             # find and add user_id to values
-            user_id: str = self.query_SQLiteDB(sql_find_user, (self.default_username,))[0]
+            user_id: str = self.query_SQLiteDB(sql_find_user, (self.default_username,))[0][0]
             sql_add_user_influxdb_values = self._get_influxdb_credentials(self.default_username)
             sql_add_user_influxdb_values["user_id"] = user_id
             # match the INSERT stmt tuple
@@ -222,8 +228,12 @@ class Database:
 
     def start_InfluxDB(self) -> Union[None, Popen[bytes], Popen]:
         try:
-            influx_process = subprocess.Popen(self.influxdb_binary_path)
-            logger.debug("InfluxDB started successfully.")
+            with open(self.influx_log_path, "wb") as influx_log:
+                influx_process = subprocess.Popen(
+                    self.influxdb_binary_path,
+                    stdout=influx_log,
+                    stderr=subprocess.STDOUT)
+                logger.debug("InfluxDB started successfully.")
         except Exception as e:
             logger.debug(e)
             logger.error("Failed to start InfluxDB.")
