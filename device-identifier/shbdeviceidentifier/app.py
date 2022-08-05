@@ -4,13 +4,16 @@ import sys
 from dataclasses import dataclass
 from functools import partial
 from importlib import metadata
+from pathlib import Path
+from typing import Union
 
 import click
 from loguru import logger
 from pyfiglet import Figlet
 
-from .rpc.server import run_rpc_server
 from .db import Database
+from .rpc.server import run_rpc_server
+
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
@@ -103,27 +106,27 @@ CONTEXT_SETTINGS = dict(
 
 @dataclass()
 class Context:
-    verbose: bool
+    flags: dict
     home: str
     version: str
-    latest_capture_file: str
-    server_running: bool
+    latest_capture_file: Union[Path, None]
+    db: Database
 
     def __init__(self):
-        self.verbose = False
+        self.flags = {}
         self.home = os.getcwd()
         self.version = metadata.version("shbdeviceidentifier")
-        self.latest_capture_file = ""
-        self.server_running = False
+        self.latest_capture_file = None
+        self.db = Database()
 
 
 pass_ctx = click.make_pass_decorator(Context, ensure=True)
 flag_default_options = dict(is_flag=True, default=False, show_default=True)
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True, chain=True)
+@click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=False, chain=True)
 @click.option("--debug", "-d", help="Enable debug output.", **flag_default_options)
-@click.option("--silent", "-s", help="Run headless.", **flag_default_options)
+@click.option("--silent", "-s", help="Disable logging.", **flag_default_options)
 @click.option("--verbose", "-v", help="Enable verbose output.", **flag_default_options)
 @click.option("--version", "version_flag", help="Show current app version.", **flag_default_options)
 @pass_ctx
@@ -131,53 +134,50 @@ def app(ctx, debug, silent, verbose, version_flag):
     """
     SmartHomeBuddy's device identifier.
     """
-    if silent:
-        # TODO: Implement silent mode
-        ...
-
-    if verbose:
-        ctx.verbose = True
-        logger.level("INFO")
-    if debug:
-        logger.level("DEBUG")
+    ctx.flags = dict(debug=debug, silent=silent, verbose=verbose, version_flag=version_flag)
 
     if version_flag:
         click.echo(f"Version: {ctx.version}")
         sys.exit(0)
 
-    figlet = Figlet(font='smslant', justify='left')  # choose btw: small, stampatello, smslant
-    click.echo(figlet.renderText('SmartHomeBuddy'))
+    if silent:
+        logger.remove()
+    else:
+        figlet = Figlet(font='smslant', justify='left')  # choose btw: small, stampatello, smslant
+        click.echo(figlet.renderText('SmartHomeBuddy'))
 
-    # run_rpc_server()
-    ctx.server_running = True
-    logger.success("RPC server started.")
+    if verbose:
+        ctx.verbose = True
+        logger.level("INFO")
+
+    if debug:
+        logger.level("DEBUG")
+
+    # Database connections checks
+    if not ctx.db.is_connected():
+        logger.error("Database connection failed.")
+        sys.exit(1)
 
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
 # ---------------------------------------------------------------------------- #
-
 @app.command("start")
-@pass_ctx
 @logger_wraps()
-def start(ctx):
+def start():
     """
     Starts the RPC server.
     """
-    if not ctx.server_task:
-        run_rpc_server()
-        ctx.server_running = True
+    run_rpc_server()
 
 
 @app.command("stop")
-@pass_ctx
 @logger_wraps()
-def stop(ctx):
+def stop():
     """
     Stops the RPC server.
     """
-    ctx.server_task.cancel()
-    logger.success("RPC server stopped.")
+    # TODO: Implement stop command
 
 
 @app.command("collect")
@@ -188,7 +188,7 @@ def collect(ctx, file_path):
     """
     Collects all the data from an interface.
     """
-    file_path = check_file_path(ctx, file_path)
+    file_path = check_default_capture_file_path(ctx, file_path)
     ...
 
 
@@ -202,7 +202,7 @@ def read(ctx, file_path, file_type):
     """
     Reads all the data from a capture file.
     """
-    file_path = check_file_path(ctx, file_path)
+    file_path = check_default_capture_file_path(ctx, file_path)
     ...
 
 
@@ -215,7 +215,7 @@ def identify(ctx, file_path, out):
     """
     Identifies a device.
     """
-    file_path = check_file_path(ctx, file_path)
+    file_path = check_default_capture_file_path(ctx, file_path)
     ...
 
 
@@ -223,13 +223,19 @@ def identify(ctx, file_path, out):
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
 
-def check_file_path(ctx, file_path):
-    """Handling default file path"""
+def check_default_capture_file_path(ctx, file_path) -> Path:
+    """Handling file path for the default capture file."""
+    # filepath supplied by user
     if file_path:
+        # Make sure file_path is of correct type and resolves to a valid file
+        file_path = file_path if isinstance(file_path, Path) else Path(file_path)
+        file_path = file_path.resolve()
         ctx.latest_capture_file = file_path
+    # filepath already set
     elif ctx.latest_capture_file:
         file_path = ctx.latest_capture_file
+    # filepath not set
     else:
-        file_path = "capture.pcap"
+        file_path = Path("./capture.pcap").resolve()
         ctx.latest_capture_file = file_path
     return file_path
