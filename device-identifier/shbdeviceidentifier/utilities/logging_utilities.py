@@ -11,8 +11,8 @@ class Formatter:
         self.padding = 30
         self.fmt = (
             "<light-black>{time:HH:mm:ss} | </>"
-            "<light-black>{function}:{line}{extra[padding]}</> | "
-            "<level>{level: <8}</> - "
+            "<light-black>{function}:{line}{extra[padding]} | </>"
+            "[<level>{level: ^9}</>] "
             "<level>{message}\n{exception}</>"
         )
 
