@@ -87,18 +87,24 @@ class Database:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, username) -> dict:
+    def _get_influxdb_credentials(self, user_id: int = 0, username: str = "") -> list:
         """
-        Get the credentials for the InfluxDB instance.
+        Get the credentials for the InfluxDB instance from the main SQLite database.
         """
-        # TODO get from sqlite db
-        return {
-            "username": self.default_username,
-            "token": "S_bFseW7ihLwo_rhz_BK_4OBSOGHarpQwiKxHs3JRiqcX31zoNoIGByCZV61yCjPYxngbNXAEh988brX9gg1Yg==",
-            "org": "smarthomebuddy",
-            "bucket": "network-traffic",
-            "url": "http://localhost:8086",
-        }
+        search_user_credentials = (
+            "SELECT username, token, org, bucket, url"
+            "FROM users u JOIN influxdb i on u.id = i.user_id"
+            "WHERE user_id = ? OR username = ?"
+        )
+
+        search_user_credentials_params = (user_id, username)
+
+        query_result = self.query_SQLiteDB(search_user_credentials, search_user_credentials_params)
+        if query_result and query_result[0][0] == username:
+            return query_result[0]
+        else:
+            logger.error(f"Could not find credentials for user {username}.")
+            logger.debug(f"Query result: {query_result}.")
 
     def _get_SQLite_connection(self) -> sqlite3.Connection:
         """ create a database connection to a SQLite database """
