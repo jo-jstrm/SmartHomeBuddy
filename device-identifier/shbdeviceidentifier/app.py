@@ -22,6 +22,7 @@ formatter = Formatter()
 logger_config = {"handlers": [{"sink": sys.stdout, "format": formatter.format, "level": "SUCCESS"}]}
 logger.configure(**logger_config)
 logger.opt = partial(logger.opt, colors=True)
+logger.level("DEBUG", color="<light-black>")
 
 # ---------------------------------------------------------------------------- #
 #                                    App                                       #
