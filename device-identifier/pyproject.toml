@@ -24,5 +24,8 @@ requires = ["setuptools",
             "wheel",
             "cython"]
 
+[project.scripts]
+shbdeviceidentifier = "shbdeviceidentifier:__main__"
+
 [tool.black]
 line-length = 120

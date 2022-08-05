@@ -1,14 +1,16 @@
-import grpc
-import logging
 from concurrent import futures
+
+import grpc
 from grpc_reflection.v1alpha import reflection
+from loguru import logger
+
 
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 
 
 class HeartbeatService(heartbeat_pb2_grpc.HeartbeatServicer):
     def GetHeartbeat(self, request, context) -> heartbeat_pb2.HeartbeatResponse:
-        logging.info("Python Server got a heartbeat request.")
+        logger.info("Python Server got a heartbeat request.")
         response = heartbeat_pb2.HeartbeatResponse(alive=True)
         return response
 
@@ -22,7 +24,7 @@ def run_rpc_server() -> None:
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(SERVICE_NAMES, server)
-    logging.info(f"Server listening on port {port}")
+    logger.info(f"Server listening on port {port}")
     server.add_insecure_port(f"[::]:{port}")
     server.start()
     server.wait_for_termination()
