@@ -7,5 +7,4 @@ pyshark==0.5.3
 pyfiglet==0.8.post1
 loguru==0.6.0
 influxdb-client
-sqlalchemy
 pyinstaller
