@@ -10,7 +10,7 @@ from loguru import logger
 from pyfiglet import Figlet
 
 from .rpc.server import run_rpc_server
-
+from .db import Database
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #

@@ -1,0 +1,80 @@
+name: Build
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    env:
+      influx_url: https://dl.influxdata.com/influxdb/releases/
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+        node: [16]
+        include:
+          - os: ubuntu-22.04
+            os_family: Linux
+            influxdb_version: influxdb2-2.3.0-linux-amd64
+            influxdb_archive: influxdb2-2.3.0-linux-amd64.tar.gz
+            influxdb_client_version: influxdb2-client-2.3.0-linux-amd64
+            influxdb_client_archive: influxdb2-client-2.3.0-linux-amd64.tar.gz
+          - os: windows-latest
+            os_family: Windows
+            influxdb_version: influxdb2-2.3.0-windows-amd64
+            influxdb_archive: influxdb2-2.3.0-windows-amd64.zip
+            influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
+            influxdb_client_archive: influxdb2-client-2.3.0-windows-amd64.tar.gz
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r device-identifier/requirements.txt
+      - name: Build Python distributable for ${{ matrix.os }}
+        run: |
+          cd device-identifier
+          pyinstaller cli.py
+      - name: Get InfluxDB for Linux
+        if: ${{ matrix.os_family == 'Linux'}}
+        run: |
+          mkdir -p InfluxData/influxdb
+          wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
+          tar xvzf ${{ matrix.influxdb_version }}
+          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
+      - name: Get InfluxDB Client for Linux
+        if: ${{ matrix.os_family == 'Linux'}}
+        run: |
+          mkdir -p InfluxData/influxdb-client
+          wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
+          tar xvzf ${{ matrix.influxdb_client_version }}
+          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
+      - name: Get InfluxDB for Windows
+        if: ${{ matrix.os_family == 'Windows'}}
+        run: |
+          mkdir -p InfluxData/influxdb
+          wget ${{ env.influxdb_url }}${{ matrix.influxdb_archive }}
+          unzip ${{ matrix.influxdb_version }}
+          mv ${{ matrix.influxdb_version }}/* InfluxData/influxdb
+      - name: Get InfluxDB Client for Windows
+        if: ${{ matrix.os_family == 'Windows'}}
+        run: |
+          mkdir -p InfluxData/influxdb-client
+          wget ${{ env.influxdb_url }}${{ matrix.influxdb_client_archive }}
+          unzip ${{ matrix.influxdb_client_version }}
+          mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
+      - uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install nodeJS dependencies
+        run: |
+          cd electron-app
+          npm ci
+      - name: Build SmartHomeBuddy for ${{ matrix.os }}
+        run: |
+          cd electron-app
+          npm run make
