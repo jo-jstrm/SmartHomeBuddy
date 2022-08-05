@@ -1,5 +1,4 @@
 import os
-import os
 import sys
 from dataclasses import dataclass
 from functools import partial
@@ -20,11 +19,9 @@ from .utilities import check_default_capture_file_path, Formatter, logger_wraps
 # ---------------------------------------------------------------------------- #
 logger.remove()
 formatter = Formatter()
-config = {"handlers": [{"sink": sys.stdout, "format": formatter.format}]}
-logger.configure(**config)
+logger_config = {"handlers": [{"sink": sys.stdout, "format": formatter.format, "level": "SUCCESS"}]}
+logger.configure(**logger_config)
 logger.opt = partial(logger.opt, colors=True)
-logger.level("INFO")
-
 
 # ---------------------------------------------------------------------------- #
 #                                    App                                       #
@@ -78,10 +75,12 @@ def app(ctx, debug, silent, verbose, version_flag):
 
     if verbose:
         ctx.verbose = True
-        logger.level("INFO")
+        logger_config["handlers"][0]["level"] = "INFO"
+        logger.configure(**logger_config)
 
     if debug:
-        logger.level("DEBUG")
+        logger_config["handlers"][0]["level"] = "DEBUG"
+        logger.configure(**logger_config)
 
     # Database connections checks
     ctx.db = Database()
