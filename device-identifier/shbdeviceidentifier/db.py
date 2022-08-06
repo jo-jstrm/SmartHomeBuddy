@@ -9,15 +9,17 @@ import subprocess
 from pathlib import Path
 from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable, Generator
+from typing import Union, Iterable, Generator, List, Dict
 
+import influxdb
+import influxdb_client
 import pandas as pd
 import pyshark
-from influxdb import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from .utilities.app_utilities import resolve_file_path
-from .utilities.capture_utilities import convert_Capture_to_DataFrame
+from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame
 
 
 # noinspection PyPep8Naming
@@ -79,12 +81,12 @@ class Database:
         self.influx_process = self.start_InfluxDB()
         self._setup_InfluxDB_db()
 
-    def _get_InfluxDB_connection(self, **client_kwargs) -> Union[InfluxDBClient, None]:
-        """ create a database connection to a InfluxDB database """
+    def _get_InfluxDB_connection(self, **client_kwargs) -> Union[influxdb.InfluxDBClient, None]:
+        """ create a database connection to a InfluxDB database server. """
         if client_kwargs is None:
             client_kwargs = {"host": self.host, "port": self.port}
         try:
-            client = InfluxDBClient(**client_kwargs)
+            client = influxdb.InfluxDBClient(**client_kwargs)
             version = client.ping()
             logger.debug(f"Connected to InfluxDB {version} at {self.host}:{self.port}.")
             return client
@@ -268,6 +270,81 @@ class Database:
             logger.debug("No InfluxDB process found.")
             return False
 
+    def write_to_InfluxDB(self, data: Union[List[str], pd.DataFrame], username: str = None, bucket: str = None,
+                          org: str = None, token: str = None, url: str = None,
+                          **df_kwargs) -> bool:
+        """
+        The write_to_influxdb function writes data to an InfluxDB bucket.
+
+        Parameters
+        ----------
+            data:List[str]
+                Data to be written to influxdb. Should be a list of Line Protocol strings,
+                see Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol)
+            username:str="user"
+                Username to be used to get InfluxDB credentials.
+            bucket:str="network-traffic"
+                The name of the bucket in which data will be stored in InfluxDB, e.g., "network-traffic".
+            org:str="smarthomebuddy"
+                The name of the organization in which the bucket is stored in InfluxDB, e.g., "smarthomebuddy".
+            token:str=<user-token>
+                Authentication token for the influxdb api.
+            url:str="http://localhost:8086"
+                Url of the influxdb instance.
+            df_kwargs:dict=None:
+                Keyword arguments when supplying a pandas.DataFrame as data.
+                Available are (from InfluxDbClient.write_api.write):
+                    data_frame_measurement_name
+                        – name of measurement for writing Pandas DataFrame - ``DataFrame``
+                    data_frame_tag_columns
+                        – list of DataFrame columns which are tags, rest columns will be fields - ``DataFrame``
+                    data_frame_timestamp_column
+                        – name of DataFrame column which contains a timestamp.
+                        The column can be defined as a str value formatted as `2018-10-26`, `2018-10-26 12:00`,
+                        `2018-10-26 12:00:00-05:00` or other formats and types supported by `pandas.to_datetime`
+                    data_frame_timestamp_timezone
+                        – name of the timezone which is used for timestamp column - ``DataFrame``
+
+
+        Returns
+        -------
+
+            True if successful, False otherwise.
+
+        Doc Author
+        ----------
+            TB
+        """
+        # TODO: Authentication & security refactoring
+        if username:
+            user_id_, token_, bucket_, org_, url_ = self._get_influxdb_credentials(username=username)
+        else:
+            user_id_, token_, bucket_, org_, url_ = self._get_influxdb_credentials(username=self.default_username)
+
+        # replace None values with defaults
+        token = token_ if not token else token
+        org = org_ if not org else org
+        url = url_ if not url else url
+        bucket = bucket_ if not bucket else bucket
+
+        try:
+            with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
+                write_api = client.write_api(write_options=SYNCHRONOUS)
+
+                # write the data sequence to the bucket
+                write_api.write(
+                    bucket=bucket,
+                    org=org,
+                    record_list=data,
+                    **df_kwargs
+                )
+
+                client.close()
+                return True
+        except Exception as e:
+            logger.error(e)
+            return False
+
 
 # noinspection PyPep8Naming
 class DataLoader:
@@ -291,14 +368,23 @@ class DataLoader:
             return pd.read_csv(file_path, **kwargs)
 
     @staticmethod
-    def from_pcap(file_path: Union[Path, str]) -> Union[pd.DataFrame, None]:
+    def from_pcap(file_path: Union[Path, str], db: Database, credentials: Dict = None) -> Union[pd.DataFrame, None]:
         """
         Loads data from a pcap file.
         """
+        if not credentials:
+            credentials = {}
+
         file_path = resolve_file_path(file_path)
         if file_path:
             cap = pyshark.FileCapture(file_path)
-            converted_cap = convert_Capture_to_DataFrame(cap)
+
+            # TODO: skip conversion to Line Protocol and write with DataFrame directly
+            converted_cap = convert_Capture_to_Line(cap)
+            if not db.write_to_InfluxDB(converted_cap, **credentials):
+                return None
+
+            return convert_Capture_to_DataFrame(cap)
 
     def from_generator(self, generator: Generator) -> Union[pd.DataFrame, None]:
         """

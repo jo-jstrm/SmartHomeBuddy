@@ -3,8 +3,6 @@ from typing import List, Union
 
 import pandas as pd
 import pyshark
-from influxdb_client import InfluxDBClient
-from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from pyshark.capture.capture import Capture
 
@@ -68,7 +66,8 @@ def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
 
 # noinspection PyPep8Naming
 def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
-    pass
+    # TODO: implement
+    return pd.DataFrame.from_dict({"Test": [1, 2, 3]})
 
 
 # noinspection PyPep8Naming
@@ -148,57 +147,3 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
 
     return data
 
-
-def write_to_influxdb(data: Union[List[str], pd.DataFrame], bucket: str, org: str, token: str, url: str, **df_kwargs):
-    """
-    The write_to_influxdb function writes data to an InfluxDB bucket.
-
-    Parameters
-    ----------
-        data:List[str]
-            Data to be written to influxdb. Should be a list of Line Protocol strings,
-            see Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol)
-        bucket:str="network-traffic"
-            The name of the bucket in which data will be stored in InfluxDB, e.g., "network-traffic".
-        org:str="smarthomebuddy"
-            The name of the organization in which the bucket is stored in InfluxDB, e.g., "smarthomebuddy".
-        token:str=<user-token>
-            Authentication token for the influxdb api.
-        url:str="http://localhost:8086"
-            Url of the influxdb instance.
-        df_kwargs:dict=None:
-            Keyword arguments when supplying a pandas.DataFrame as data.
-            Available are (from InfluxDbClient.write_api.write):
-                data_frame_measurement_name
-                    – name of measurement for writing Pandas DataFrame - ``DataFrame``
-                data_frame_tag_columns
-                    – list of DataFrame columns which are tags, rest columns will be fields - ``DataFrame``
-                data_frame_timestamp_column
-                    – name of DataFrame column which contains a timestamp.
-                    The column can be defined as a :class:`~str` value formatted as `2018-10-26`, `2018-10-26 12:00`,
-                    `2018-10-26 12:00:00-05:00` or other formats and types supported by `pandas.to_datetime`
-                data_frame_timestamp_timezone
-                    – name of the timezone which is used for timestamp column - ``DataFrame``
-
-
-    Returns
-    -------
-
-        Nothing
-
-    Doc Author
-    ----------
-        TB
-    """
-    with InfluxDBClient(url=url, token=token, org=org) as client:
-        write_api = client.write_api(write_options=SYNCHRONOUS)
-
-        # write the data sequence to the bucket
-        write_api.write(
-            bucket=bucket,
-            org=org,
-            record_list=data,
-            **df_kwargs
-        )
-
-        client.close()

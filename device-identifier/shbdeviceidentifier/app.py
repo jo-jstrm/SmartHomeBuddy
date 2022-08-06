@@ -12,7 +12,7 @@ import pyshark
 from loguru import logger
 from pyfiglet import Figlet
 
-from .db import Database
+from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
 # ---------------------------------------------------------------------------- #
@@ -133,7 +133,7 @@ def show_interfaces():
 
 
 @app.command("read")
-@click.option("-f", "--file_path", type=click.Path(), required=False, default="")
+@click.argument("file_path", type=click.Path())
 @click.option('--file-type', '-T', help='File type to read.', required=False,
               type=click.Choice(['pcap', 'pcapng'], case_sensitive=False), default='pcap')
 @pass_ctx
@@ -143,7 +143,14 @@ def read(ctx, file_path, file_type):
     Reads all the data from a capture file.
     """
     file_path = get_capture_file_path(ctx, file_path)
-    ...
+
+    if file_type == 'pcap' or file_type == 'pcapng':
+        if not DataLoader.from_pcap(file_path, ctx.db).empty:
+            logger.success(f"Wrote {file_path} to Database.")
+        else:
+            logger.error(f"Failed to write {file_path} to Database.")
+
+    # TODO: Add support for other file types.
 
 
 @app.command("identify")
