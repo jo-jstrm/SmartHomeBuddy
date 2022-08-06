@@ -9,10 +9,15 @@ import subprocess
 from pathlib import Path
 from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable
+from typing import Union, Iterable, Generator
 
+import pandas as pd
+import pyshark
 from influxdb import InfluxDBClient
 from loguru import logger
+
+from .utilities.app_utilities import resolve_file_path
+from .utilities.capture_utilities import convert_Capture_to_DataFrame
 
 
 # noinspection PyPep8Naming
@@ -34,7 +39,7 @@ class Database:
     influx_log_path = Path("device-identifier/shbdeviceidentifier/logs/influx.log").resolve()
 
     default_username = "user"
-    influx_process = None
+    influx_process: Union[None, Popen[bytes], Popen] = None
 
     host = "localhost"
     port = "8086"
@@ -49,23 +54,21 @@ class Database:
             port=port
     ):
         # Handle file paths to make sure they exist and are absolute
-        self.influx_log_path = influx_log_path if isinstance(influx_log_path, Path) else Path(influx_log_path).resolve()
-        self.db_file = db_file if isinstance(db_file, Path) else Path(db_file).resolve()
-        self.influxdb_binary_path = influxdb_binary_path if isinstance(influxdb_binary_path, Path) else Path(
-            influxdb_binary_path).resolve()
-        if not self.db_file.is_file():
-            logger.error(f"Database file {self.db_file} does not exist."
-                         f" Please supply a valid database file."
-                         f" Current working directory: {os.getcwd()}")
-        if not self.influxdb_binary_path.is_file():
-            logger.error(f"InfluxDB binary {self.influxdb_binary_path} does not exist. "
-                         f"Please check your installation path."
-                         f" Current working directory: {os.getcwd()}")
-        if not self.influx_log_path.is_file():
-            logger.error(f"InfluxDB log file {self.influx_log_path} does not exist."
-                         f" Please check your log directory."
-                         f" Default log directory is 'device-identifier/shbdeviceidentifier/logs/influx.log'"
-                         f" Current working directory: {os.getcwd()}")
+        error_msg = (f"InfluxDB log file {self.influx_log_path} does not exist."
+                     f" Please check your log directory."
+                     f" Default log directory is 'device-identifier/shbdeviceidentifier/logs/influx.log'"
+                     f" Current working directory: {os.getcwd()}")
+        self.influx_log_path = resolve_file_path(influx_log_path, error_msg=error_msg)
+
+        error_msg = (f"Database file {self.db_file} does not exist."
+                     f" Please supply a valid database file."
+                     f" Current working directory: {os.getcwd()}")
+        self.db_file = resolve_file_path(db_file, error_msg=error_msg)
+
+        error_msg = (f"InfluxDB binary {self.influxdb_binary_path} does not exist. "
+                     f"Please check your installation path."
+                     f" Current working directory: {os.getcwd()}")
+        self.influxdb_binary_path = resolve_file_path(influxdb_binary_path, error_msg=error_msg)
 
         self.default_username = default_username
 
@@ -76,10 +79,12 @@ class Database:
         self.influx_process = self.start_InfluxDB()
         self._setup_InfluxDB_db()
 
-    def _get_InfluxDB_connection(self) -> Union[InfluxDBClient, None]:
+    def _get_InfluxDB_connection(self, **client_kwargs) -> Union[InfluxDBClient, None]:
         """ create a database connection to a InfluxDB database """
+        if client_kwargs is None:
+            client_kwargs = {"host": self.host, "port": self.port}
         try:
-            client = InfluxDBClient(host=self.host, port=self.port)
+            client = InfluxDBClient(**client_kwargs)
             version = client.ping()
             logger.debug(f"Connected to InfluxDB {version} at {self.host}:{self.port}.")
             return client
@@ -200,7 +205,8 @@ class Database:
         """
         Queries the InfluxDB instance.
         """
-        client = self._get_InfluxDB_connection()
+        user_id, token, bucket, org, url = self._get_influxdb_credentials(username=self.default_username)
+        client = self._get_InfluxDB_connection(token=token, org=org, url=url)
         if client:
             return client.query(query, params, bind_params)
 
@@ -225,15 +231,15 @@ class Database:
             except Error as e:
                 logger.error(e)
 
-    def query(self, query: str, params: dict = None, bind_params: dict = None, db='i') -> Union[list, None]:
+    def query(self, query: str, params: dict = None, bind_params: dict = None, db='influx') -> Union[list, None]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
         Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
         Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
         """
-        if db == 'i':
+        if db == 'influx':
             return self.query_InfluxDB(query, params, bind_params)
-        elif db == 's':
+        elif db == 'sqlite':
             return self.query_SQLiteDB(query, params)
 
     def start_InfluxDB(self) -> Union[None, Popen[bytes], Popen]:
@@ -261,3 +267,47 @@ class Database:
         else:
             logger.debug("No InfluxDB process found.")
             return False
+
+
+# noinspection PyPep8Naming
+class DataLoader:
+    """
+    Class for loading data from various sources into a pandas DataFrame.
+    """
+
+    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Union[list, None]:
+        """
+        Loads data from the InfluxDB database.
+        """
+        ...
+
+    @staticmethod
+    def from_CSV(file_path: Union[Path, str], **kwargs) -> Union[pd.DataFrame, None]:
+        """
+        Loads data from a CSV file.
+        """
+        file_path = resolve_file_path(file_path)
+        if file_path:
+            return pd.read_csv(file_path, **kwargs)
+
+    @staticmethod
+    def from_pcap(file_path: Union[Path, str]) -> Union[pd.DataFrame, None]:
+        """
+        Loads data from a pcap file.
+        """
+        file_path = resolve_file_path(file_path)
+        if file_path:
+            cap = pyshark.FileCapture(file_path)
+            converted_cap = convert_Capture_to_DataFrame(cap)
+
+    def from_generator(self, generator: Generator) -> Union[pd.DataFrame, None]:
+        """
+        Loads data from a generator.
+        """
+        ...
+
+    def from_dict(self, data: dict) -> Union[pd.DataFrame, None]:
+        """
+        Constructs a Dataset from data in memory.
+        """
+        ...

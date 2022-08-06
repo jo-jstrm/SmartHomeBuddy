@@ -12,7 +12,7 @@ from pyfiglet import Figlet
 
 from .db import Database
 from .rpc.server import run_rpc_server
-from .utilities import check_default_capture_file_path, Formatter, logger_wraps, QUERIES
+from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
@@ -110,7 +110,7 @@ def collect(ctx, file_path):
     """
     Collects all the data from an interface.
     """
-    file_path = check_default_capture_file_path(ctx, file_path)
+    file_path = get_capture_file_path(ctx, file_path)
     ...
 
 
@@ -124,7 +124,7 @@ def read(ctx, file_path, file_type):
     """
     Reads all the data from a capture file.
     """
-    file_path = check_default_capture_file_path(ctx, file_path)
+    file_path = get_capture_file_path(ctx, file_path)
     ...
 
 
@@ -137,7 +137,7 @@ def identify(ctx, file_path, out):
     """
     Identifies a device.
     """
-    file_path = check_default_capture_file_path(ctx, file_path)
+    file_path = get_capture_file_path(ctx, file_path)
     ...
 
 
