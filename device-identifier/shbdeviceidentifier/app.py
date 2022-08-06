@@ -1,4 +1,5 @@
 import os
+import pprint
 import sys
 from dataclasses import dataclass
 from functools import partial
@@ -7,6 +8,7 @@ from pathlib import Path
 from typing import Union
 
 import click
+import pyshark
 from loguru import logger
 from pyfiglet import Figlet
 
@@ -121,6 +123,15 @@ def collect(ctx, interface, time, out):
         logger.info(f"No packets captured.")
 
 
+@app.command("show-interfaces")
+def show_interfaces():
+    """
+    The show_interfaces function prints the available interfaces on the machine.
+    """
+    available_interfaces = {i: Path(face) for i, face in enumerate(pyshark.LiveCapture().interfaces)}
+    logger.info(f"Available interfaces:\n {pprint.pformat(available_interfaces, indent=57)[1:-1]}")
+
+
 @app.command("read")
 @click.option("-f", "--file_path", type=click.Path(), required=False, default="")
 @click.option('--file-type', '-T', help='File type to read.', required=False,
@@ -160,6 +171,16 @@ def query(ctx, data_base, statement_name):
     Find all available statements in utilities.queries.
     """
     statement = QUERIES[data_base][statement_name]
-    res = ctx.db.query(statement, db=data_base)
     # TODO: handle long list of results / complex results
-    logger.info(f"Query run successfully with the following output: \n\n{res}\n")
+    res = ctx.db.query(statement, db=data_base)
+
+    if res:
+        # pprint indent does not work with this, probably because of the length of the results
+        res = [" " * 57 + f"{i}: {row}" for i, row in enumerate(res)]
+        res = "\n".join(res)
+
+        logger.info(f"Query run successfully with the following output: \n"
+                    f"{res}")
+
+    else:
+        logger.info(f"Query run successfully with no output.")
