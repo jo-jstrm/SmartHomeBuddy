@@ -16,3 +16,5 @@ INFLUX_QUERIES = {
 SQLITE_QUERIES = {
     'custom_query': query_file_to_string(q_path / 'custom_query.sql'),
 }
+
+QUERIES = {'influx': INFLUX_QUERIES, 'sqlite': SQLITE_QUERIES}

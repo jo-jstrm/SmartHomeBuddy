@@ -12,7 +12,7 @@ from pyfiglet import Figlet
 
 from .db import Database
 from .rpc.server import run_rpc_server
-from .utilities import check_default_capture_file_path, Formatter, logger_wraps, INFLUX_QUERIES, SQLITE_QUERIES
+from .utilities import check_default_capture_file_path, Formatter, logger_wraps, QUERIES
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
@@ -152,12 +152,7 @@ def query(ctx, data_base, statement_name):
     Queries the database.
     Find all available statements in utilities.queries.
     """
-    res = "Selection not implemented."
-    if data_base == "influx":
-        statement = INFLUX_QUERIES[statement_name]
-        res = ctx.db.query(statement, db='i')
-    elif data_base == "sqlite":
-        statement = SQLITE_QUERIES[statement_name]
-        res = ctx.db.query(statement, db='s')
+    statement = QUERIES[data_base][statement_name]
+    res = ctx.db.query(statement, db=data_base)
     # TODO: handle long list of results / complex results
     logger.info(f"Query run successfully with the following output: \n\n{res}\n")
