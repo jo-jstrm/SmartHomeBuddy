@@ -9,23 +9,21 @@ from loguru import logger
 from pyshark.capture.capture import Capture
 
 
-def collect_traffic(interface='eth0', time: int = 0,
-                    output_file: Union[Path, str] = None) -> pyshark.capture.capture.Capture:
+def collect_traffic(interface: Union[Path, str] = Path('eth0'), time: int = -1,
+                    output_file: Union[Path, str] = None) -> Union[pyshark.capture.capture.Capture, None]:
     """
     The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
-    If no time is specified, it will run indefinitely until the user stops it.
+    If no or non-positive time is specified, it will run indefinitely until the user stops it.
     It can also write the captured packets to an output file if one is provided.
 
     Parameters
     ----------
-        interface='eth0'
+        interface: str = 'eth0'
             The interface to capture traffic on
-        time:int=0
+        time: int = 0
             The time limit for the traffic capture in seconds
-        output_file:Union[Path
+        output_file: Union[Path, str]=None
             The path to the output file
-        str]=None
-            The output file
 
     Returns
     -------
@@ -39,13 +37,24 @@ def collect_traffic(interface='eth0', time: int = 0,
     if output_file:
         output_file = Path(output_file).resolve()
         logger.info(f"Capturing traffic to {output_file}.")
-    cap = pyshark.LiveCapture(interface=interface, output_file=output_file)
+
+    interface = Path(interface)
+    available_interfaces = [Path(face) for face in pyshark.LiveCapture().interfaces]
+
+    try:
+        ix = available_interfaces.index(interface)
+        cap = pyshark.LiveCapture(interface=pyshark.LiveCapture().interfaces[ix], output_file=output_file)
+    except ValueError:
+        logger.error(f"Interface {interface} not found. Available interfaces are {available_interfaces}.")
+        return None
 
     if time > 0:
         cap.sniff(timeout=time)
     else:
-        logger.info("Sniffing indefinitely... (Ctrl-C to stop)")
-        cap.sniff_continuously()
+        logger.error("Continuously capturing traffic is currently not supported.")
+        # TODO: add continuous capture support
+        # logger.info("Sniffing indefinitely... (Ctrl-C to stop)")
+        # gen = cap.sniff_continuously()
     return cap
 
 

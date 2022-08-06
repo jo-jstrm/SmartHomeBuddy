@@ -13,7 +13,7 @@ def get_capture_file_path(ctx, file_path) -> Path:
 
     # find existing filepath with priority
     # user supplied filepath > context filepath > default filepath
-    paths = (file_path, ctx.latest_capture_file, "./capture.pcap")
+    paths = (file_path, ctx.latest_capture_file, "./pcaps/capture.pcap")
     path = next(filter(lambda p: bool(p), paths))
 
     ctx.latest_capture_file = resolve_file_path(path)

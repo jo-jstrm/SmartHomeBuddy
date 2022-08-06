@@ -191,7 +191,7 @@ class Database:
         if influx_con and sqlite_con:
             influx_con.close()
             sqlite_con.close()
-            logger.success("Databases are connected.")
+            logger.debug("Databases are connected.")
             return True
         elif influx_con:
             influx_con.close()

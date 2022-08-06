@@ -13,10 +13,11 @@ from pyfiglet import Figlet
 from .db import Database
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
-
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
+from .utilities.capture_utilities import collect_traffic
+
 logger.remove()
 formatter = Formatter()
 logger_config = {"handlers": [{"sink": sys.stdout, "format": formatter.format, "level": "SUCCESS"}]}
@@ -103,15 +104,21 @@ def start():
 
 
 @app.command("collect")
-@click.option("-f", "--file_path", type=click.Path(), required=False, default="")
+@click.option("-t", "--time", type=click.INT, required=False, default=-1, help="Time to capture in seconds.")
+@click.option("-o", "--out", type=click.Path(), required=False, default=None, help="Output file path.")
+@click.argument('interface', nargs=1, type=click.STRING)
 @pass_ctx
 @logger_wraps()
-def collect(ctx, file_path):
+def collect(ctx, interface, time, out):
     """
     Collects all the data from an interface.
     """
-    file_path = get_capture_file_path(ctx, file_path)
-    ...
+    file_path = get_capture_file_path(ctx, out)
+    cap = collect_traffic(interface=interface, time=time, output_file=file_path)
+    if cap:
+        logger.success(f"Captured {len(cap)} packets.")
+    else:
+        logger.info(f"No packets captured.")
 
 
 @app.command("read")
