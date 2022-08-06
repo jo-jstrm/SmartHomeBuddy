@@ -102,15 +102,6 @@ def start():
     run_rpc_server()
 
 
-@app.command("stop")
-@logger_wraps()
-def stop():
-    """
-    Stops the RPC server.
-    """
-    # TODO: Implement stop command
-
-
 @app.command("collect")
 @click.option("-f", "--file_path", type=click.Path(), required=False, default="")
 @pass_ctx
