@@ -9,16 +9,17 @@ from loguru import logger
 from pyshark.capture.capture import Capture
 
 
-def collect_traffic(interface: Union[Path, str] = Path('eth0'), time: int = -1,
+def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
                     output_file: Union[Path, str] = None) -> Union[pyshark.capture.capture.Capture, None]:
     """
     The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
+    Either the interface_id or the interface name must be specified.
     If no or non-positive time is specified, it will run indefinitely until the user stops it.
     It can also write the captured packets to an output file if one is provided.
 
     Parameters
     ----------
-        interface: str = 'eth0'
+        interface: str = None
             The interface to capture traffic on
         time: int = 0
             The time limit for the traffic capture in seconds
@@ -34,19 +35,26 @@ def collect_traffic(interface: Union[Path, str] = Path('eth0'), time: int = -1,
     ----------
         TB
     """
+    if not isinstance(interface, Path) and interface.isdigit():
+        ix = int(interface)
+    else:
+        interface = Path(interface)
+        available_interfaces = [Path(face) for face in pyshark.LiveCapture().interfaces]
+        try:
+            ix = available_interfaces.index(interface)
+        except ValueError:
+            logger.error(f"Interface {interface} not found. Available interfaces are {available_interfaces}.")
+            return None
+
+    interface = pyshark.LiveCapture().interfaces[ix]
+
     if output_file:
         output_file = Path(output_file).resolve()
-        logger.info(f"Capturing traffic to {output_file}.")
+        logger.info(f"Capturing traffic on interface {interface} and saving to {output_file}.")
+    else:
+        logger.info(f"Capturing traffic on interface {interface}. No output file specified.")
 
-    interface = Path(interface)
-    available_interfaces = [Path(face) for face in pyshark.LiveCapture().interfaces]
-
-    try:
-        ix = available_interfaces.index(interface)
-        cap = pyshark.LiveCapture(interface=pyshark.LiveCapture().interfaces[ix], output_file=output_file)
-    except ValueError:
-        logger.error(f"Interface {interface} not found. Available interfaces are {available_interfaces}.")
-        return None
+    cap = pyshark.LiveCapture(interface=interface, output_file=output_file)
 
     if time > 0:
         cap.sniff(timeout=time)
