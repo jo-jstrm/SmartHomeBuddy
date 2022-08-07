@@ -135,7 +135,10 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
         # third layer (usually data)
         if "DATA" in layer_names:
             # access through attribute not possible, bc of pyshark implementation (capitalized layer name)
-            fields["data_len"] = packet.layers[layer_names.index("DATA")].data_len
+            try:
+                fields["data_len"] = packet.layers[layer_names.index("DATA")].data_len
+            except AttributeError:
+                fields["data_len"] = 0
 
         line += ",".join([f"{k}={v}" for k, v in sorted(fields.items())])
         line += " "  # end fields-set
