@@ -377,7 +377,7 @@ class DataLoader:
 
         file_path = resolve_file_path(file_path)
         if file_path:
-            cap = pyshark.FileCapture(file_path)
+            cap = pyshark.FileCapture(file_path, keep_packets=False)
 
             # TODO: skip conversion to Line Protocol and write with DataFrame directly
             converted_cap = convert_Capture_to_Line(cap)
