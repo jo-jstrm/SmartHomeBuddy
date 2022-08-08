@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 
 import pandas as pd
 import pyshark
@@ -8,7 +8,7 @@ from pyshark.capture.capture import Capture
 
 
 def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
-                    output_file: Union[Path, str] = None) -> Union[pyshark.capture.capture.Capture, None]:
+                    output_file: Union[Path, str] = None) -> Optional[pyshark.capture.capture.Capture]:
     """
     The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
     Either the interface_id or the interface name must be specified.

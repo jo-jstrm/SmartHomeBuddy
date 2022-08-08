@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable, Generator, List, Dict
+from typing import Union, Iterable, Generator, List, Dict, Optional
 
 import influxdb
 import influxdb_client
@@ -81,7 +81,7 @@ class Database:
         self.influx_process = self.start_InfluxDB()
         self._setup_InfluxDB_db()
 
-    def _get_InfluxDB_connection(self, **client_kwargs) -> Union[influxdb.InfluxDBClient, None]:
+    def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
         """ create a database connection to a InfluxDB database server. """
         if client_kwargs is None:
             client_kwargs = {"host": self.host, "port": self.port}
@@ -212,7 +212,7 @@ class Database:
         if client:
             return client.query(query, params, bind_params)
 
-    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Union[list, None]:
+    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
         """
         Queries the SQLite database.
         """
@@ -233,7 +233,7 @@ class Database:
             except Error as e:
                 logger.error(e)
 
-    def query(self, query: str, params: dict = None, bind_params: dict = None, db='influx') -> Union[list, None]:
+    def query(self, query: str, params: dict = None, bind_params: dict = None, db='influx') -> Optional[List]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
         Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
@@ -352,14 +352,14 @@ class DataLoader:
     Class for loading data from various sources into a pandas DataFrame.
     """
 
-    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Union[list, None]:
+    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Optional[List]:
         """
         Loads data from the InfluxDB database.
         """
         ...
 
     @staticmethod
-    def from_CSV(file_path: Union[Path, str], **kwargs) -> Union[pd.DataFrame, None]:
+    def from_CSV(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
         """
         Loads data from a CSV file.
         """
@@ -368,7 +368,7 @@ class DataLoader:
             return pd.read_csv(file_path, **kwargs)
 
     @staticmethod
-    def from_pcap(file_path: Union[Path, str], db: Database, credentials: Dict = None) -> Union[pd.DataFrame, None]:
+    def from_pcap(file_path: Union[Path, str], db: Database, credentials: Dict = None) -> Optional[pd.DataFrame]:
         """
         Loads data from a pcap file.
         """
@@ -386,13 +386,13 @@ class DataLoader:
 
             return convert_Capture_to_DataFrame(cap)
 
-    def from_generator(self, generator: Generator) -> Union[pd.DataFrame, None]:
+    def from_generator(self, generator: Generator) -> Optional[pd.DataFrame]:
         """
         Loads data from a generator.
         """
         ...
 
-    def from_dict(self, data: dict) -> Union[pd.DataFrame, None]:
+    def from_dict(self, data: dict) -> Optional[pd.DataFrame]:
         """
         Constructs a Dataset from data in memory.
         """
