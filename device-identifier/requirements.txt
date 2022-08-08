@@ -6,6 +6,6 @@ click==8.1.3
 pyshark==0.5.3
 pyfiglet==0.8.post1
 loguru==0.6.0
-influxdb-client
-sqlalchemy
-pyinstaller
+influxdb-client==1.30.0
+pyinstaller==5.1
+pandas==1.4.3

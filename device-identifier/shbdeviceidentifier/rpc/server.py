@@ -4,7 +4,6 @@ import grpc
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
-
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 
 
@@ -24,7 +23,8 @@ def run_rpc_server() -> None:
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(SERVICE_NAMES, server)
-    logger.info(f"Server listening on port {port}")
+    logger.success("RPC server started. Press Ctrl+C to stop.")
+    logger.debug(f"Server listening on port {port}.")
     server.add_insecure_port(f"[::]:{port}")
     server.start()
     server.wait_for_termination()
