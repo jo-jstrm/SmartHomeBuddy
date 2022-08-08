@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Union
 
 import click
+import pandas as pd
 import pyshark
 from loguru import logger
 from pyfiglet import Figlet
@@ -145,7 +146,8 @@ def read(ctx, file_path, file_type):
     file_path = get_capture_file_path(ctx, file_path)
 
     if file_type == 'pcap' or file_type == 'pcapng':
-        if not DataLoader.from_pcap(file_path, ctx.db).empty:
+        res = DataLoader.from_pcap(file_path, ctx.db)
+        if isinstance(res, pd.DataFrame) and not res.empty:
             logger.success(f"Wrote {file_path} to Database.")
         else:
             logger.error(f"Failed to write {file_path} to Database.")

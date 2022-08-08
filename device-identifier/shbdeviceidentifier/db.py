@@ -19,7 +19,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from .utilities.app_utilities import resolve_file_path
-from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame, get_conversations
+from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame, get_conversations, \
+    get_capinfos
 
 
 # noinspection PyPep8Naming
@@ -378,17 +379,28 @@ class DataLoader:
         file_path = resolve_file_path(file_path)
 
         conversations = get_conversations(file_path)
-        logger.debug(f"{len(conversations)} conversations found.")
+        if len(conversations) != 2:
+            logger.error("Conversations have to contain two protocols - udp and tcp. Stopping file read.")
+            return None
+
+        tcp_len = len(conversations[0]) if conversations[0] else 0
+        udp_len = len(conversations[1]) if conversations[1] else 0
+        logger.debug(f"{tcp_len} tcp and {udp_len} udp conversations found.")
+
+        capinfos = get_capinfos(file_path)
+        logger.debug(f"{capinfos['interfaces'][0]['Number_of_packets']} packets found.")
 
         if file_path:
             cap = pyshark.FileCapture(file_path)
 
             # TODO: skip conversion to Line Protocol and write with DataFrame directly
-            converted_cap = convert_Capture_to_Line(cap)
+            converted_cap = convert_Capture_to_Line(cap, conversations=conversations)
             if not db.write_to_InfluxDB(converted_cap, **credentials):
                 return None
 
             return convert_Capture_to_DataFrame(cap)
+
+        return None
 
     def from_generator(self, generator: Generator) -> Optional[pd.DataFrame]:
         """

@@ -1,7 +1,9 @@
+import platform
 import shlex
 import subprocess
+from functools import reduce
 from pathlib import Path
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Tuple
 
 import pandas as pd
 import pyshark
@@ -75,7 +77,8 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[str]:
+def convert_Capture_to_Line(cap: Capture, conversations: Tuple[Optional[List[dict]], Optional[List[dict]]] = None,
+                            measurement: str = "packet") -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
@@ -84,6 +87,8 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
     ----------
         cap:Capture
             A pyshark capture object containing packets to be written to the database.
+        conversations: List[Dict] = None
+            A list of dictionaries containing the conversations within the capture object.
         measurement:str="packet"
             The name of the measurement.
 
@@ -97,6 +102,10 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
         TB
     """
     # TODO: standardize with other convert functions
+
+    if conversations and 'total_frames' in conversations[0].keys():
+        num_of_frames = reduce(lambda x, y: x + int(y['total_frames']), conversations, 0)
+        logger.warning(f"{num_of_frames} frames found in capture. This may take a while to process.")
 
     # create influx db Line Protocol sequence
     # one string per packet
@@ -155,8 +164,12 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
     return data
 
 
-def get_conversations(file_path: Union[str, Path]) -> Optional[List[Dict]]:
-    """ Gets the conversations statistics from tshark """
+def get_conversations(file_path: Union[str, Path]) -> Tuple[Optional[List[dict]], Optional[List[dict]]]:
+    """
+    Gets the conversations statistics from tshark.
+    Returns it as a list of protocols containing a dictionary per conversation.
+    Ordered as tcp, udp.
+    """
     file_path = resolve_file_path(file_path)
     tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
     if tshark_path and file_path:
@@ -164,28 +177,21 @@ def get_conversations(file_path: Union[str, Path]) -> Optional[List[Dict]]:
 
         # Make sure arguments for tshark call are split properly
         args_tcp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
-        args_udp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
+        args_udp = shlex.split(tshark_path.as_posix() + " -q -z conv,udp -r " + file_path.as_posix())
 
         # Run tshark and get output as text
         res_tcp = subprocess.run(args_tcp, capture_output=True, text=True).stdout
         res_udp = subprocess.run(args_udp, capture_output=True, text=True).stdout
 
         # Parse output into list of dictionaries
-        res_tcp = _conversations_string_to_dict(res_tcp, tag={'protocol': 'tcp'})
-        res_udp = _conversations_string_to_dict(res_udp, tag={'protocol': 'udp'})
+        res_tcp = _conversations_string_to_list(res_tcp, tag={'protocol': 'tcp'})
+        res_udp = _conversations_string_to_list(res_udp, tag={'protocol': 'udp'})
 
         # Combine results
-        if res_tcp and res_udp:
-            return res_tcp + res_udp
-        elif res_tcp:
-            return res_tcp
-        elif res_udp:
-            return res_udp
-        else:
-            return None
+        return res_tcp, res_udp
 
 
-def _conversations_string_to_dict(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
+def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
     """ Converts a conversations string to a list of dictionaries """
     # Split into lines
     conv = conversations.split("\n")
@@ -222,3 +228,59 @@ def _conversations_string_to_dict(conversations: str, tag: Dict = None) -> Optio
             logger.debug(e)
 
     return res if res else None
+
+
+def get_capinfos(file_path: Union[str, Path]) -> Optional[Dict]:
+    """
+    Gets the capinfos statistics from tshark.
+    Returns it as a dictionary.
+    """
+    file_path = resolve_file_path(file_path)
+    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
+
+    system = platform.system()
+    if system == 'Windows':
+        capinfos_path = 'capinfos.exe'
+    else:
+        capinfos_path = 'capinfos'
+    capinfos_path = resolve_file_path(tshark_path.parents[0] / capinfos_path)
+
+    if capinfos_path and file_path:
+        # Make sure arguments for tshark call are split properly
+        args = shlex.split(capinfos_path.as_posix() + " " + file_path.as_posix())
+
+        # Run tshark and get output as text
+        res = subprocess.run(args, capture_output=True, text=True).stdout
+
+        # Parse output into dictionary
+        return _capinfos_string_to_dict(res)
+
+
+def _capinfos_string_to_dict(capinfos: str) -> Optional[Dict]:
+    capinfos = capinfos.split("\n")[:-1]
+    capinfos_dict = {}
+
+    for line in capinfos[:-7]:
+        try:
+            k, v = line.split(":", 1)
+            k = k.strip().replace(" ", "_")
+            capinfos_dict[k] = v.strip()
+        except ValueError as e:
+            logger.warning(f"Could not parse capinfos line: {line}")
+            logger.debug(e)
+
+    # TODO: add support for multiple interfaces
+    # Add interface info
+    interface_dict = {}
+    for line in capinfos[-6:]:
+        try:
+            k, v = line.split("=", 1)
+            k = k.strip().replace(" ", "_")
+            interface_dict[k] = v.strip()
+        except ValueError as e:
+            logger.warning(f"Could not parse capinfos interface line: {line}")
+            logger.debug(e)
+
+    capinfos_dict["interfaces"] = [interface_dict]
+
+    return capinfos_dict if capinfos_dict else None
