@@ -19,7 +19,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 
 from .utilities.app_utilities import resolve_file_path
-from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame
+from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame, get_conversations
 
 
 # noinspection PyPep8Naming
@@ -376,8 +376,12 @@ class DataLoader:
             credentials = {}
 
         file_path = resolve_file_path(file_path)
+
+        conversations = get_conversations(file_path)
+        logger.debug(f"{len(conversations)} conversations found.")
+
         if file_path:
-            cap = pyshark.FileCapture(file_path, keep_packets=False)
+            cap = pyshark.FileCapture(file_path)
 
             # TODO: skip conversion to Line Protocol and write with DataFrame directly
             converted_cap = convert_Capture_to_Line(cap)

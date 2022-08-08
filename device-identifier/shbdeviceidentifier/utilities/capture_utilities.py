@@ -1,10 +1,14 @@
+import shlex
+import subprocess
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict
 
 import pandas as pd
 import pyshark
 from loguru import logger
 from pyshark.capture.capture import Capture
+
+from shbdeviceidentifier.utilities.app_utilities import resolve_file_path
 
 
 def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
@@ -150,3 +154,71 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
 
     return data
 
+
+def get_conversations(file_path: Union[str, Path]) -> Optional[List[Dict]]:
+    """ Gets the conversations statistics from tshark """
+    file_path = resolve_file_path(file_path)
+    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
+    if tshark_path and file_path:
+        # TODO: add support for other operating systems and possibly transport protocols
+
+        # Make sure arguments for tshark call are split properly
+        args_tcp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
+        args_udp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
+
+        # Run tshark and get output as text
+        res_tcp = subprocess.run(args_tcp, capture_output=True, text=True).stdout
+        res_udp = subprocess.run(args_udp, capture_output=True, text=True).stdout
+
+        # Parse output into list of dictionaries
+        res_tcp = _conversations_string_to_dict(res_tcp, tag={'protocol': 'tcp'})
+        res_udp = _conversations_string_to_dict(res_udp, tag={'protocol': 'udp'})
+
+        # Combine results
+        if res_tcp and res_udp:
+            return res_tcp + res_udp
+        elif res_tcp:
+            return res_tcp
+        elif res_udp:
+            return res_udp
+        else:
+            return None
+
+
+def _conversations_string_to_dict(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
+    """ Converts a conversations string to a list of dictionaries """
+    # Split into lines
+    conv = conversations.split("\n")
+
+    # Remove header lines
+    # TODO: improve robustness by searching for header lines
+    conv = conv[5:-2]
+
+    # Split lines into conversations
+    conversations = [line.split() for line in conv]
+
+    # Convert conversations to dictionaries
+    # TODO: improve robustness (rm hard coded indices)
+    res = []
+    for conv in conversations:
+        try:
+            conv_dict = {
+                "src": conv[0],
+                "dst": conv[2],
+                "incoming_frames": conv[3],
+                "incoming_bytes": conv[4] + " " + conv[5],
+                "outgoing_frames": conv[6],
+                "outgoing_bytes": conv[7] + " " + conv[8],
+                "total_frames": conv[9],
+                "total_bytes": conv[10] + " " + conv[11],
+                "relative_start": conv[12],
+                "duration": conv[13],
+            }
+            if tag:
+                conv_dict.update(tag)
+            res.append(conv_dict)
+        except IndexError as e:
+            logger.warning(f"Could not parse conversation: {conv}.")
+            logger.debug(e)
+
+    return res if res else None
