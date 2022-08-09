@@ -1,10 +1,10 @@
 import * as React from "react";
 import Container from "@mui/material/Container";
-import Copyright from "../common/Copyright";
-import Title from "../common/Title";
+import Copyright from "../components/common/Copyright";
+import Title from "../components/common/Title";
 import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import Device from "./Device";
+import Device from "../components/Device";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 
