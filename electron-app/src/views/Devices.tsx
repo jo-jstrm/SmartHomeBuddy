@@ -48,7 +48,7 @@ export default function Devices() {
             const { name, icon, status, mac, action } = device;
             return (
               <Device
-                index={index}
+                key={index}
                 name={name}
                 icon={icon}
                 status={status}
