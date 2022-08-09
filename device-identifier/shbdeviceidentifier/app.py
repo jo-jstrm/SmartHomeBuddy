@@ -1,6 +1,7 @@
 import os
 import pprint
 import sys
+import warnings
 from dataclasses import dataclass
 from functools import partial
 from importlib import metadata
@@ -21,6 +22,10 @@ from .utilities.capture_utilities import collect_traffic
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
+
+# Ignore scapy warnings, since CryptographyDeprecationWarning is showing up constantly and
+# is not relevant for our use case
+warnings.filterwarnings(action='ignore', module='.*scapy.*')
 
 logger.remove()
 formatter = Formatter()
@@ -147,13 +152,11 @@ def read(ctx, file_path, file_type):
     file_path = get_capture_file_path(ctx, file_path)
 
     if file_type == 'pcap' or file_type == 'pcapng':
-        res = DataLoader.from_pcap(file_path, ctx.db)
+        res = DataLoader.from_pcap(file_path)
         if isinstance(res, pd.DataFrame) and not res.empty:
             logger.success(f"Wrote {file_path} to Database.")
         else:
             logger.error(f"Failed to write {file_path} to Database.")
-
-    # TODO: Add support for other file types.
 
 
 @app.command("identify")

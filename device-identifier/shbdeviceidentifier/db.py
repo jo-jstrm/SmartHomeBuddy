@@ -9,19 +9,17 @@ import subprocess
 from pathlib import Path
 from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable, Generator, List, Dict, Optional
+from typing import Union, Iterable, Generator, List, Optional
 
 import influxdb
 import influxdb_client
-import numba as nb
 import pandas as pd
-import pyshark
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
+from scapy.all import rdpcap
 
 from .utilities.app_utilities import resolve_file_path
-from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame, get_conversations, \
-    get_capinfos
+from .utilities.capture_utilities import convert_Capture_to_DataFrame
 
 
 # noinspection PyPep8Naming
@@ -354,6 +352,7 @@ class DataLoader:
     Class for loading data from various sources into a pandas DataFrame.
     """
 
+    @staticmethod
     def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Optional[List]:
         """
         Loads data from the InfluxDB database.
@@ -370,56 +369,30 @@ class DataLoader:
             return pd.read_csv(file_path, **kwargs)
 
     @staticmethod
-    def from_pcap(file_path: Union[Path, str], db: Database, credentials: Dict = None) -> Optional[pd.DataFrame]:
+    def from_pcap(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
         """
         Loads data from a pcap file.
         """
-        if not credentials:
-            credentials = {}
-
         file_path = resolve_file_path(file_path)
 
-        conversations = get_conversations(file_path)
-        if len(conversations) != 2:
-            logger.error("Conversations have to contain two protocols - udp and tcp. Stopping file read.")
-            return None
-
-        tcp_len = len(conversations[0]) if conversations[0] else 0
-        udp_len = len(conversations[1]) if conversations[1] else 0
-        logger.debug(f"{tcp_len} tcp and {udp_len} udp conversations found.")
-
-        capinfos = get_capinfos(file_path)
-        logger.debug(f"{capinfos['interfaces'][0]['Number_of_packets']} packets found.")
-
         if file_path:
+            # Read pcap
+            cap = rdpcap(file_path.as_posix())
 
-            for tcp_stream_ix in nb.prange(0, tcp_len):
-                cap = pyshark.FileCapture(file_path, display_filter=f"tcp.stream eq {tcp_stream_ix}")
+            df = convert_Capture_to_DataFrame(cap)
 
-                # TODO: skip conversion to Line Protocol and write with DataFrame directly
-                converted_cap = convert_Capture_to_Line(cap, additional_tags={"stream_index": tcp_stream_ix})
-                if not db.write_to_InfluxDB(converted_cap, **credentials):
-                    return None
+            if not df.empty:
+                return df
 
-            for udp_stream_ix in nb.prange(0, udp_len):
-                cap = pyshark.FileCapture(file_path, display_filter=f"udp.stream eq {udp_stream_ix}")
-
-                # TODO: skip conversion to Line Protocol and write with DataFrame directly
-                converted_cap = convert_Capture_to_Line(cap, additional_tags={"stream_index": udp_stream_ix})
-                if not db.write_to_InfluxDB(converted_cap, **credentials):
-                    return None
-
-                return convert_Capture_to_DataFrame(cap)
-
-        return None
-
-    def from_generator(self, generator: Generator) -> Optional[pd.DataFrame]:
+    @staticmethod
+    def from_generator(generator: Generator) -> Optional[pd.DataFrame]:
         """
         Loads data from a generator.
         """
         ...
 
-    def from_dict(self, data: dict) -> Optional[pd.DataFrame]:
+    @staticmethod
+    def from_dict(data: dict) -> Optional[pd.DataFrame]:
         """
         Constructs a Dataset from data in memory.
         """

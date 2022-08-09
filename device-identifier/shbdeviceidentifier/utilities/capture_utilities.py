@@ -4,10 +4,14 @@ import subprocess
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
 
+import numba as nb
+import numpy as np
 import pandas as pd
 import pyshark
 from loguru import logger
 from pyshark.capture.capture import Capture
+from scapy.all import TCP, UDP, IP
+from scapy.packet import Packet
 
 from shbdeviceidentifier.utilities.app_utilities import resolve_file_path
 
@@ -71,8 +75,34 @@ def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
 
 # noinspection PyPep8Naming
 def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
-    # TODO: implement
-    return pd.DataFrame.from_dict({"Test": [1, 2, 3]})
+    num_of_packets = len(cap)
+
+    src_series = np.empty((num_of_packets,), dtype=object)
+    dst_series = np.empty((num_of_packets,), dtype=object)
+    ts_series = np.empty((num_of_packets,), dtype=object)
+    protocol_series = np.empty((num_of_packets,), dtype=object)
+    data_len_series = np.empty((num_of_packets,), dtype=object)
+
+    for i in nb.prange(num_of_packets):
+        src_series[i] = _get_address_from_scapy_packet(cap[i], src=True)
+        dst_series[i] = _get_address_from_scapy_packet(cap[i], src=False)
+        ts_series[i] = _get_timestamp_from_scapy_packet(cap[i])
+        protocol_series[i] = _get_protocol_from_scapy_packet(cap[i])
+        data_len_series[i] = _get_data_len_from_scapy_packet(cap[i])
+
+    df = pd.DataFrame({'src': src_series, 'dst': dst_series, 'timestamp': ts_series, 'L4_protocol': protocol_series,
+                       'data_len': data_len_series})
+
+    # Filter out packets that do not have a transport layer protocol
+    df = df[df['L4_protocol'].astype(bool)]
+
+    # Create stream IDs
+    # TODO: check performance cost of this
+    df["conv"] = [" <-> ".join(i) for i in np.sort(df[['src', 'dst']], axis=1)]
+    df = df.assign(stream_id=df.groupby(['conv']).ngroup())
+    df.drop(columns=['conv'], inplace=True)
+
+    return df
 
 
 # noinspection PyPep8Naming
@@ -280,3 +310,63 @@ def _capinfos_string_to_dict(capinfos: str) -> Optional[Dict]:
     capinfos_dict["interfaces"] = [interface_dict]
 
     return capinfos_dict if capinfos_dict else None
+
+
+@nb.jit(forceobj=True)
+def _get_data_len_from_scapy_packet(packet: Packet) -> str:
+    """
+    Returns the length of the data in a scapy packet in bytes.
+    """
+    # TODO: decide which length to return
+    # Currently returning the size of the Ethernet Frame!
+    return str(len(packet))
+
+
+@nb.jit(forceobj=True)
+def _get_protocol_from_scapy_packet(packet: Packet) -> str:
+    """
+    Returns the transport layer protocol name of a scapy packet.
+    """
+    if TCP in packet:
+        return "tcp"
+    elif UDP in packet:
+        return "udp"
+    else:
+        return ""
+
+
+@nb.jit(forceobj=True)
+def _get_timestamp_from_scapy_packet(packet: Packet) -> str:
+    """
+    Returns the timestamp of a packet in nanoseconds.
+    """
+    time = ""
+
+    if hasattr(packet, "time"):
+        # timestamp converted to nanoseconds from seconds (see influxdb timestamp precision (default: ns))
+        time = str(packet.time).replace(".", "")
+
+    return time
+
+
+@nb.jit(forceobj=True)
+def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
+    """
+    Returns the source address and port of a scapy packet.
+    Per default the source address is returned. Set src to `False` to get the destination address.
+    """
+    addr: str = ""
+
+    if IP in packet:
+        if src:
+            if hasattr(packet[IP], "src"):
+                addr = str(packet[IP].src)
+                if hasattr(packet[IP], "sport"):
+                    addr += ":" + str(packet[IP].sport)
+        else:
+            if hasattr(packet[IP], "dst"):
+                addr = str(packet[IP].dst)
+                if hasattr(packet[IP], "dport"):
+                    addr += ":" + str(packet[IP].dport)
+
+    return addr
