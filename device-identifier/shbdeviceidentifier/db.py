@@ -13,6 +13,7 @@ from typing import Union, Iterable, Generator, List, Dict, Optional
 
 import influxdb
 import influxdb_client
+import numba as nb
 import pandas as pd
 import pyshark
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -391,14 +392,24 @@ class DataLoader:
         logger.debug(f"{capinfos['interfaces'][0]['Number_of_packets']} packets found.")
 
         if file_path:
-            cap = pyshark.FileCapture(file_path)
 
-            # TODO: skip conversion to Line Protocol and write with DataFrame directly
-            converted_cap = convert_Capture_to_Line(cap, conversations=conversations)
-            if not db.write_to_InfluxDB(converted_cap, **credentials):
-                return None
+            for tcp_stream_ix in nb.prange(0, tcp_len):
+                cap = pyshark.FileCapture(file_path, display_filter=f"tcp.stream eq {tcp_stream_ix}")
 
-            return convert_Capture_to_DataFrame(cap)
+                # TODO: skip conversion to Line Protocol and write with DataFrame directly
+                converted_cap = convert_Capture_to_Line(cap, additional_tags={"stream_index": tcp_stream_ix})
+                if not db.write_to_InfluxDB(converted_cap, **credentials):
+                    return None
+
+            for udp_stream_ix in nb.prange(0, udp_len):
+                cap = pyshark.FileCapture(file_path, display_filter=f"udp.stream eq {udp_stream_ix}")
+
+                # TODO: skip conversion to Line Protocol and write with DataFrame directly
+                converted_cap = convert_Capture_to_Line(cap, additional_tags={"stream_index": udp_stream_ix})
+                if not db.write_to_InfluxDB(converted_cap, **credentials):
+                    return None
+
+                return convert_Capture_to_DataFrame(cap)
 
         return None
 

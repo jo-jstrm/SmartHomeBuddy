@@ -1,7 +1,6 @@
 import platform
 import shlex
 import subprocess
-from functools import reduce
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Tuple
 
@@ -77,8 +76,7 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(cap: Capture, conversations: Tuple[Optional[List[dict]], Optional[List[dict]]] = None,
-                            measurement: str = "packet") -> List[str]:
+def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
@@ -87,8 +85,8 @@ def convert_Capture_to_Line(cap: Capture, conversations: Tuple[Optional[List[dic
     ----------
         cap:Capture
             A pyshark capture object containing packets to be written to the database.
-        conversations: List[Dict] = None
-            A list of dictionaries containing the conversations within the capture object.
+        additional_tags: Dict = None
+            A dictionary containing additional tags to be added to each line.
         measurement:str="packet"
             The name of the measurement.
 
@@ -102,10 +100,6 @@ def convert_Capture_to_Line(cap: Capture, conversations: Tuple[Optional[List[dic
         TB
     """
     # TODO: standardize with other convert functions
-
-    if conversations and 'total_frames' in conversations[0].keys():
-        num_of_frames = reduce(lambda x, y: x + int(y['total_frames']), conversations, 0)
-        logger.warning(f"{num_of_frames} frames found in capture. This may take a while to process.")
 
     # create influx db Line Protocol sequence
     # one string per packet
@@ -137,7 +131,9 @@ def convert_Capture_to_Line(cap: Capture, conversations: Tuple[Optional[List[dic
         elif "udp" in layer_names:
             tags["udp_src"] = packet.udp.port
             tags["udp_dst"] = packet.udp.dstport
-
+        # add additional tags
+        if additional_tags:
+            tags.update(additional_tags)
         line += "," + ",".join([f"{k}={v}" for k, v in sorted(tags.items())])
         line += " "  # end tag-set (or measurement if no tag-set is present)
 

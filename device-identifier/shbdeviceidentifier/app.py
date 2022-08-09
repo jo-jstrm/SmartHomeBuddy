@@ -16,10 +16,11 @@ from pyfiglet import Figlet
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
+from .utilities.capture_utilities import collect_traffic
+
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
-from .utilities.capture_utilities import collect_traffic
 
 logger.remove()
 formatter = Formatter()
@@ -188,8 +189,9 @@ def query(ctx, data_base, statement_name):
         res = [" " * 57 + f"{i}: {row}" for i, row in enumerate(res)]
         res = "\n".join(res)
 
-        logger.info(f"Query run successfully with the following output: \n"
-                    f"{res}")
-
+        logger.success(
+            f"Query run successfully with the following output: \n"
+            f"{res}"
+        )
     else:
-        logger.info(f"Query run successfully with no output.")
+        logger.success(f"Query run successfully with no output.")
