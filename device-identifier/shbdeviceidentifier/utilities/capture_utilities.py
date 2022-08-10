@@ -87,9 +87,9 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
     """
     src_series = np.empty((num_of_packets,), dtype=object)
     dst_series = np.empty((num_of_packets,), dtype=object)
-    ts_series = np.empty((num_of_packets,), dtype=object)
+    ts_series = np.empty((num_of_packets,), dtype=pd.Timestamp)
     protocol_series = np.empty((num_of_packets,), dtype=object)
-    data_len_series = np.empty((num_of_packets,), dtype=object)
+    data_len_series = np.empty((num_of_packets,), dtype='uint16')
 
     for i in nb.prange(num_of_packets):
         src_series[i] = _get_address_from_scapy_packet(cap[i], src=True)
@@ -99,8 +99,13 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
         data_len_series[i] = _get_data_len_from_scapy_packet(cap[i])
         progress_proxy.update(1)
 
-    df = pd.DataFrame({'src': src_series, 'dst': dst_series, 'timestamp': ts_series, 'L4_protocol': protocol_series,
-                       'data_len': data_len_series})
+    df = pd.DataFrame(
+        {'src': src_series,
+         'dst': dst_series,
+         'L4_protocol': protocol_series,
+         'data_len': data_len_series},
+        index=ts_series
+    )
 
     # Filter out packets that do not have a transport layer protocol
     df = df[df['L4_protocol'].astype(bool)]
@@ -110,6 +115,7 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
     df["conv"] = [" <-> ".join(i) for i in np.sort(df[['src', 'dst']], axis=1)]
     df = df.assign(stream_id=df.groupby(['conv']).ngroup())
     df.drop(columns=['conv'], inplace=True)
+    df['stream_id'] = df['stream_id'].astype('uint16')
 
     return df
 
@@ -120,7 +126,7 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
 
     spinner.stop()
 
-    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame:") as progress:
+    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
     return df
 
@@ -333,13 +339,13 @@ def _capinfos_string_to_dict(capinfos: str) -> Optional[Dict]:
 
 
 @nb.jit(forceobj=True)
-def _get_data_len_from_scapy_packet(packet: Packet) -> str:
+def _get_data_len_from_scapy_packet(packet: Packet) -> np.uint16:
     """
     Returns the length of the data in a scapy packet in bytes.
     """
     # TODO: decide which length to return
     # Currently returning the size of the Ethernet Frame!
-    return str(len(packet))
+    return np.uint16(len(packet))
 
 
 @nb.jit(forceobj=True)
@@ -356,16 +362,27 @@ def _get_protocol_from_scapy_packet(packet: Packet) -> str:
 
 
 @nb.jit(forceobj=True)
-def _get_timestamp_from_scapy_packet(packet: Packet) -> str:
+def _get_timestamp_from_scapy_packet(packet: Packet) -> pd.Timestamp:
     """
     Returns the timestamp of a packet in nanoseconds.
     """
-    time = ""
+    time = pd.NaT
 
     if hasattr(packet, "time"):
-        # timestamp converted to nanoseconds from seconds (see influxdb timestamp precision (default: ns))
-        time = str(packet.time).replace(".", "")
+        # Cannot use fromtimestamp with microseconds, so we split the timestamp up and
+        # merge them again explicitly afterwards
+        timestamp, fractions = str(packet.time).split(".")
+        time = pd.Timestamp.fromtimestamp(int(timestamp))
 
+        time = pd.Timestamp(
+            year=time.year,
+            month=time.month,
+            day=time.day,
+            hour=time.hour,
+            minute=time.minute,
+            second=time.second,
+            microsecond=int(fractions),
+        )
     return time
 
 

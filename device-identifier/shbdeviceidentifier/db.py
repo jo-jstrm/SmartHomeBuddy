@@ -332,19 +332,25 @@ class Database:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
 
+                if isinstance(data, pd.DataFrame):
+                    logger.debug(f"Writing DataFrame of shape {data.shape} to InfluxDB, bucket {bucket}, org {org}."
+                                 f" Using {df_kwargs}.")
+                else:
+                    logger.debug(f"Writing {len(data)} lines of data to InfluxDB, bucket {bucket}, org {org}.")
+
                 # write the data sequence to the bucket
                 write_api.write(
                     bucket=bucket,
                     org=org,
-                    record_list=data,
+                    record=data,
                     **df_kwargs
                 )
-
                 client.close()
-                return True
         except Exception as e:
             logger.error(e)
             return False
+
+        return True
 
 
 # noinspection PyPep8Naming
@@ -378,7 +384,7 @@ class DataLoader:
         # Get the file size in Gigabyte
         file_size = os.path.getsize(file_path) * 1e-9
 
-        spinner_text = 'Reading file and compiling conversion functions.'
+        spinner_text = 'Reading file.'
         if file_size > 0.25:
             spinner_text += f' This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB).'
 
