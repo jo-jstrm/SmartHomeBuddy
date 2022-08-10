@@ -20,6 +20,7 @@ from scapy.all import rdpcap
 
 from .utilities.app_utilities import resolve_file_path
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
+from .utilities.logging_utilities import spinner
 
 
 # noinspection PyPep8Naming
@@ -374,6 +375,15 @@ class DataLoader:
         Loads data from a pcap file.
         """
         file_path = resolve_file_path(file_path)
+        # Get the file size in Gigabyte
+        file_size = os.path.getsize(file_path) * 1e-9
+
+        spinner_text = 'Reading file and compiling conversion functions.'
+        if file_size > 0.25:
+            spinner_text += f' This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB).'
+
+        spinner.text = spinner_text
+        spinner.start()
 
         if file_path:
             # Read pcap

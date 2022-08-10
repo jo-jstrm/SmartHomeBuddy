@@ -1,7 +1,6 @@
 import os
 import pprint
 import sys
-import warnings
 from dataclasses import dataclass
 from functools import partial
 from importlib import metadata
@@ -22,10 +21,6 @@ from .utilities.capture_utilities import collect_traffic
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
-
-# Ignore scapy warnings, since CryptographyDeprecationWarning is showing up constantly and
-# is not relevant for our use case
-warnings.filterwarnings(action='ignore', module='.*scapy.*')
 
 logger.remove()
 formatter = Formatter()

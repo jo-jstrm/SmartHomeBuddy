@@ -9,11 +9,13 @@ import numpy as np
 import pandas as pd
 import pyshark
 from loguru import logger
+from numba_progress import ProgressBar
 from pyshark.capture.capture import Capture
 from scapy.all import TCP, UDP, IP
 from scapy.packet import Packet
 
-from shbdeviceidentifier.utilities.app_utilities import resolve_file_path
+from .app_utilities import resolve_file_path
+from .logging_utilities import spinner
 
 
 def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
@@ -74,9 +76,15 @@ def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
-    num_of_packets = len(cap)
-
+@nb.jit(forceobj=True, parallel=True)
+def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_proxy) -> pd.DataFrame:
+    """
+    The _convert_Capture_to_DataFrame_JIT function is the JIT compiled part of the
+     convert_Capture_to_DataFrame function.
+    It is used to speed up the conversion of a pyshark.capture.Capture object to a pandas.DataFrame.
+    The function is JIT compiled using numba.
+    The function is not intended to be used directly, but within a tqdm progress bar.
+    """
     src_series = np.empty((num_of_packets,), dtype=object)
     dst_series = np.empty((num_of_packets,), dtype=object)
     ts_series = np.empty((num_of_packets,), dtype=object)
@@ -89,6 +97,7 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
         ts_series[i] = _get_timestamp_from_scapy_packet(cap[i])
         protocol_series[i] = _get_protocol_from_scapy_packet(cap[i])
         data_len_series[i] = _get_data_len_from_scapy_packet(cap[i])
+        progress_proxy.update(1)
 
     df = pd.DataFrame({'src': src_series, 'dst': dst_series, 'timestamp': ts_series, 'L4_protocol': protocol_series,
                        'data_len': data_len_series})
@@ -102,6 +111,17 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
     df = df.assign(stream_id=df.groupby(['conv']).ngroup())
     df.drop(columns=['conv'], inplace=True)
 
+    return df
+
+
+# noinspection PyPep8Naming
+def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
+    num_of_packets = len(cap)
+
+    spinner.stop()
+
+    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame:") as progress:
+        df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
     return df
 
 
