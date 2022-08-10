@@ -21,7 +21,11 @@
     "forge": {
       "packagerConfig": {
         "appCopyright": "GPLv3",
-        "extraResource": "../device-identifier/dist/cli"
+        "extraResource": [
+          "../device-identifier/dist/cli",
+          "../InfluxData/influxdb",
+          "../InfluxData/influxdb-client"
+        ]
       },
       "makers": [
         {
@@ -38,21 +42,6 @@
           ]
         },
         {
-          "name": "@electron-forge/maker-flatpak",
-          "config": {
-            "options": {
-              "categories": [
-                "Network",
-                "System"
-              ],
-              "description": "Identify vulnerabilities in your network from IoT devices.",
-              "genericName": "Network Device Identifier",
-              "icon": "media/app-icons/background.png",
-              "productName": "SmartHomeBuddy"
-            }
-          }
-        },
-        {
           "name": "@electron-forge/maker-deb",
           "config": {
             "bin": "SmartHomeBuddy",
@@ -67,6 +56,19 @@
             "maintainer": "Tobias Becher and Johannes Jestram",
             "name": "smarthomebuddy",
             "productName": "SmartHomeBuddy"
+          }
+        }
+      ],
+      "publishers": [
+        {
+          "name": "@electron-forge/publisher-github",
+          "config": {
+            "repository": {
+              "owner": "jo-jstrm",
+              "name": "SmartHomeBuddy"
+            },
+            "prerelease": false,
+            "draft": true
           }
         }
       ],
