@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+
+import numpy as np
+import pandas as pd
 
 
 class MLModel(ABC):
@@ -11,23 +13,17 @@ class MLModel(ABC):
         ...
 
     @abstractmethod
-    def train(self, data: list) -> None:
-        ...
+    def train(self, X: pd.DataFrame, y: np.ndarray) -> bool:
+        pass
 
     @abstractmethod
-    def predict(self, data: list) -> list:
-        ...
+    def predict(self, X: pd.DataFrame) -> pd.DataFrame:
+        pass
 
     @abstractmethod
     def save(self, path: str) -> None:
-        ...
+        pass
 
     @abstractmethod
     def load(self, path: str) -> None:
-        ...
-
-
-@dataclass
-class TrafficData:
-    """ Retrieves traffic data from the database. """
-    ...
+        pass

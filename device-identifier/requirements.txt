@@ -13,3 +13,4 @@ numba==0.55.2
 scapy==2.4.5
 numba-progress==0.0.3
 halo==0.0.31
+scikit-learn==0.24.2

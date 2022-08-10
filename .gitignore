@@ -231,6 +231,7 @@ dmypy.json
 # Packet Capture files
 /device-identifier/shbdeviceidentifier/pcaps/*
 !/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
+!/device-identifier/shbdeviceidentifier/pcaps/dummy_labels.json
 
 # Python unit tests
 /device-identifier/shbdeviceidentifier/tests/
@@ -240,3 +241,6 @@ InfluxData/*
 !/InfluxData/cli_setup.txt
 SQLite/*
 !/SQLite/cli_setup.txt
+
+# ML model files
+*.pkl

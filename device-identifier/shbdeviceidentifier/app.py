@@ -1,10 +1,10 @@
 import os
-import pprint
 import sys
 from dataclasses import dataclass
 from functools import partial
 from importlib import metadata
 from pathlib import Path
+from pprint import pprint, pformat
 from typing import Union
 
 import click
@@ -16,11 +16,12 @@ from pyfiglet import Figlet
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
+from .utilities.app_utilities import get_file_type
 from .utilities.capture_utilities import collect_traffic
-
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
+from .utilities.ml_utilities import get_model
 
 logger.remove()
 formatter = Formatter()
@@ -41,14 +42,14 @@ CONTEXT_SETTINGS = dict(
 @dataclass()
 class Context:
     flags: dict
-    home: str
+    cwd: str
     version: str
     latest_capture_file: Union[Path, None]
     db: Database
 
     def __init__(self):
         self.flags = {}
-        self.home = os.getcwd()
+        self.cwd = os.getcwd()
         self.version = metadata.version("shbdeviceidentifier")
         self.latest_capture_file = None
 
@@ -102,7 +103,7 @@ def app(ctx, debug, silent, verbose, version_flag):
 @logger_wraps()
 def start():
     """
-    Starts the RPC server.
+    Starts the RPC and database servers.
     """
     run_rpc_server()
 
@@ -131,7 +132,7 @@ def show_interfaces():
     The show_interfaces function prints the available interfaces on the machine.
     """
     available_interfaces = {i: Path(face) for i, face in enumerate(pyshark.LiveCapture().interfaces)}
-    logger.info(f"Available interfaces:\n {pprint.pformat(available_interfaces, indent=57)[1:-1]}")
+    logger.info(f"Available interfaces:\n {pformat(available_interfaces, indent=57)[1:-1]}")
 
 
 @app.command("read")
@@ -164,15 +165,45 @@ def read(ctx, file_path, file_type):
 
 @app.command("identify")
 @click.option("-f", "--file_path", type=click.Path(), required=False, default="")
-@click.option("-o", "--out", type=click.Path(), required=False, default="influx")  # TODO: refactor
+@click.argument("model-path", type=click.Path())
+@click.option("-o", "--out", type=click.STRING, required=False, default="stdout")  # TODO: refactor
+@click.option("-M", "--model", "model_selector", type=click.STRING, required=False, default="default")
 @pass_ctx
 @logger_wraps()
-def identify(ctx, file_path, out):
+def identify(ctx, file_path, model_path, out, model_selector):
     """
     Identifies a device.
     """
     file_path = get_capture_file_path(ctx, file_path)
-    ...
+    df = DataLoader.from_pcap(file_path)
+
+    if not model_selector:
+        model_selector = 'default'
+    model = get_model(model_selector)
+    model.load(model_path)
+
+    res = model.predict(df[['data_len', 'stream_id']])
+    del df
+
+    if not res.empty:
+        logger.success(f"Identified {len(res)} devices.")
+
+    if out == 'stdout':
+        pprint(res)
+    elif out == 'sqlite':
+        # TODO: write res to sqlite db
+        ...
+    elif out == 'influx' or out == 'influxdb':
+        # TODO: write res to influxdb
+        ...
+    elif out == 'json':
+        # TODO: write res to json file in ctx.home_dir
+        ...
+    elif out == 'csv':
+        # TODO: write res to csv file in ctx.home_dir
+        ...
+    else:
+        logger.debug(f"Unknown output format: {out}")
 
 
 @app.command("query")
@@ -201,3 +232,58 @@ def query(ctx, data_base, statement_name):
         )
     else:
         logger.success(f"Query run successfully with no output.")
+
+
+@app.command("train")
+@click.argument('model-selector', nargs=1, type=click.STRING)
+@click.argument('training-data-path', nargs=1, type=click.STRING)
+@click.argument('training-labels-path', nargs=1, type=click.STRING)
+@pass_ctx
+@logger_wraps()
+def train(ctx, model_selector, training_data_path, training_labels_path):
+    """
+    Trains a model.
+    """
+    # HACK: refactor all of this
+
+    model = get_model(model_selector)
+
+    load_train_df = {
+        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_data_path}."),
+        "pcap": DataLoader.from_pcap,
+        "pcapng": DataLoader.from_pcap,
+        "csv": DataLoader.from_csv,
+    }[get_file_type(training_data_path)]
+    train_df = load_train_df(training_data_path)
+
+    load_label_lookup = {
+        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_labels_path}."),
+        "json": DataLoader.labels_from_json,
+    }[get_file_type(training_labels_path)]
+    label_lookup = load_label_lookup(training_labels_path)
+
+    target_labels = ["Google-Nest-Mini", "ESP-1DC41C"]
+
+    # TODO: consider dst too
+    def get_label(row):
+        # Split IP address and port
+        key = row.rsplit(":", 1)[0]
+
+        # Check if label is available
+        try:
+            label = label_lookup.loc[key, "name"]
+            # Check if label is a desired target label, aka. a device that is supposed to be identified
+            if label not in target_labels:
+                label = "NoLabel"
+        except KeyError:
+            label = "NoLabel"
+
+        return label
+
+    train_labels = train_df["src"].apply(get_label)
+
+    model.train(train_df[['data_len', 'stream_id']], train_labels)
+
+    save_path = "device-identifier/shbdeviceidentifier/ml_models/" + model_selector + ".pkl"
+    if model.save(save_path):
+        logger.success(f"Model {model_selector} saved successfully to {save_path}.")
