@@ -204,14 +204,22 @@ class Database:
                                                FOREIGN KEY (user_id) 
                                                REFERENCES users (id)
                                        );"""
+        sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
+                                                   id integer PRIMARY KEY,
+                                                   device_name VARCHAR NOT NULL,
+                                                   mac_address VARCHAR UNIQUE                                             
+                                               );"""
         conn = self._get_SQLite_connection()
         if conn:
             # Users table
-            if self.query_SQLiteDB(sql_create_users_table):
-                logger.debug("Table 'users' created successfully.")
+            self.query_SQLiteDB(sql_create_users_table)
+            logger.debug("Table 'users' created successfully.")
             # InfluxDB table
-            if self.query_SQLiteDB(sql_create_influxdb_table):
-                logger.debug("Table 'influxdb' created successfully.")
+            self.query_SQLiteDB(sql_create_influxdb_table)
+            logger.debug("Table 'influxdb' created successfully.")
+            # Devices table
+            self.query_SQLiteDB(sql_create_devices_table)
+            logger.debug("Table 'devices' created successfully.")
 
     def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
         """create a database connection to a InfluxDB database server."""
@@ -264,7 +272,6 @@ class Database:
         self.query_SQLiteDB(sql_add_user_users, [user.name])
         # We could hard code user_id = 1, but this seems more robust.
         user_id = self.query_SQLiteDB(sql_get_user_id, [user.name])[0][0]
-        logger.debug(f"type: {type(user_id)}")
         # Add user credentials to influxdb table in SQLite DB.
         self.query_SQLiteDB(
             sql_add_user_influxdb,
@@ -442,6 +449,29 @@ class Database:
             return False
 
         return True
+
+    #####################
+    ###### Devices ######
+    #####################
+
+    def classify_devices(self):
+        # TODO implement.
+        devices = [
+            {"name": "Google Home Mini", "mac_address": "ef:00:49:01:1a:ff"},
+            {"name": "Amazon Echo Dot", "mac_address": "00:a0:00:19:2e:01"},
+        ]
+        for device in devices:
+            self._write_device(device["name"], device["mac_address"])
+
+    def _write_device(self, name, mac_address):
+        sql_write_device = """INSERT INTO devices (device_name, mac_address)
+                                VALUES (?,?);"""
+        self.query_SQLiteDB(sql_write_device, [name, mac_address])
+
+    def get_all_devices(self):
+        sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
+        devices = self.query_SQLiteDB(sql_get_devices)
+        return devices
 
 
 # noinspection PyPep8Naming
