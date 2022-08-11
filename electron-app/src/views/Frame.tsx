@@ -8,11 +8,11 @@ import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { Drawer } from "./drawer/Drawer";
-import Devices from "./devices/Devices";
-import { AppBar } from "./AppBar";
+import { Drawer } from "../components/drawer/Drawer";
+import Devices from "./Devices";
+import { AppBar } from "../components/AppBar";
 import { Route, Routes } from "react-router-dom";
-import Home from "./home/Home";
+import Home from "./Home";
 
 const mdTheme = createTheme();
 
