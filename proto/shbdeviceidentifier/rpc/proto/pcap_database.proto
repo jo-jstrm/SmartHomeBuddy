@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message DbLoadRequest {
+  string file_path = 1;
+  string file_type = 2;
+}
+
+message DbLoadResponse {
+  bool is_done = 1;
+}
+
+service PcapDatabase {
+  rpc LoadPcapIntoDatabase(DbLoadRequest) returns (DbLoadResponse);
+}
