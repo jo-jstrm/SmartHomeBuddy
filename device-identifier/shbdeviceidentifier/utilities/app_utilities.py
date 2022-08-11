@@ -31,3 +31,11 @@ def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Optional[P
             logger.error(error_msg)
         logger.debug(e)
         return None
+
+
+def get_file_type(file_path: Union[Path, str]) -> str:
+    """ Returns the file type of the given file. """
+    file_path = resolve_file_path(file_path)
+    if file_path:
+        return file_path.suffix[1:]
+    return "UNKNOWN"

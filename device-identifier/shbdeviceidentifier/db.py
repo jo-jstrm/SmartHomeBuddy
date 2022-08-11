@@ -462,7 +462,7 @@ class DataLoader:
         ...
 
     @staticmethod
-    def from_CSV(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
+    def from_csv(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
         """
         Loads data from a CSV file.
         """
@@ -508,3 +508,14 @@ class DataLoader:
         Constructs a Dataset from data in memory.
         """
         ...
+
+    @staticmethod
+    def labels_from_json(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
+        """
+        Loads labels from a JSON file.
+        """
+        file_path = resolve_file_path(file_path)
+        if file_path:
+            return pd.read_json(file_path, orient='index')
+        else:
+            return None
