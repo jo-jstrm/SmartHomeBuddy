@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import os
 import platform
+import traceback
+
 import requests
 import sqlite3
 import subprocess
@@ -35,12 +37,6 @@ class InfluxDbUser:
     bucket: str
     org: str
     url: str
-
-    def to_list(self) -> List[str]:
-        return [self.name, self.password, self.token, self.bucket, self.org, self.url]
-
-    def get_entries_for_db(self) -> List[str]:
-        return [self.token, self.bucket, self.url, self.org]
 
 
 # noinspection PyPep8Naming
@@ -164,7 +160,7 @@ class Database:
             token=token,
             bucket=self.influxdb_bucket,
             org=self.influxdb_org,
-            url=f"{self.influxdb_host}:{self.influxdb_port}",
+            url=f"http://{self.influxdb_host}:{self.influxdb_port}",
         )
 
     def _is_InfluxDB_setup(self) -> bool:
@@ -230,7 +226,7 @@ class Database:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, user_id: int = 0, user_name: str = "") -> list:
+    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> list:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
@@ -238,7 +234,7 @@ class Database:
         search_user_credentials = (
             "SELECT user_id, token, bucket, org, url "
             "FROM users u JOIN influxdb i on u.id = i.user_id "
-            "WHERE id = ? OR username = ?"
+            "WHERE u.id = ? OR u.username = ?"
         )
         params = (user_id, user_name)
         query_result = self.query_SQLiteDB(search_user_credentials, params)
@@ -267,10 +263,13 @@ class Database:
         # Add user to the users table
         self.query_SQLiteDB(sql_add_user_users, [user.name])
         # We could hard code user_id = 1, but this seems more robust.
-        user_id = self.query_SQLiteDB(sql_get_user_id, [user.name])[0]
+        user_id = self.query_SQLiteDB(sql_get_user_id, [user.name])[0][0]
         logger.debug(f"type: {type(user_id)}")
         # Add user credentials to influxdb table in SQLite DB.
-        self.query_SQLiteDB(sql_add_user_influxdb, [*user_id, *user.get_entries_for_db()])
+        self.query_SQLiteDB(
+            sql_add_user_influxdb,
+            [user_id, user.token, user.bucket, user.url, user.org],
+        )
         logger.debug(f"User credentials added successfully for {(user_id, user.name)}.")
 
     def is_connected(self) -> bool:
@@ -306,22 +305,23 @@ class Database:
         Queries the SQLite database.
         """
         conn = self._get_SQLite_connection()
-        if conn:
-            try:
-                c = conn.cursor()
-                if params:
-                    c.execute(query, params)
-                else:
-                    c.execute(query)
-
-                res = c.fetchall()
-                conn.commit()
-                conn.close()
-                return res
-
-            except Error as e:
-                logger.error(e)
-                logger.error(f"The supplied statements are: {params}")
+        if not conn:
+            return
+        try:
+            c = conn.cursor()
+            if params:
+                c.execute(query, params)
+            else:
+                c.execute(query)
+            res = c.fetchall()
+            conn.commit()
+            conn.close()
+            return res
+        except Error:
+            lines = traceback.format_exc().splitlines()
+            for line in lines:
+                logger.error(line)
+            logger.error(f"The supplied statements are: {params}")
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
         """
@@ -416,7 +416,6 @@ class Database:
             user_id_, token_, bucket_, org_, url_ = self._get_influxdb_credentials(user_name=username)
         else:
             user_id_, token_, bucket_, org_, url_ = self._get_influxdb_credentials(user_name=self.default_username)
-
         # replace None values with defaults
         token = token_ if not token else token
         org = org_ if not org else org
@@ -426,7 +425,6 @@ class Database:
         try:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
-
                 if isinstance(data, pd.DataFrame):
                     logger.debug(
                         f"Writing DataFrame of shape {data.shape} to InfluxDB, bucket {bucket}, org {org}."
@@ -434,12 +432,13 @@ class Database:
                     )
                 else:
                     logger.debug(f"Writing {len(data)} lines of data to InfluxDB, bucket {bucket}, org {org}.")
-
                 # write the data sequence to the bucket
                 write_api.write(bucket=bucket, org=org, record=data, **df_kwargs)
                 client.close()
         except Exception as e:
-            logger.error(e)
+            lines = traceback.format_exc().splitlines()
+            for line in lines:
+                logger.error(line)
             return False
 
         return True

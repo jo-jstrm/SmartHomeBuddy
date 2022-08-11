@@ -8,10 +8,10 @@ from .db import Database, DataLoader
 def read(db: Database, file_path: click.Path, file_type: str):
     """Reads all the data from a capture file."""
     if file_type == "pcap" or file_type == "pcapng":
-        res = DataLoader.from_pcap(file_path)
-        if isinstance(res, pd.DataFrame) and not res.empty:
+        packets = DataLoader.from_pcap(file_path)
+        if isinstance(packets, pd.DataFrame) and not packets.empty:
             if db.write_to_InfluxDB(
-                res,
+                packets,
                 data_frame_measurement_name="packet",
                 data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
             ):
