@@ -2,11 +2,15 @@
 # https://mypy.readthedocs.io/en/stable/runtime_troubles.html#using-classes-that-are-generic-in-stubs-but-not-at-runtime
 from __future__ import annotations
 
+import logging
 import os
 import platform
+import requests
 import sqlite3
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
+from requests.adapters import HTTPAdapter, Retry
 from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, Generator, List, Optional
@@ -23,77 +27,172 @@ from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
 
 
+@dataclass
+class InfluxDbUser:
+    user_id: str
+    user_name: str
+    password: str
+    token: str
+    bucket: str
+    org: str
+    url: str
+
+    def to_list(self) -> List[str]:
+        return [self.user_id, self.user_name, self.password, self.token, self.bucket, self.org, self.url]
+
+    def get_entries_for_db(self) -> List[str]:
+        return [self.user_name, self.token, self.bucket, self.url, self.org]
+
+
 # noinspection PyPep8Naming
 class Database:
     # SQLite database file path
     db_file = Path("SQLite/main.db").resolve()
 
     # InfluxDB database file path
-    binary_name = ''
+    binary_name = ""
     system = platform.system()
-    if system == 'Linux':
-        binary_name = 'influxd'
-    elif system == 'Windows':
-        binary_name = 'influxd.exe'
+    if system == "Linux":
+        binary_name = "influxd"
+    elif system == "Windows":
+        binary_name = "influxd.exe"
     else:
-        logger.error(f"Unsupported system: {system}. Please use Linux or Windows. "
-                     f"Alternatively, start the influxdb server manually.")
+        logger.error(
+            f"Unsupported system: {system}. Please use Linux or Windows. "
+            f"Alternatively, start the influxdb server manually."
+        )
     influxdb_binary_path = Path("InfluxData/influxdb/", binary_name).resolve()
     influx_log_path = Path("device-identifier/shbdeviceidentifier/logs/influx.log").resolve()
 
     default_username = "user"
     influx_process: Union[None, Popen[bytes], Popen] = None
 
-    host = "localhost"
-    port = "8086"
+    influxdb_pw = "SHBadmin"
+    influxdb_host = "localhost"
+    influxdb_port = "8086"
+    influxdb_org = "SmartHomeBuddy"
+    influxdb_bucket = "network-traffic"
 
     def __init__(
-            self,
-            db_file=db_file,
-            influxdb_binary_path=influxdb_binary_path,
-            influx_log_path=influx_log_path,
-            default_username=default_username,
-            host=host,
-            port=port
+        self,
+        db_file=db_file,
+        influxdb_binary_path=influxdb_binary_path,
+        influx_log_path=influx_log_path,
+        default_username=default_username,
+        influxdb_host=influxdb_host,
+        influxdb_port=influxdb_port,
+        influxdb_org=influxdb_org,
+        influxdb_bucket=influxdb_bucket,
+        influxdb_pw=influxdb_pw,
     ):
         # Handle file paths to make sure they exist and are absolute
-        error_msg = (f"InfluxDB log file {self.influx_log_path} does not exist."
-                     f" Please check your log directory."
-                     f" Default log directory is 'device-identifier/shbdeviceidentifier/logs/influx.log'"
-                     f" Current working directory: {os.getcwd()}")
+        error_msg = (
+            f"InfluxDB log file {self.influx_log_path} does not exist."
+            f" Please check your log directory."
+            f" Default log directory is 'device-identifier/shbdeviceidentifier/logs/influx.log'"
+            f" Current working directory: {os.getcwd()}"
+        )
         self.influx_log_path = resolve_file_path(influx_log_path, error_msg=error_msg)
 
-        error_msg = (f"Database file {self.db_file} does not exist."
-                     f" Please supply a valid database file."
-                     f" Current working directory: {os.getcwd()}")
+        error_msg = (
+            f"Database file {self.db_file} does not exist."
+            f" Please supply a valid database file."
+            f" Current working directory: {os.getcwd()}"
+        )
+        if not Path(db_file).exists():
+            logger.debug(f"No sqlite db file found. Creating at {db_file}")
+            Path(db_file).touch()
         self.db_file = resolve_file_path(db_file, error_msg=error_msg)
 
-        error_msg = (f"InfluxDB binary {self.influxdb_binary_path} does not exist. "
-                     f"Please check your installation path."
-                     f" Current working directory: {os.getcwd()}")
+        error_msg = (
+            f"InfluxDB binary {self.influxdb_binary_path} does not exist. "
+            f"Please check your installation path."
+            f" Current working directory: {os.getcwd()}"
+        )
         self.influxdb_binary_path = resolve_file_path(influxdb_binary_path, error_msg=error_msg)
 
         self.default_username = default_username
 
-        self.host = host
-        self.port = port
+        self.influxdb_host = influxdb_host
+        self.influxdb_port = influxdb_port
+        self.influxdb_org = influxdb_org
+        self.influxdb_bucket = influxdb_bucket
+        self.influxdb_pw = influxdb_pw
 
-        self._setup_SQLite_db()
         self.influx_process = self.start_InfluxDB()
-        self._setup_InfluxDB_db()
+        self._create_SQLite_tables()
+        if not self._is_InfluxDB_setup():
+            self._do_initial_db_setup()
 
     def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
         """ create a database connection to a InfluxDB database server. """
         if client_kwargs is None:
-            client_kwargs = {"host": self.host, "port": self.port}
+            client_kwargs = {"host": self.influxdb_host, "port": self.influxdb_port}
         try:
             client = influxdb.InfluxDBClient(**client_kwargs)
             version = client.ping()
-            logger.debug(f"Connected to InfluxDB {version} at {self.host}:{self.port}.")
+            logger.debug(f"Connected to InfluxDB {version} at {self.influxdb_host}:{self.influxdb_port}.")
             return client
         except Exception as e:
             logger.debug(e)
             return None
+
+    def _run_influxdb_setup(self) -> Union[InfluxDbUser, None]:
+        """Runs the "setup" routine from InfluxDBs API. It sets up the admin user for InfluxDB and return an access token.
+        API doc: https://docs.influxdata.com/influxdb/v2.3/api/#tag/Setup
+        Returns
+        -------
+        InfluxDbUser:  Check the InfluxDbUser.token indicates if the setup has been successful.
+        None: If there was an unknown error during setup.
+
+        """
+        url = f"http://{self.influxdb_host}:{self.influxdb_port}/api/v2/setup"
+        req_body = {
+            "username": self.default_username,
+            "password": self.influxdb_pw,
+            "bucket": self.influxdb_bucket,
+            "org": self.influxdb_org,
+        }
+        s = requests.Session()
+        # InfluxDB takes a moment to start, therefore some retries might be necessary.
+        retries = Retry(total=5, backoff_factor=1)
+        s.mount("http://", HTTPAdapter(max_retries=retries))
+        res = s.post(url, json=req_body)
+        res_body = res.json()
+        res_code = res.status_code
+        if res_code == 201:
+            token = res_body["auth"]["token"]
+            logging.debug(f"Token: {token}")
+        elif res_code == 422:
+            token = None
+        else:
+            # TODO Raise exception?
+            logger.error("Initial InfluxDB setup failed for unknown reasons.")
+            logger.error(res_code)
+            logger.error(res_body)
+            return None
+        return InfluxDbUser(
+            user_id="0",
+            user_name=self.default_username,
+            password=self.influxdb_pw,
+            token=token,
+            bucket=self.influxdb_bucket,
+            org=self.influxdb_org,
+            url=f"{self.influxdb_host}:{self.influxdb_port}",
+        )
+
+    def _do_initial_db_setup(self):
+        influxdb_admin = self._run_influxdb_setup()
+        if influxdb_admin == None:
+            raise ValueError("InfluxDB setup failed for unknown reasons")
+        elif influxdb_admin.token == None:
+            logger.warning(
+                "The InfluxDB setup has already been run. No new token was received. "
+                "Check the SQLite DB, if there is an admin token"
+            )
+            return
+        self._store_InfluxDB_user(influxdb_admin)
+        logger.success("Completed initial DB setup.")
 
     def _get_influxdb_credentials(self, user_id: int = 0, username: str = "") -> list:
         """
@@ -116,7 +215,7 @@ class Database:
             logger.debug(f"Query result: {query_result}.")
 
     def _get_SQLite_connection(self) -> sqlite3.Connection:
-        """ create a database connection to a SQLite database """
+        """create a database connection to a SQLite database"""
         conn = None
         try:
             conn = sqlite3.connect(self.db_file)
@@ -124,28 +223,27 @@ class Database:
             logger.debug(f"Failed to connect to SQLite database at {self.db_file}. \n{e}")
         return conn
 
-    def _setup_InfluxDB_db(self):
-        """
-        Sets up the InfluxDB database.
-        """
+    def _is_InfluxDB_setup(self) -> bool:
+        sql_find_influxdb_user = """SELECT id FROM users WHERE username = ?"""
+        # Find user values in SQLite DB.
+        influxdb_user_id = self.query_SQLiteDB(sql_find_influxdb_user, (self.default_username,))
+        logger.trace(f"The following list should be empty: influxdb_user_id = {influxdb_user_id}")
+        return True if influxdb_user_id else False
 
+    def _store_InfluxDB_user(self, influxdb_admin: InfluxDbUser):
+        """Inserts the given user into the influxdb table of the SQLite DB."""
         sql_add_user_influxdb = """INSERT OR IGNORE INTO influxdb (user_id, token, bucket, org, url)
-                            VALUES(?,?,?,?,?);"""
+                                   VALUES(?,?,?,?,?);"""
+        sql_add_user_users = """INSERT OR IGNORE INTO users (username)
+                                VALUES(?);"""
+        # Add user to the users table
+        self.query_SQLiteDB(sql_add_user_users, [influxdb_admin.user_name])
+        logger.debug(f"User '{influxdb_admin.user_name}' successfully added into 'users' table.")
+        # Add user credentials to influxdb table in SQLite DB.
+        self.query_SQLiteDB(sql_add_user_influxdb, influxdb_admin.get_entries_for_db())
+        logger.debug(f"User credentials added successfully for {(influxdb_admin.user_id, influxdb_admin.user_name)}.")
 
-        sql_find_user = """SELECT id FROM users WHERE username = ?"""
-
-        # find user values in sqlite db
-        user_id = self.query_SQLiteDB(sql_find_user, (self.default_username,))[0][0]
-        sql_add_user_influxdb_values = self._get_influxdb_credentials(
-            user_id=user_id,
-            username=self.default_username
-        )
-
-        # add user credentials to influxdb table
-        if self.query_SQLiteDB(sql_add_user_influxdb, sql_add_user_influxdb_values):
-            logger.debug(f"User credentials added successfully for {(self.default_username, user_id)}.")
-
-    def _setup_SQLite_db(self):
+    def _create_SQLite_tables(self):
         """
         Sets up the SQLite database.
         """
@@ -155,11 +253,6 @@ class Database:
                                                id integer PRIMARY KEY,
                                                username VARCHAR NOT NULL UNIQUE
                                            );"""
-
-        sql_add_user = """INSERT OR IGNORE INTO users (username)
-                               VALUES(?);"""
-        sql_add_user_values = (self.default_username,)
-
         sql_create_influxdb_table = """CREATE TABLE IF NOT EXISTS influxdb (
                                            id integer PRIMARY KEY,
                                            user_id integer NOT NULL UNIQUE,
@@ -171,8 +264,6 @@ class Database:
                                                FOREIGN KEY (user_id) 
                                                REFERENCES users (id)
                                        );"""
-
-        # create tables
         conn = self._get_SQLite_connection()
         if conn:
             # Users table
@@ -181,9 +272,6 @@ class Database:
             # InfluxDB table
             if self.query_SQLiteDB(sql_create_influxdb_table):
                 logger.debug("Table 'influxdb' created successfully.")
-            # Add user
-            if self.query_SQLiteDB(sql_add_user, sql_add_user_values):
-                logger.debug(f"User '{sql_add_user_values[0]}' added successfully.")
 
     def is_connected(self) -> bool:
         """
@@ -233,6 +321,7 @@ class Database:
 
             except Error as e:
                 logger.error(e)
+                logger.error(f"The supplied statements are: {params}")
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db='influx') -> Optional[List]:
         """
@@ -240,18 +329,17 @@ class Database:
         Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
         Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
         """
-        if db == 'influx':
+        if db == "influx":
             return self.query_InfluxDB(query, params, bind_params)
-        elif db == 'sqlite':
+        elif db == "sqlite":
             return self.query_SQLiteDB(query, params)
 
     def start_InfluxDB(self) -> Union[None, Popen[bytes], Popen]:
         try:
             with open(self.influx_log_path, "wb") as influx_log:
                 influx_process = subprocess.Popen(
-                    self.influxdb_binary_path,
-                    stdout=influx_log,
-                    stderr=subprocess.STDOUT)
+                    self.influxdb_binary_path, stdout=influx_log, stderr=subprocess.STDOUT
+                )
                 logger.debug("InfluxDB started successfully.")
         except Exception as e:
             logger.debug(e)
@@ -271,9 +359,16 @@ class Database:
             logger.debug("No InfluxDB process found.")
             return False
 
-    def write_to_InfluxDB(self, data: Union[List[str], pd.DataFrame], username: str = None, bucket: str = None,
-                          org: str = None, token: str = None, url: str = None,
-                          **df_kwargs) -> bool:
+    def write_to_InfluxDB(
+        self,
+        data: Union[List[str], pd.DataFrame],
+        username: str = None,
+        bucket: str = None,
+        org: str = None,
+        token: str = None,
+        url: str = None,
+        **df_kwargs,
+    ) -> bool:
         """
         The write_to_influxdb function writes data to an InfluxDB bucket.
 

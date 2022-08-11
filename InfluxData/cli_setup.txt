@@ -12,9 +12,3 @@ SmartHomeBuddy
         ├── admin_auth.json
         ├── ...
 ├── ...
-
-
-
-.\influx.exe setup --username admin --password SHBadmin --org SmartHomeBuddy --bucket network-traffic --force
-
-.\influx.exe auth list --json --user admin > .\admin_auth.json

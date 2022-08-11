@@ -6,7 +6,6 @@ export default function Device(props: {
   name: string;
   icon: any;
   status: string;
-  index: number;
   mac: string;
   action: any;
 }) {

@@ -394,16 +394,18 @@ def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
     """
     addr: str = ""
 
-    if IP in packet:
-        if src:
-            if hasattr(packet[IP], "src"):
-                addr = str(packet[IP].src)
-                if hasattr(packet[IP], "sport"):
-                    addr += ":" + str(packet[IP].sport)
-        else:
-            if hasattr(packet[IP], "dst"):
-                addr = str(packet[IP].dst)
-                if hasattr(packet[IP], "dport"):
-                    addr += ":" + str(packet[IP].dport)
+    if not IP in packet:
+        return addr
+
+    if src:
+        if hasattr(packet[IP], "src"):
+            addr = str(packet[IP].src)
+            if hasattr(packet[IP], "sport"):
+                addr += ":" + str(packet[IP].sport)
+    else:
+        if hasattr(packet[IP], "dst"):
+            addr = str(packet[IP].dst)
+            if hasattr(packet[IP], "dport"):
+                addr += ":" + str(packet[IP].dport)
 
     return addr
