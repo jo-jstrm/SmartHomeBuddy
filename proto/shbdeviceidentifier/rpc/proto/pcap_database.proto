@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package SmartHomeBuddy;
+
 message DbLoadRequest {
   string file_path = 1;
   string file_type = 2;

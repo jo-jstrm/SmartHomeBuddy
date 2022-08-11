@@ -16,10 +16,10 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='shbdeviceidentifier/rpc/proto/heartbeat.proto',
-  package='',
+  package='SmartHomeBuddy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n-shbdeviceidentifier/rpc/proto/heartbeat.proto\"!\n\x10HeartbeatRequest\x12\r\n\x05\x63ount\x18\x01 \x01(\x05\"\"\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x32\x42\n\tHeartbeat\x12\x35\n\x0cGetHeartbeat\x12\x11.HeartbeatRequest\x1a\x12.HeartbeatResponseb\x06proto3')
+  serialized_pb=_b('\n-shbdeviceidentifier/rpc/proto/heartbeat.proto\x12\x0eSmartHomeBuddy\"!\n\x10HeartbeatRequest\x12\r\n\x05\x63ount\x18\x01 \x01(\x05\"\"\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x32`\n\tHeartbeat\x12S\n\x0cGetHeartbeat\x12 .SmartHomeBuddy.HeartbeatRequest\x1a!.SmartHomeBuddy.HeartbeatResponseb\x06proto3')
 )
 
 
@@ -27,13 +27,13 @@ DESCRIPTOR = _descriptor.FileDescriptor(
 
 _HEARTBEATREQUEST = _descriptor.Descriptor(
   name='HeartbeatRequest',
-  full_name='HeartbeatRequest',
+  full_name='SmartHomeBuddy.HeartbeatRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='count', full_name='HeartbeatRequest.count', index=0,
+      name='count', full_name='SmartHomeBuddy.HeartbeatRequest.count', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -51,20 +51,20 @@ _HEARTBEATREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=49,
-  serialized_end=82,
+  serialized_start=65,
+  serialized_end=98,
 )
 
 
 _HEARTBEATRESPONSE = _descriptor.Descriptor(
   name='HeartbeatResponse',
-  full_name='HeartbeatResponse',
+  full_name='SmartHomeBuddy.HeartbeatResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='alive', full_name='HeartbeatResponse.alive', index=0,
+      name='alive', full_name='SmartHomeBuddy.HeartbeatResponse.alive', index=0,
       number=1, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -82,8 +82,8 @@ _HEARTBEATRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=84,
-  serialized_end=118,
+  serialized_start=100,
+  serialized_end=134,
 )
 
 DESCRIPTOR.message_types_by_name['HeartbeatRequest'] = _HEARTBEATREQUEST
@@ -93,14 +93,14 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 HeartbeatRequest = _reflection.GeneratedProtocolMessageType('HeartbeatRequest', (_message.Message,), dict(
   DESCRIPTOR = _HEARTBEATREQUEST,
   __module__ = 'shbdeviceidentifier.rpc.proto.heartbeat_pb2'
-  # @@protoc_insertion_point(class_scope:HeartbeatRequest)
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.HeartbeatRequest)
   ))
 _sym_db.RegisterMessage(HeartbeatRequest)
 
 HeartbeatResponse = _reflection.GeneratedProtocolMessageType('HeartbeatResponse', (_message.Message,), dict(
   DESCRIPTOR = _HEARTBEATRESPONSE,
   __module__ = 'shbdeviceidentifier.rpc.proto.heartbeat_pb2'
-  # @@protoc_insertion_point(class_scope:HeartbeatResponse)
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.HeartbeatResponse)
   ))
 _sym_db.RegisterMessage(HeartbeatResponse)
 
@@ -108,16 +108,16 @@ _sym_db.RegisterMessage(HeartbeatResponse)
 
 _HEARTBEAT = _descriptor.ServiceDescriptor(
   name='Heartbeat',
-  full_name='Heartbeat',
+  full_name='SmartHomeBuddy.Heartbeat',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=120,
-  serialized_end=186,
+  serialized_start=136,
+  serialized_end=232,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetHeartbeat',
-    full_name='Heartbeat.GetHeartbeat',
+    full_name='SmartHomeBuddy.Heartbeat.GetHeartbeat',
     index=0,
     containing_service=None,
     input_type=_HEARTBEATREQUEST,

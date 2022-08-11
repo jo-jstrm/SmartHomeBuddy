@@ -1,6 +1,5 @@
 # Local Development Setup
 
-
 ## electron-app
 - `make electronapp` or `cd electron-app && npm install && npm start`
 
@@ -24,3 +23,6 @@ Windows
 
 ## Additional Info
 - If you have orphaned python processes running, run `kill $(pgrep -f 'python -m shbdeviceidentifier')`
+- GRPC
+  - You can test the running server from the command line usind [grpcurl](https://github.com/fullstorydev/grpcurl): `./grpcurl --plaintext localhost:8090 list`
+  - RPC example: `./grpcurl -v -d '{"file_path": "/home/jo/git/SmartHomeBuddy/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap", "file_type": "pcap"}' -plaintext localhost:8090 SmartHomeBuddy.PcapDatabase/LoadPcapIntoDatabase`

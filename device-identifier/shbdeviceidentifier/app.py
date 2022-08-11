@@ -8,11 +8,12 @@ from pprint import pprint, pformat
 from typing import Union
 
 import click
-import pandas as pd
+
 import pyshark
 from loguru import logger
 from pyfiglet import Figlet
 
+import shbdeviceidentifier.commands as commands
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
@@ -90,6 +91,7 @@ def app(ctx, debug, silent, verbose, version_flag):
 
     # Database connections checks
     ctx.db = Database()
+    ctx.db.start()
     if not ctx.db.is_connected():
         logger.error("Database connection failed.")
         sys.exit(1)
@@ -151,26 +153,10 @@ def show_interfaces():
 )
 @pass_ctx
 @logger_wraps()
-def read(ctx, file_path: click.Path, file_type: str) -> None:
-    """
-    Reads all the data from a capture file.
-    """
+def read(ctx, file_path: click.Path, file_type: str):
+    """CLI wrapper. Calls read()"""
     file_path = get_capture_file_path(ctx, file_path)
-
-    if file_type == 'pcap' or file_type == 'pcapng':
-        res = DataLoader.from_pcap(file_path)
-        if isinstance(res, pd.DataFrame) and not res.empty:
-
-            if ctx.db.write_to_InfluxDB(
-                    res,
-                    data_frame_measurement_name='packet',
-                    data_frame_tag_columns=['src', 'dst', 'L4_protocol', 'stream_id'],
-            ):
-                logger.success(f"Wrote {file_path} to Database.")
-            else:
-                logger.error(f"Failed to write {file_path} to Database.")
-        else:
-            logger.error(f"Failed to read {file_path}.")
+    commands.read(ctx.db, file_path, file_type)
 
 
 @app.command("identify")
@@ -188,28 +174,28 @@ def identify(ctx, file_path, model_path, out, model_selector):
     df = DataLoader.from_pcap(file_path)
 
     if not model_selector:
-        model_selector = 'default'
+        model_selector = "default"
     model = get_model(model_selector)
     model.load(model_path)
 
-    res = model.predict(df[['data_len', 'stream_id']])
+    res = model.predict(df[["data_len", "stream_id"]])
     del df
 
     if not res.empty:
         logger.success(f"Identified {len(res)} devices.")
 
-    if out == 'stdout':
+    if out == "stdout":
         pprint(res)
-    elif out == 'sqlite':
+    elif out == "sqlite":
         # TODO: write res to sqlite db
         ...
-    elif out == 'influx' or out == 'influxdb':
+    elif out == "influx" or out == "influxdb":
         # TODO: write res to influxdb
         ...
-    elif out == 'json':
+    elif out == "json":
         # TODO: write res to json file in ctx.home_dir
         ...
-    elif out == 'csv':
+    elif out == "csv":
         # TODO: write res to csv file in ctx.home_dir
         ...
     else:
@@ -242,18 +228,15 @@ def query(ctx, data_base, statement_name):
         res = [" " * 57 + f"{i}: {row}" for i, row in enumerate(res)]
         res = "\n".join(res)
 
-        logger.success(
-            f"Query run successfully with the following output: \n"
-            f"{res}"
-        )
+        logger.success(f"Query run successfully with the following output: \n" f"{res}")
     else:
         logger.success(f"Query run successfully with no output.")
 
 
 @app.command("train")
-@click.argument('model-selector', nargs=1, type=click.STRING)
-@click.argument('training-data-path', nargs=1, type=click.STRING)
-@click.argument('training-labels-path', nargs=1, type=click.STRING)
+@click.argument("model-selector", nargs=1, type=click.STRING)
+@click.argument("training-data-path", nargs=1, type=click.STRING)
+@click.argument("training-labels-path", nargs=1, type=click.STRING)
 @pass_ctx
 @logger_wraps()
 def train(ctx, model_selector, training_data_path, training_labels_path):
@@ -298,7 +281,7 @@ def train(ctx, model_selector, training_data_path, training_labels_path):
 
     train_labels = train_df["src"].apply(get_label)
 
-    model.train(train_df[['data_len', 'stream_id']], train_labels)
+    model.train(train_df[["data_len", "stream_id"]], train_labels)
 
     save_path = "device-identifier/shbdeviceidentifier/ml_models/" + model_selector + ".pkl"
     if model.save(save_path):

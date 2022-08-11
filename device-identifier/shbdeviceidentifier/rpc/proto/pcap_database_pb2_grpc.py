@@ -15,7 +15,7 @@ class PcapDatabaseStub(object):
       channel: A grpc.Channel.
     """
     self.LoadPcapIntoDatabase = channel.unary_unary(
-        '/PcapDatabase/LoadPcapIntoDatabase',
+        '/SmartHomeBuddy.PcapDatabase/LoadPcapIntoDatabase',
         request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_pcap__database__pb2.DbLoadRequest.SerializeToString,
         response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_pcap__database__pb2.DbLoadResponse.FromString,
         )
@@ -42,5 +42,5 @@ def add_PcapDatabaseServicer_to_server(servicer, server):
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'PcapDatabase', rpc_method_handlers)
+      'SmartHomeBuddy.PcapDatabase', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

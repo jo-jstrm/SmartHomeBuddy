@@ -18,8 +18,9 @@ from .app_utilities import resolve_file_path
 from .logging_utilities import spinner
 
 
-def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
-                    output_file: Union[Path, str] = None) -> Optional[pyshark.capture.capture.Capture]:
+def collect_traffic(
+    interface: Union[Path, str] = None, time: int = -1, output_file: Union[Path, str] = None
+) -> Optional[pyshark.capture.capture.Capture]:
     """
     The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
     Either the interface_id or the interface name must be specified.
@@ -89,7 +90,7 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
     dst_series = np.empty((num_of_packets,), dtype=object)
     ts_series = np.empty((num_of_packets,), dtype=pd.Timestamp)
     protocol_series = np.empty((num_of_packets,), dtype=object)
-    data_len_series = np.empty((num_of_packets,), dtype='uint16')
+    data_len_series = np.empty((num_of_packets,), dtype="uint16")
 
     for i in nb.prange(num_of_packets):
         src_series[i] = _get_address_from_scapy_packet(cap[i], src=True)
@@ -100,22 +101,19 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
         progress_proxy.update(1)
 
     df = pd.DataFrame(
-        {'src': src_series,
-         'dst': dst_series,
-         'L4_protocol': protocol_series,
-         'data_len': data_len_series},
-        index=ts_series
+        {"src": src_series, "dst": dst_series, "L4_protocol": protocol_series, "data_len": data_len_series},
+        index=ts_series,
     )
 
     # Filter out packets that do not have a transport layer protocol
-    df = df[df['L4_protocol'].astype(bool)]
+    df = df[df["L4_protocol"].astype(bool)]
 
     # Create stream IDs
     # TODO: check performance cost of this
-    df["conv"] = [" <-> ".join(i) for i in np.sort(df[['src', 'dst']], axis=1)]
-    df = df.assign(stream_id=df.groupby(['conv']).ngroup())
-    df.drop(columns=['conv'], inplace=True)
-    df['stream_id'] = df['stream_id'].astype('uint16')
+    df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src", "dst"]], axis=1)]
+    df = df.assign(stream_id=df.groupby(["conv"]).ngroup())
+    df.drop(columns=["conv"], inplace=True)
+    df["stream_id"] = df["stream_id"].astype("uint16")
 
     return df
 
@@ -123,9 +121,7 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
 # noinspection PyPep8Naming
 def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
     num_of_packets = len(cap)
-
     spinner.stop()
-
     with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
     return df
@@ -194,9 +190,7 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additiona
         line += " "  # end tag-set (or measurement if no tag-set is present)
 
         # fields
-        fields = {
-            "data_len": "0"
-        }
+        fields = {"data_len": "0"}
         # third layer (usually data)
         if "DATA" in layer_names:
             # access through attribute not possible, bc of pyshark implementation (capitalized layer name)
@@ -236,15 +230,15 @@ def get_conversations(file_path: Union[str, Path]) -> Tuple[Optional[List[dict]]
         res_udp = subprocess.run(args_udp, capture_output=True, text=True).stdout
 
         # Parse output into list of dictionaries
-        res_tcp = _conversations_string_to_list(res_tcp, tag={'protocol': 'tcp'})
-        res_udp = _conversations_string_to_list(res_udp, tag={'protocol': 'udp'})
+        res_tcp = _conversations_string_to_list(res_tcp, tag={"protocol": "tcp"})
+        res_udp = _conversations_string_to_list(res_udp, tag={"protocol": "udp"})
 
         # Combine results
         return res_tcp, res_udp
 
 
 def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
-    """ Converts a conversations string to a list of dictionaries """
+    """Converts a conversations string to a list of dictionaries"""
     # Split into lines
     conv = conversations.split("\n")
 
@@ -291,10 +285,10 @@ def get_capinfos(file_path: Union[str, Path]) -> Optional[Dict]:
     tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
 
     system = platform.system()
-    if system == 'Windows':
-        capinfos_path = 'capinfos.exe'
+    if system == "Windows":
+        capinfos_path = "capinfos.exe"
     else:
-        capinfos_path = 'capinfos'
+        capinfos_path = "capinfos"
     capinfos_path = resolve_file_path(tshark_path.parents[0] / capinfos_path)
 
     if capinfos_path and file_path:

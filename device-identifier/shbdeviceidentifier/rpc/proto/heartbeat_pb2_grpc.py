@@ -15,7 +15,7 @@ class HeartbeatStub(object):
       channel: A grpc.Channel.
     """
     self.GetHeartbeat = channel.unary_unary(
-        '/Heartbeat/GetHeartbeat',
+        '/SmartHomeBuddy.Heartbeat/GetHeartbeat',
         request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_heartbeat__pb2.HeartbeatRequest.SerializeToString,
         response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_heartbeat__pb2.HeartbeatResponse.FromString,
         )
@@ -42,5 +42,5 @@ def add_HeartbeatServicer_to_server(servicer, server):
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'Heartbeat', rpc_method_handlers)
+      'SmartHomeBuddy.Heartbeat', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

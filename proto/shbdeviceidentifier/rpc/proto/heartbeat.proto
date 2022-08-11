@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package SmartHomeBuddy;
+
 message HeartbeatRequest {
   int32 count = 1;
 }
