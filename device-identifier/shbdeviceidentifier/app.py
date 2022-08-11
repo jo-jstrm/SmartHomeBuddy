@@ -104,7 +104,7 @@ def start(ctx):
     try:
         run_rpc_server()
     except KeyboardInterrupt:
-        logger.error("Stopping InfluxDB...")
+        logger.info("Stopping InfluxDB...")
         ctx.db.stop_InfluxDB()
 
 
