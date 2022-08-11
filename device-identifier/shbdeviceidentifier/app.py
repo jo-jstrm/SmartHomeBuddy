@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Union
 
 import click
+import pandas as pd
 import pyshark
 from loguru import logger
 from pyfiglet import Figlet
@@ -15,11 +16,12 @@ from pyfiglet import Figlet
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
+from .utilities.capture_utilities import collect_traffic
+
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
-from .utilities.capture_utilities import collect_traffic
 
 logger.remove()
 formatter = Formatter()
@@ -153,13 +155,20 @@ def read(ctx, file_path: click.Path, file_type: str) -> None:
     """
     file_path = get_capture_file_path(ctx, file_path)
 
-    if file_type == "pcap" or file_type == "pcapng":
-        if not DataLoader.from_pcap(file_path, ctx.db).empty:
-            logger.success(f"Wrote {file_path} to Database.")
-        else:
-            logger.error(f"Failed to write {file_path} to Database.")
+    if file_type == 'pcap' or file_type == 'pcapng':
+        res = DataLoader.from_pcap(file_path)
+        if isinstance(res, pd.DataFrame) and not res.empty:
 
-    # TODO: Add support for other file types.
+            if ctx.db.write_to_InfluxDB(
+                    res,
+                    data_frame_measurement_name='packet',
+                    data_frame_tag_columns=['src', 'dst', 'L4_protocol', 'stream_id'],
+            ):
+                logger.success(f"Wrote {file_path} to Database.")
+            else:
+                logger.error(f"Failed to write {file_path} to Database.")
+        else:
+            logger.error(f"Failed to read {file_path}.")
 
 
 @app.command("identify")
@@ -201,7 +210,9 @@ def query(ctx, data_base, statement_name):
         res = [" " * 57 + f"{i}: {row}" for i, row in enumerate(res)]
         res = "\n".join(res)
 
-        logger.info(f"Query run successfully with the following output: \n" f"{res}")
-
+        logger.success(
+            f"Query run successfully with the following output: \n"
+            f"{res}"
+        )
     else:
-        logger.info(f"Query run successfully with no output.")
+        logger.success(f"Query run successfully with no output.")

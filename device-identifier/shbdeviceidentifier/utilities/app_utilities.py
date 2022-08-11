@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 
 from loguru import logger
 
@@ -20,7 +20,7 @@ def get_capture_file_path(ctx, file_path) -> Path:
     return ctx.latest_capture_file
 
 
-def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Union[Path, None]:
+def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Optional[Path]:
     """ Make sure file_path is of correct type and resolves to a valid file. """
     try:
         file_path = Path(file_path).resolve()

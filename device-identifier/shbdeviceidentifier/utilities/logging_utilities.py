@@ -3,7 +3,12 @@
 # ---------------------------------------------------------------------------- #
 import functools
 
+from halo import Halo
 from loguru import logger
+
+# Define spinner object to be called when waiting for a function,
+# without knowing anything about the duration of the execution
+spinner = Halo(text="Loading.", spinner='dots')
 
 
 class Formatter:

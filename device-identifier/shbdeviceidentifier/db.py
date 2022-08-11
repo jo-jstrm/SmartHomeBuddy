@@ -13,17 +13,18 @@ from pathlib import Path
 from requests.adapters import HTTPAdapter, Retry
 from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable, Generator, List, Dict
+from typing import Union, Iterable, Generator, List, Optional
 
 import influxdb
 import influxdb_client
 import pandas as pd
-import pyshark
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
+from scapy.all import rdpcap
 
 from .utilities.app_utilities import resolve_file_path
-from .utilities.capture_utilities import convert_Capture_to_Line, convert_Capture_to_DataFrame
+from .utilities.capture_utilities import convert_Capture_to_DataFrame
+from .utilities.logging_utilities import spinner
 
 
 @dataclass
@@ -123,8 +124,8 @@ class Database:
         if not self._is_InfluxDB_setup():
             self._do_initial_db_setup()
 
-    def _get_InfluxDB_connection(self, **client_kwargs) -> Union[influxdb.InfluxDBClient, None]:
-        """create a database connection to a InfluxDB database server."""
+    def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
+        """ create a database connection to a InfluxDB database server. """
         if client_kwargs is None:
             client_kwargs = {"host": self.influxdb_host, "port": self.influxdb_port}
         try:
@@ -300,7 +301,7 @@ class Database:
         if client:
             return client.query(query, params, bind_params)
 
-    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Union[list, None]:
+    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
         """
         Queries the SQLite database.
         """
@@ -322,7 +323,7 @@ class Database:
                 logger.error(e)
                 logger.error(f"The supplied statements are: {params}")
 
-    def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Union[list, None]:
+    def query(self, query: str, params: dict = None, bind_params: dict = None, db='influx') -> Optional[List]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
         Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
@@ -426,14 +427,25 @@ class Database:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-                # write the data sequence to the bucket
-                write_api.write(bucket=bucket, org=org, record_list=data, **df_kwargs)
+                if isinstance(data, pd.DataFrame):
+                    logger.debug(f"Writing DataFrame of shape {data.shape} to InfluxDB, bucket {bucket}, org {org}."
+                                 f" Using {df_kwargs}.")
+                else:
+                    logger.debug(f"Writing {len(data)} lines of data to InfluxDB, bucket {bucket}, org {org}.")
 
+                # write the data sequence to the bucket
+                write_api.write(
+                    bucket=bucket,
+                    org=org,
+                    record=data,
+                    **df_kwargs
+                )
                 client.close()
-                return True
         except Exception as e:
             logger.error(e)
             return False
+
+        return True
 
 
 # noinspection PyPep8Naming
@@ -442,14 +454,15 @@ class DataLoader:
     Class for loading data from various sources into a pandas DataFrame.
     """
 
-    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Union[list, None]:
+    @staticmethod
+    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Optional[List]:
         """
         Loads data from the InfluxDB database.
         """
         ...
 
     @staticmethod
-    def from_CSV(file_path: Union[Path, str], **kwargs) -> Union[pd.DataFrame, None]:
+    def from_CSV(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
         """
         Loads data from a CSV file.
         """
@@ -458,31 +471,39 @@ class DataLoader:
             return pd.read_csv(file_path, **kwargs)
 
     @staticmethod
-    def from_pcap(file_path: Union[Path, str], db: Database, credentials: Dict = None) -> Union[pd.DataFrame, None]:
+    def from_pcap(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
         """
         Loads data from a pcap file.
         """
-        if not credentials:
-            credentials = {}
-
         file_path = resolve_file_path(file_path)
+        # Get the file size in Gigabyte
+        file_size = os.path.getsize(file_path) * 1e-9
+
+        spinner_text = 'Reading file.'
+        if file_size > 0.25:
+            spinner_text += f' This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB).'
+
+        spinner.text = spinner_text
+        spinner.start()
+
         if file_path:
-            cap = pyshark.FileCapture(file_path, keep_packets=False)
+            # Read pcap
+            cap = rdpcap(file_path.as_posix())
 
-            # TODO: skip conversion to Line Protocol and write with DataFrame directly
-            converted_cap = convert_Capture_to_Line(cap)
-            if not db.write_to_InfluxDB(converted_cap, **credentials):
-                return None
+            df = convert_Capture_to_DataFrame(cap)
 
-            return convert_Capture_to_DataFrame(cap)
+            if not df.empty:
+                return df
 
-    def from_generator(self, generator: Generator) -> Union[pd.DataFrame, None]:
+    @staticmethod
+    def from_generator(generator: Generator) -> Optional[pd.DataFrame]:
         """
         Loads data from a generator.
         """
         ...
 
-    def from_dict(self, data: dict) -> Union[pd.DataFrame, None]:
+    @staticmethod
+    def from_dict(data: dict) -> Optional[pd.DataFrame]:
         """
         Constructs a Dataset from data in memory.
         """
