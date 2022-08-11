@@ -15,7 +15,7 @@ start-device-identifier-dev:
 		source $(VENV_DIR) && \
 		python -m pip install --upgrade pip && \
 		python -m pip install -r requirements.txt
-		python -m shbdeviceidentifier \
+		python -m shbdeviceidentifier start\
 		& # Run in the background
 
 start-influxdb-dev:

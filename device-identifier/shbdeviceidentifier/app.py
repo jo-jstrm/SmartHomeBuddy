@@ -18,6 +18,7 @@ from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
 from .utilities.capture_utilities import collect_traffic
 
+
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
@@ -32,10 +33,7 @@ logger.level("DEBUG", color="<light-black>")
 # ---------------------------------------------------------------------------- #
 #                                    App                                       #
 # ---------------------------------------------------------------------------- #
-CONTEXT_SETTINGS = dict(
-    help_option_names=['-h', '--help'],
-    auto_envvar_prefix="SHB"
-)
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB")
 
 
 @dataclass()
@@ -76,8 +74,8 @@ def app(ctx, debug, silent, verbose, version_flag):
     if silent:
         logger.remove()
     else:
-        figlet = Figlet(font='smslant', justify='left')  # choose btw: small, stampatello, smslant
-        click.echo(figlet.renderText('SmartHomeBuddy'))
+        figlet = Figlet(font="smslant", justify="left")  # choose btw: small, stampatello, smslant
+        click.echo(figlet.renderText("SmartHomeBuddy"))
 
     if verbose:
         ctx.verbose = True
@@ -100,17 +98,22 @@ def app(ctx, debug, silent, verbose, version_flag):
 # ---------------------------------------------------------------------------- #
 @app.command("start")
 @logger_wraps()
-def start():
+@pass_ctx
+def start(ctx):
     """
     Starts the RPC server.
     """
-    run_rpc_server()
+    try:
+        run_rpc_server()
+    except KeyboardInterrupt:
+        logger.info("Stopping InfluxDB...")
+        ctx.db.stop_InfluxDB()
 
 
 @app.command("collect")
 @click.option("-t", "--time", type=click.INT, required=False, default=-1, help="Time to capture in seconds.")
 @click.option("-o", "--out", type=click.Path(), required=False, default=None, help="Output file path.")
-@click.argument('interface', nargs=1, type=click.STRING)
+@click.argument("interface", nargs=1, type=click.STRING)
 @pass_ctx
 @logger_wraps()
 def collect(ctx, interface, time, out):
@@ -136,11 +139,17 @@ def show_interfaces():
 
 @app.command("read")
 @click.argument("file_path", type=click.Path())
-@click.option('--file-type', '-T', help='File type to read.', required=False,
-              type=click.Choice(['pcap', 'pcapng'], case_sensitive=False), default='pcap')
+@click.option(
+    "--file-type",
+    "-T",
+    help="File type to read.",
+    required=False,
+    type=click.Choice(["pcap", "pcapng"], case_sensitive=False),
+    default="pcap",
+)
 @pass_ctx
 @logger_wraps()
-def read(ctx, file_path, file_type):
+def read(ctx, file_path: click.Path, file_type: str) -> None:
     """
     Reads all the data from a capture file.
     """
@@ -176,9 +185,15 @@ def identify(ctx, file_path, out):
 
 
 @app.command("query")
-@click.option("-D", "--data-base", help="Choose the database to query.", required=False,
-              type=click.Choice(['influx', 'sqlite'], case_sensitive=False), default='influx')
-@click.argument('statement_name', nargs=1)
+@click.option(
+    "-D",
+    "--data-base",
+    help="Choose the database to query.",
+    required=False,
+    type=click.Choice(["influx", "sqlite"], case_sensitive=False),
+    default="influx",
+)
+@click.argument("statement_name", nargs=1)
 @pass_ctx
 @logger_wraps()
 def query(ctx, data_base, statement_name):
