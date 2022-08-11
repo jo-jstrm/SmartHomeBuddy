@@ -9,3 +9,6 @@ loguru==0.6.0
 influxdb-client==1.30.0
 pyinstaller==5.1
 pandas==1.4.3
+shbdeviceidentifier>=0.0.0
+requests>=2.28.1
+influxdb>=5.3.1
