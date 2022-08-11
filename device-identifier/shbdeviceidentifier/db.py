@@ -225,13 +225,18 @@ class Database:
         sql_find_influxdb_user = """SELECT id FROM users WHERE username = ?"""
         # Find user values in SQLite DB.
         influxdb_user_id = self.query_SQLiteDB(sql_find_influxdb_user, (self.default_username,))
-        logger.debug(f"influxdb_user_id: {influxdb_user_id}")
+        logger.trace(f"The following list should be empty: influxdb_user_id = {influxdb_user_id}")
         return True if influxdb_user_id else False
 
     def _store_InfluxDB_user(self, influxdb_admin: InfluxDbUser):
         """Inserts the given user into the influxdb table of the SQLite DB."""
         sql_add_user_influxdb = """INSERT OR IGNORE INTO influxdb (user_id, token, bucket, org, url)
-                            VALUES(?,?,?,?,?);"""
+                                   VALUES(?,?,?,?,?);"""
+        sql_add_user_users = """INSERT OR IGNORE INTO users (username)
+                                VALUES(?);"""
+        # Add user to the users table
+        if self.query_SQLiteDB(sql_add_user_users, [influxdb_admin.user_name]):
+            logger.debug(f'User {influxdb_admin.user_name} successfully added into "users" table.')
         # Add user credentials to influxdb table in SQLite DB.
         if self.query_SQLiteDB(sql_add_user_influxdb, influxdb_admin.get_entries_for_db()):
             logger.debug(
@@ -316,6 +321,7 @@ class Database:
 
             except Error as e:
                 logger.error(e)
+                logger.error(f"The supplied statements are: {params}")
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Union[list, None]:
         """
