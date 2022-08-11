@@ -191,6 +191,7 @@ class Database:
             )
             return
         self._store_InfluxDB_user(influxdb_admin)
+        logger.success("Completed initial DB setup.")
 
     def _get_influxdb_credentials(self, user_id: int = 0, username: str = "") -> list:
         """
@@ -235,13 +236,11 @@ class Database:
         sql_add_user_users = """INSERT OR IGNORE INTO users (username)
                                 VALUES(?);"""
         # Add user to the users table
-        if self.query_SQLiteDB(sql_add_user_users, [influxdb_admin.user_name]):
-            logger.debug(f'User {influxdb_admin.user_name} successfully added into "users" table.')
+        self.query_SQLiteDB(sql_add_user_users, [influxdb_admin.user_name])
+        logger.debug(f"User '{influxdb_admin.user_name}' successfully added into 'users' table.")
         # Add user credentials to influxdb table in SQLite DB.
-        if self.query_SQLiteDB(sql_add_user_influxdb, influxdb_admin.get_entries_for_db()):
-            logger.debug(
-                f"User credentials added successfully for {(influxdb_admin.user_id, influxdb_admin.user_name)}."
-            )
+        self.query_SQLiteDB(sql_add_user_influxdb, influxdb_admin.get_entries_for_db())
+        logger.debug(f"User credentials added successfully for {(influxdb_admin.user_id, influxdb_admin.user_name)}.")
 
     def _create_SQLite_tables(self):
         """
