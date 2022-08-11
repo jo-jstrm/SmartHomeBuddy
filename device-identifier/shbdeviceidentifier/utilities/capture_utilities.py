@@ -7,8 +7,9 @@ from loguru import logger
 from pyshark.capture.capture import Capture
 
 
-def collect_traffic(interface: Union[Path, str] = None, time: int = -1,
-                    output_file: Union[Path, str] = None) -> Union[pyshark.capture.capture.Capture, None]:
+def collect_traffic(
+    interface: Union[Path, str] = None, time: int = -1, output_file: Union[Path, str] = None
+) -> Union[pyshark.capture.capture.Capture, None]:
     """
     The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
     Either the interface_id or the interface name must be specified.
@@ -119,19 +120,17 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
             tags["ip_dst"] = packet.ip.dst
         # second layer (usually TCP or UDP)
         if "tcp" in layer_names:
-            tags["tcp_src"] = packet.tcp.port
+            tags["tcp_src"] = packet.tcp.influxdb_port
             tags["tcp_dst"] = packet.tcp.dstport
         elif "udp" in layer_names:
-            tags["udp_src"] = packet.udp.port
+            tags["udp_src"] = packet.udp.influxdb_port
             tags["udp_dst"] = packet.udp.dstport
 
         line += "," + ",".join([f"{k}={v}" for k, v in sorted(tags.items())])
         line += " "  # end tag-set (or measurement if no tag-set is present)
 
         # fields
-        fields = {
-            "data_len": "0"
-        }
+        fields = {"data_len": "0"}
         # third layer (usually data)
         if "DATA" in layer_names:
             # access through attribute not possible, bc of pyshark implementation (capitalized layer name)
@@ -149,4 +148,3 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet") -> List[s
         data.append(line)
 
     return data
-
