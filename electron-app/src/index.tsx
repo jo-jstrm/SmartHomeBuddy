@@ -2,7 +2,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import CssBaseline from "@mui/material/CssBaseline";
 import Frame from "./views/Frame";
-import {HashRouter} from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 
 const container = document.getElementById("root");
 const root = createRoot(container!);
