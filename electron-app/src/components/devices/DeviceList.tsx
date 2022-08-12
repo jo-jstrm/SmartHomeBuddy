@@ -1,14 +1,13 @@
 import * as React from "react";
-import {useState} from "react";
-import {Smartphone} from "@mui/icons-material";
+import { useState } from "react";
+import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
-import {queryAll} from "../../database/Database";
-import {Button} from "@mui/material";
-
+import { queryAll } from "../../database/Database";
+import { Button } from "@mui/material";
 
 const deviceList = [
   {
@@ -41,8 +40,8 @@ const dummy_devices = [
     icon: <Smartphone fontSize="large" />,
     status: "Not Identified",
     action: <WarningAmberIcon color="action" fontSize="large" />,
-  }
-]
+  },
+];
 
 export default function DeviceList(props: any) {
   const [devices, setDevices] = useState(dummy_devices);
@@ -50,28 +49,30 @@ export default function DeviceList(props: any) {
   const queryDevices = () => {
     queryAll(sql)
       .then((rows) => {
-        console.log("Received devices: " + rows.toString())
-        let devices = rows.map((elem: { device_name: string, mac_address: string }) => {
-          console.log(elem)
-          // TODO Icon, status, and action are hard coded.
-          return {
-            name: elem.device_name,
-            mac_address: elem.mac_address,
-            icon: <Smartphone fontSize="large" />,
-            status: "Identified",
-            action: <WarningAmberIcon color="action" fontSize="large" />,
+        console.log("Received devices: " + rows.toString());
+        let devices = rows.map(
+          (elem: { device_name: string; mac_address: string }) => {
+            console.log(elem);
+            // TODO Icon, status, and action are hard coded.
+            return {
+              name: elem.device_name,
+              mac_address: elem.mac_address,
+              icon: <Smartphone fontSize="large" />,
+              status: "Identified",
+              action: <WarningAmberIcon color="action" fontSize="large" />,
+            };
           }
-        })
-        setDevices(devices)
+        );
+        setDevices(devices);
       })
       .catch((err: Error) => {
-        console.log("Catch: " + err.toString())
-        setDevices(dummy_devices)
-      })
-  }
+        console.log("Catch: " + err.toString());
+        setDevices(dummy_devices);
+      });
+  };
   return (
     <React.Fragment>
-      <Title {...props} >Devices</Title>
+      <Title {...props}>Devices</Title>
       <Paper
         sx={{
           p: 2,
@@ -90,9 +91,7 @@ export default function DeviceList(props: any) {
         >
           <Grid item xs={12}>
             <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-              <Button onClick={queryDevices}>
-                 Load devices from database
-              </Button>
+              <Button onClick={queryDevices}>Load devices from database</Button>
             </Paper>
           </Grid>
           {devices.map((device, index) => {
