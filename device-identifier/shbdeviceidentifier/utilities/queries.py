@@ -1,6 +1,8 @@
 from pathlib import Path
 
-q_path = Path("device-identifier/shbdeviceidentifier/utilities/queries").resolve()
+from .app_utilities import IDENTIFIER_HOME
+
+q_path = IDENTIFIER_HOME / Path("utilities/queries").resolve()
 
 
 def query_file_to_string(file_path: Path) -> str:

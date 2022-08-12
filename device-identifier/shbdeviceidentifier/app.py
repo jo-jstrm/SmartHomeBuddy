@@ -16,7 +16,7 @@ from pyfiglet import Figlet
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps
-from .utilities.app_utilities import get_file_type
+from .utilities.app_utilities import get_file_type, IDENTIFIER_HOME
 from .utilities.capture_utilities import collect_traffic
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
@@ -300,6 +300,6 @@ def train(ctx, model_selector, training_data_path, training_labels_path):
 
     model.train(train_df[['data_len', 'stream_id']], train_labels)
 
-    save_path = "device-identifier/shbdeviceidentifier/ml_models/" + model_selector + ".pkl"
+    save_path = IDENTIFIER_HOME / Path("ml_models/" + model_selector + ".pkl")
     if model.save(save_path):
         logger.success(f"Model {model_selector} saved successfully to {save_path}.")
