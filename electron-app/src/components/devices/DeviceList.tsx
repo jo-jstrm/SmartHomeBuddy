@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Smartphone} from "@mui/icons-material";
+import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
@@ -25,7 +25,7 @@ export default function DeviceList(props: any) {
   ];
   return (
     <React.Fragment>
-      <Title {...props} >Devices</Title>
+      <Title {...props}>Devices</Title>
       <Paper
         sx={{
           p: 2,
