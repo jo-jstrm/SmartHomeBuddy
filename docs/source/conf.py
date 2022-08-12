@@ -12,6 +12,7 @@
 #
 import os
 import sys
+
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../device-identifier/'))
 
@@ -23,7 +24,7 @@ copyright = '2022, Johannes Jestram, Tobias Becher'
 author = 'Johannes Jestram, Tobias Becher'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.0'
+version = release = '0.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,10 +32,12 @@ release = '0.0.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.napoleon'
-              ]
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'sphinx_rtd_theme',
+]
 
 napoleon_google_docstring = False
 napoleon_use_param = False
