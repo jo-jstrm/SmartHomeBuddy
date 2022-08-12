@@ -75,6 +75,7 @@ function FrameContent() {
         >
           <Toolbar />
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route path="/main_window" element={<Home />} />
             <Route path="/home" element={<Home />} />
             <Route path="/devices" element={<Devices />} />
