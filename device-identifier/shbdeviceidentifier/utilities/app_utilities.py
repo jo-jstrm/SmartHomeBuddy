@@ -3,10 +3,12 @@ from typing import Union, Optional
 
 from loguru import logger
 
-
 # ---------------------------------------------------------------------------- #
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
+IDENTIFIER_HOME = Path(__file__).parents[1].resolve()
+SHB_HOME = Path(__file__).parents[3].resolve()
+
 
 def get_capture_file_path(ctx, file_path) -> Path:
     """Handling file path for the default capture file."""

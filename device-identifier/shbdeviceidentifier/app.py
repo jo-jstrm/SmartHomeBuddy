@@ -15,15 +15,15 @@ from pyfiglet import Figlet
 
 from .db import Database, DataLoader
 from .rpc.server import run_rpc_server
-from .utilities import get_capture_file_path, Formatter, logger_wraps, QUERIES
+from .utilities import get_capture_file_path, Formatter, logger_wraps
 from .utilities.app_utilities import get_file_type
 from .utilities.capture_utilities import collect_traffic
-
+from .utilities.ml_utilities import get_model
+from .utilities.queries import QUERIES
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
-from .utilities.ml_utilities import get_model
 
 logger.remove()
 formatter = Formatter()
