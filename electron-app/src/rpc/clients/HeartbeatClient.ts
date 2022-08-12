@@ -1,6 +1,6 @@
 // import * as grpc from "@grpc/grpc-js";
 import { ChannelCredentials, ServiceError } from "@grpc/grpc-js";
-import { config } from "../../config"
+import { config } from "../../config";
 import { HeartbeatRequest, HeartbeatResponse } from "../proto/heartbeat_pb";
 import { HeartbeatClient } from "../proto/heartbeat_grpc_pb";
 
@@ -17,9 +17,7 @@ export function callHeartbeatService(): Promise<any> {
         if (response) console.log("Response: ", response.toString());
         if (err) console.log("Error: ", err.toString());
         if (!err) {
-          console.log(
-            "Device identifier's heartbeat server is healthy.\n"
-          );
+          console.log("Device identifier's heartbeat server is healthy.\n");
           accept(true);
         } else {
           console.log(

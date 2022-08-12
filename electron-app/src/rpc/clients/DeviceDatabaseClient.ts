@@ -1,6 +1,9 @@
 import { ChannelCredentials, ServiceError } from "@grpc/grpc-js";
-import { ClassifyRequest, ClassifyResponse } from "../proto/devices_database_pb";
-import { config } from "../../config"
+import {
+  ClassifyRequest,
+  ClassifyResponse,
+} from "../proto/devices_database_pb";
+import { config } from "../../config";
 import { DevicesDatabaseClient } from "../proto/devices_database_grpc_pb";
 
 export function callClassifyDevices(): Promise<any> {
@@ -16,9 +19,7 @@ export function callClassifyDevices(): Promise<any> {
         if (response) console.log("Response: ", response.toString());
         if (err) console.log("Error: ", err.toString());
         if (!err) {
-          console.log(
-            "Device classification done.\n"
-          );
+          console.log("Device classification done.\n");
           accept(true);
         } else {
           console.log(

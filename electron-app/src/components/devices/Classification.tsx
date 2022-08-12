@@ -10,7 +10,7 @@ export default function Classification() {
     "Classify IoT devices based on the network data in your database."
   );
   const classifyDevices = () => {
-    setClassifierStatus("Classifying. This might take a moment...")
+    setClassifierStatus("Classifying. This might take a moment...");
     callClassifyDevices()
       .then(() => {
         setClassifierStatus("Classified!");
