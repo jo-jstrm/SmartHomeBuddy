@@ -1,3 +1,6 @@
+import sys
+
+sys.stderr = None  # suppress stderr for scapy TODO: remove this once a better solution is found
 import os
 import sys
 from dataclasses import dataclass
@@ -20,6 +23,7 @@ from .utilities.app_utilities import get_file_type, IDENTIFIER_HOME
 from .utilities.capture_utilities import collect_traffic
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
+
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
@@ -94,6 +98,7 @@ def app(ctx, debug, silent, verbose, version_flag):
         logger.error("Database connection failed.")
         sys.exit(1)
 
+    sys.stderr = sys.__stderr__  # restore stderr
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
