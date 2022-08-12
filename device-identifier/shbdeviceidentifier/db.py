@@ -454,16 +454,7 @@ class Database:
     ###### Devices ######
     #####################
 
-    def classify_devices(self):
-        # TODO implement.
-        devices = [
-            {"name": "Google Home Mini", "mac_address": "ef:00:49:01:1a:ff"},
-            {"name": "Amazon Echo Dot", "mac_address": "00:a0:00:19:2e:01"},
-        ]
-        for device in devices:
-            self._write_device(device["name"], device["mac_address"])
-
-    def _write_device(self, name, mac_address):
+    def write_device(self, name, mac_address):
         sql_write_device = """INSERT INTO devices (device_name, mac_address)
                                 VALUES (?,?);"""
         self.query_SQLiteDB(sql_write_device, [name, mac_address])

@@ -4,6 +4,7 @@ from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
 import shbdeviceidentifier.commands as commands
+from ..utilities.ml_utilities import classify_devices
 from ..db import Database
 from .proto import devices_database_pb2_grpc, devices_database_pb2
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
@@ -15,7 +16,7 @@ class DeviceDatabaseService(devices_database_pb2_grpc.DevicesDatabaseServicer):
         self, request: devices_database_pb2.ClassifyRequest, context
     ) -> devices_database_pb2.ClassifyResponse:
         logger.debug("GRPC Server received a ClassifyDevices request.")
-        Database().classify_devices()
+        classify_devices(Database())
         logger.debug("Processed ClassifyDevices request.")
         return devices_database_pb2.ClassifyResponse()
 

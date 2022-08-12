@@ -237,7 +237,7 @@ dmypy.json
 # Python unit tests
 /device-identifier/shbdeviceidentifier/tests/
 
-# Database files / binaries
+# database files / binaries
 InfluxData/*
 !/InfluxData/cli_setup.txt
 SQLite/*

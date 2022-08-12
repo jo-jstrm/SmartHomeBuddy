@@ -6,6 +6,7 @@ from importlib import metadata
 from pathlib import Path
 from pprint import pprint, pformat
 from typing import Union
+from time import sleep
 
 import click
 
@@ -92,8 +93,10 @@ def app(ctx, debug, silent, verbose, version_flag):
     # Database connections checks
     ctx.db = Database()
     ctx.db.start()
+    sleep(0.5)
     if not ctx.db.is_connected():
-        logger.error("Database connection failed.")
+        logger.error("Database connection failed. Quitting.")
+        ctx.db.stop_InfluxDB()
         sys.exit(1)
 
 
@@ -110,7 +113,10 @@ def start(ctx):
     try:
         run_rpc_server()
     except KeyboardInterrupt:
-        logger.info("Stopping InfluxDB...")
+        logger.info("Keyboard interrupt. Stopping InfluxDB...")
+    except SystemExit:
+        logger.info("System exit. Stopping InfluxDB...")
+    finally:
         ctx.db.stop_InfluxDB()
 
 
