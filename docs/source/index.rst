@@ -1,11 +1,12 @@
 .. title:: SmartHomeBuddy
 
-|SmartHomeBuddy| SmartHomeBuddy
-===============================
+.. image:: media/shb_long.png
+    :height: 72
+    :alt: SmartHomeBuddy
+    :align: center
 
-.. |SmartHomeBuddy| image:: media/shb.png
-    :height: 96
-    :alt:
+=============================
+
 
 SmartHomeBuddy is a desktop application that allows you to identify smart home devices in your home network.
 It is extensible with custom Machine Learning models for classification and provides countermeasures to secure your
