@@ -8,6 +8,7 @@ from loguru import logger
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
 
+
 def get_capture_file_path(ctx, file_path) -> Path:
     """Handling file path for the default capture file."""
 
@@ -21,7 +22,7 @@ def get_capture_file_path(ctx, file_path) -> Path:
 
 
 def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Optional[Path]:
-    """ Make sure file_path is of correct type and resolves to a valid file. """
+    """Make sure file_path is of correct type and resolves to a valid file."""
     try:
         file_path = Path(file_path).resolve()
         assert file_path.is_file()
@@ -34,7 +35,7 @@ def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Optional[P
 
 
 def get_file_type(file_path: Union[Path, str]) -> str:
-    """ Returns the file type of the given file. """
+    """Returns the file type of the given file."""
     file_path = resolve_file_path(file_path)
     if file_path:
         return file_path.suffix[1:]

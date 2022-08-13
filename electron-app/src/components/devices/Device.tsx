@@ -6,7 +6,7 @@ export default function Device(props: {
   name: string;
   icon: any;
   status: string;
-  mac: string;
+  mac_address: string;
   action: any;
 }) {
   return (
@@ -35,7 +35,7 @@ export default function Device(props: {
           </Grid>
           <Grid item>
             <Typography variant="body2" color="text.secondary">
-              {props.mac}
+              {props.mac_address}
             </Typography>
           </Grid>
         </Grid>
