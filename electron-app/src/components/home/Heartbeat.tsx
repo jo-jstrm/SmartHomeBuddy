@@ -3,14 +3,14 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
-import { callHeartbeatServer } from "../../rpc/HeartbeatClient";
+import { callHeartbeatService } from "../../rpc/clients/HeartbeatClient";
 
 export function Heartbeat() {
   const [identifierStatus, setIdentifierStatus] = useState(
     "Click the button to check the status of the Device Identifier."
   );
   const checkHeartbeat = () => {
-    callHeartbeatServer()
+    callHeartbeatService()
       .then(() => {
         setIdentifierStatus("Device Identifier is alive.");
       })
