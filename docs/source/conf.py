@@ -24,7 +24,7 @@ copyright = '2022, Johannes Jestram, Tobias Becher'
 author = 'Johannes Jestram, Tobias Becher'
 
 # The full version, including alpha/beta/rc tags
-version = release = '0.0.0'
+version = release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
