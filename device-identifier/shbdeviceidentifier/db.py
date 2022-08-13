@@ -47,7 +47,7 @@ class InfluxDbUser:
 # noinspection PyPep8Naming
 class Database:
     # SQLite database file path
-    db_file = Path("SQLite/main.db").resolve()
+    db_file = SHB_HOME / Path("SQLite/main.db")
 
     # InfluxDB database file path
     binary_name = ""
@@ -195,9 +195,9 @@ class Database:
         if influxdb_admin == None:
             raise ValueError("InfluxDB setup failed for unknown reasons")
         elif influxdb_admin.token == None:
-            logger.warning(
+            logger.trace(
                 "The InfluxDB setup has already been run. No new token was received. "
-                "Check the SQLite DB, if there is an admin token"
+                "Check the SQLite DB, if there is an admin token."
             )
             return
         self._store_InfluxDB_user(influxdb_admin)
