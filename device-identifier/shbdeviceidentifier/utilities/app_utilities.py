@@ -3,10 +3,12 @@ from typing import Union, Optional
 
 from loguru import logger
 
-
 # ---------------------------------------------------------------------------- #
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
+IDENTIFIER_HOME = Path(__file__).parents[1].resolve()
+SHB_HOME = Path(__file__).parents[3].resolve()
+
 
 
 def get_capture_file_path(ctx, file_path) -> Path:
@@ -14,7 +16,7 @@ def get_capture_file_path(ctx, file_path) -> Path:
 
     # find existing filepath with priority
     # user supplied filepath > context filepath > default filepath
-    paths = (file_path, ctx.latest_capture_file, "device-identifier/shbdeviceidentifier/pcaps/capture.pcap")
+    paths = (file_path, ctx.latest_capture_file, IDENTIFIER_HOME / Path("pcaps/capture.pcap"))
     path = next(filter(lambda p: bool(p), paths))
 
     ctx.latest_capture_file = resolve_file_path(path)
