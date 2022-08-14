@@ -1,9 +1,9 @@
 [project]
 name = "shbdeviceidentifier"
-version = "0.0.0"
+version = "0.1.0"
 authors = [
-  { name="Tobias Becher", email="TPB.DevAcc@gmail.com" },
-  { name="Johannes Jestram", email="jambalaya_jo@posteo.ch" }
+    { name = "Tobias Becher", email = "TPB.DevAcc@gmail.com" },
+    { name = "Johannes Jestram", email = "jambalaya_jo@posteo.ch" }
 ]
 description = "Backend to SmartHomeBuddy"
 readme = "README.md"
