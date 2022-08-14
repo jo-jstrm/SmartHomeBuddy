@@ -1,8 +1,8 @@
 [project]
-name = "smarthomebuddy"
+name = "shbdeviceidentifier"
 version = "0.0.0"
 authors = [
-  { name="Tobias Becher", email="author@example.com" },
+  { name="Tobias Becher", email="TPB.DevAcc@gmail.com" },
   { name="Johannes Jestram", email="jambalaya_jo@posteo.ch" }
 ]
 description = "Backend to SmartHomeBuddy"
@@ -24,5 +24,8 @@ requires = ["setuptools",
             "wheel",
             "cython"]
 
+[project.scripts]
+shbdeviceidentifier = "shbdeviceidentifier:__main__"
+
 [tool.black]
-line-length = 99
+line-length = 120

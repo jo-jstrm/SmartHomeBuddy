@@ -12,6 +12,7 @@
 #
 import os
 import sys
+
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../device-identifier/'))
 
@@ -23,7 +24,7 @@ copyright = '2022, Johannes Jestram, Tobias Becher'
 author = 'Johannes Jestram, Tobias Becher'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.0'
+version = release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,10 +32,12 @@ release = '0.0.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.napoleon'
-              ]
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'sphinx_rtd_theme',
+]
 
 napoleon_google_docstring = False
 napoleon_use_param = False
@@ -60,3 +63,9 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'custom.css',
+]

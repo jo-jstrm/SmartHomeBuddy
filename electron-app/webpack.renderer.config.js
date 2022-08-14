@@ -1,9 +1,9 @@
-const rules = require('./webpack.rules');
-const plugins = require('./webpack.plugins');
+const rules = require("./webpack.rules");
+const plugins = require("./webpack.plugins");
 
 rules.push({
   test: /\.css$/,
-  use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+  use: [{ loader: "style-loader" }, { loader: "css-loader" }],
 });
 
 module.exports = {
@@ -12,6 +12,19 @@ module.exports = {
   },
   plugins: plugins,
   resolve: {
-    extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
+    extensions: [".js", ".ts", ".jsx", ".tsx", ".css"],
+    // fallback: {
+    // "path": require.resolve("path-browserify"),
+    // "os": require.resolve("os-browserify/browser"),
+    // "stream": require.resolve("stream-browserify"),
+    // "assert": require.resolve("assert/"),
+    // "url": require.resolve("url/"),
+    //
+    // "path": false,
+    // "os": false,
+    // "stream": false,
+    // "assert": false,
+    // "url": false,
+    // }
   },
 };

@@ -1,0 +1,14 @@
+Folder structure:
+
+SmartHomeBuddy
+├── device-identifier
+├── electron-app
+├── InfluxData
+    ├── influxdb
+        ├── influxd binary
+        ├── ...
+    ├── influxdb-client
+        ├── influx binary
+        ├── admin_auth.json
+        ├── ...
+├── ...

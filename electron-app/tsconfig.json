@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
+    "module": "ES2020",
     "allowJs": true,
-    "module": "commonjs",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,

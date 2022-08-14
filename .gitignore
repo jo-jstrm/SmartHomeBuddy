@@ -108,7 +108,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+device-identifier/build/
 develop-eggs/
 dist/
 downloads/
@@ -227,3 +227,20 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Packet Capture files
+/device-identifier/shbdeviceidentifier/pcaps/*
+!/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
+!/device-identifier/shbdeviceidentifier/pcaps/dummy_labels.json
+
+# Python unit tests
+/device-identifier/shbdeviceidentifier/tests/
+
+# Database files / binaries
+InfluxData/*
+!/InfluxData/cli_setup.txt
+SQLite/*
+!/SQLite/cli_setup.txt
+
+# ML model files
+*.pkl
