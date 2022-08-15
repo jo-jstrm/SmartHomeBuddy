@@ -1,6 +1,6 @@
 import sys
 
-sys.stderr = None  # suppress stderr for scapy TODO: remove this once a better solution is found
+# sys.stderr = None  # suppress stderr for scapy TODO: remove this once a better solution is found
 import os
 import sys
 from dataclasses import dataclass
@@ -104,6 +104,7 @@ def app(ctx, debug, silent, verbose, version_flag):
         sys.exit(1)
 
     sys.stderr = sys.__stderr__  # restore stderr
+
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
