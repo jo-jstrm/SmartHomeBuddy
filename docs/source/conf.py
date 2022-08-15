@@ -69,3 +69,8 @@ html_static_path = ['_static']
 html_css_files = [
     'custom.css',
 ]
+
+html_js_files = [
+    'custom.js',
+    "https://cdn.jsdelivr.net/npm/clipboard@1/dist/clipboard.min.js"
+]
