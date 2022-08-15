@@ -22,12 +22,44 @@ Quick links
 Get Started
 ------------
 
+GUI
+~~~
+
+Select the correct binary for your system from `GitHub <https://github.com/jo-jstrm/SmartHomeBuddy/releases>`_ and install it.
+You should then be able to start the application.
 
 
-Installation
-------------
+CLI
+~~~~
 
+The command line interface shbdeviceidentifier requires Python 3.8 or higher.
+You can start by installing the application by running the following command from the main directory of the repository:
 
+.. code-block:: bash
+
+    cd device-identifier
+
+.. code-block:: bash
+
+    pip install -r requirements.txt
+
+And for example:
+
+.. code-block:: bash
+
+    shbdeviceidentifier start
+
+The result should look something like this:
+
+.. image:: media/cli_carbon2_bgW.png
+    :alt: device-identifier-start
+    :align: center
+
+A list of available commands can be found by running the following command:
+
+.. code-block:: bash
+
+    shbdeviceidentifier --help
 
 Documentation
 -------------

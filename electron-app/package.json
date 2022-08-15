@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "rebuild": "electron-rebuild -f -w sqlite3"
   },
   "keywords": [],
   "author": {
@@ -127,6 +128,7 @@
     "typescript": "~4.5.4"
   },
   "dependencies": {
+    "@electron-forge/publisher-github": "^6.0.0-beta.65",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
     "@grpc/grpc-js": "^1.6.8",
@@ -138,6 +140,7 @@
     "react-dom": "^18.2.0",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
-    "recharts": "^2.1.12"
+    "recharts": "^2.1.12",
+    "sqlite3": "^5.0.11"
   }
 }

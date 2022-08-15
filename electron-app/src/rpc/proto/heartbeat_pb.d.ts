@@ -1,4 +1,4 @@
-// package:
+// package: SmartHomeBuddy
 // file: heartbeat.proto
 
 import * as jspb from "google-protobuf";

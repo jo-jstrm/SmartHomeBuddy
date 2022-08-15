@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package SmartHomeBuddy;
+
+message ClassifyRequest {
+  string param = 1;
+}
+
+message ClassifyResponse {
+  bool is_done = 1;
+}
+
+service DevicesDatabase {
+  rpc ClassifyDevices(ClassifyRequest) returns (ClassifyResponse);
+}

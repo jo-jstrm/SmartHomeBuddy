@@ -1,6 +1,6 @@
 // GENERATED CODE -- DO NOT EDIT!
 
-// package:
+// package: SmartHomeBuddy
 // file: heartbeat.proto
 
 import * as heartbeat_pb from "./heartbeat_pb";
