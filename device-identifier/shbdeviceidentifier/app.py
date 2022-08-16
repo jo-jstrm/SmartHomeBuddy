@@ -103,8 +103,6 @@ def app(ctx, debug, silent, verbose, version_flag):
         ctx.db.stop_InfluxDB()
         sys.exit(1)
 
-    sys.stderr = sys.__stderr__  # restore stderr
-
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
