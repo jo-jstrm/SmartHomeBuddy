@@ -2,7 +2,7 @@ from pathlib import Path
 
 from .app_utilities import IDENTIFIER_HOME
 
-query_dir = Path(IDENTIFIER_HOME, "utilities/queries").resolve()
+query_dir = IDENTIFIER_HOME / "utilities/queries"
 
 
 def query_file_to_string(file_path: Path) -> str:
