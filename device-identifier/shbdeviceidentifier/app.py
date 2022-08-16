@@ -1,6 +1,3 @@
-import sys
-
-# sys.stderr = None  # suppress stderr for scapy TODO: remove this once a better solution is found
 import os
 import sys
 from dataclasses import dataclass
@@ -9,17 +6,14 @@ from importlib import metadata
 from pathlib import Path
 from pprint import pprint, pformat
 from typing import Union
-from time import sleep
 
 import click
-
 import pyshark
 from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
 from .db import Database, DataLoader
-from .rpc.server import run_rpc_server
 from .utilities import get_capture_file_path, Formatter, logger_wraps
 from .utilities.app_utilities import get_file_type, IDENTIFIER_HOME
 from .utilities.capture_utilities import collect_traffic
@@ -96,12 +90,7 @@ def app(ctx, debug, silent, verbose, version_flag):
 
     # Database connections checks
     ctx.db = Database()
-    ctx.db.start()
-    sleep(0.5)
-    if not ctx.db.is_connected():
-        logger.error("Database connection failed. Quitting.")
-        ctx.db.stop_InfluxDB()
-        sys.exit(1)
+    commands.start_database(ctx.db)
 
 
 # ---------------------------------------------------------------------------- #
@@ -114,14 +103,7 @@ def start(ctx):
     """
     Starts the RPC and database servers.
     """
-    try:
-        run_rpc_server()
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt. Stopping InfluxDB...")
-    except SystemExit:
-        logger.info("System exit. Stopping InfluxDB...")
-    finally:
-        ctx.db.stop_InfluxDB()
+    commands.run_rpc_server(ctx.db)
 
 
 @app.command("collect")
@@ -164,7 +146,7 @@ def show_interfaces():
 @pass_ctx
 @logger_wraps()
 def read(ctx, file_path: click.Path, file_type: str):
-    """CLI wrapper. Calls read()"""
+    """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
     commands.read(ctx.db, file_path, file_type)
 

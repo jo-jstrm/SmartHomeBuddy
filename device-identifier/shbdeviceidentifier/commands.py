@@ -1,9 +1,29 @@
 import click
 import pandas as pd
+import sys
 from loguru import logger
+from time import sleep
 
 from .db import Database, DataLoader
+from .rpc.server import start_rpc_server
 
+
+def start_database(db: Database):
+    db.start()
+    sleep(0.5)
+    if not db.is_connected():
+        logger.error("Database connection failed. Quitting.")
+        db.stop_InfluxDB()
+        sys.exit(1)
+def run_rpc_server(db: Database):
+    try:
+        start_rpc_server()
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt. Stopping InfluxDB...")
+    except SystemExit:
+        logger.info("System exit. Stopping InfluxDB...")
+    finally:
+        db.stop_InfluxDB()
 
 def read(db: Database, file_path: click.Path, file_type: str):
     """Reads all the data from a capture file."""
