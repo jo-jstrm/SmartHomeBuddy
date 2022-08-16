@@ -1,5 +1,5 @@
-import { config } from "../config";
-let sqlite3 = require("sqlite3");
+import {config} from "../config";
+
 
 /**
  * Query the SQLite DB.
@@ -9,7 +9,7 @@ let sqlite3 = require("sqlite3");
  */
 export function queryAll(sql: string, params: any[] = []): Promise<any> {
   console.log("SQLite DB path: " + config.database.path);
-  let db = new sqlite3.Database(config.database.path, sqlite3.OPEN_READ);
+  const db = require('better-sqlite3')(config.database.path, {readonly: true});
   return new Promise((accept, reject) => {
     db.all(sql, params, (err: any, rows: any) => {
       if (err) {
@@ -22,3 +22,4 @@ export function queryAll(sql: string, params: any[] = []): Promise<any> {
     });
   });
 }
+
