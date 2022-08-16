@@ -24,7 +24,7 @@ from requests.adapters import HTTPAdapter, Retry
 from scapy.all import rdpcap
 from sqlite3 import Error
 
-from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR
+from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
 
@@ -56,8 +56,8 @@ class Database:
             f"Unsupported system: {system}. Please use Linux or Windows. "
             f"Alternatively, start the influxdb server manually."
         )
-    influxdb_binary_path = INFLUXDB_DIR / "influxdb" / influxdb_binary
-    influx_log_path = INFLUXDB_DIR / "logs" / "influx.log"
+    influxdb_binary_path = INFLUXDB_DIR / influxdb_binary
+    influx_log_path = LOG_DIR / "logs" / "influx.log"
 
     default_username = "user"
     influx_process: Union[None, Popen[bytes], Popen] = None

@@ -32,4 +32,4 @@ setup-influxdb:
 
 dist-device-identifier:
 	 cd device-identifier && \
-	 	pyinstaller cli.py &&
+	 	pyinstaller --noconfirm device_identifier_server.py
