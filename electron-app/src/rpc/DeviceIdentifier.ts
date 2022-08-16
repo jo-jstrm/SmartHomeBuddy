@@ -10,7 +10,10 @@ export function runDeviceIdentifier(): void {
   if (isDevMode) {
     return;
   }
-  const deviceIdentifierPath = path.join(process.resourcesPath, "device_identifier_server/device_identifier_server");
+  const deviceIdentifierPath = path.join(
+    process.resourcesPath,
+    "device_identifier_server/device_identifier_server"
+  );
   console.log("deviceIdentifierPath: " + deviceIdentifierPath);
   let child = spawn(deviceIdentifierPath);
 }
