@@ -4,19 +4,17 @@ from dataclasses import dataclass
 from functools import partial
 from importlib import metadata
 from pathlib import Path
-from pprint import pprint, pformat
+from pprint import pprint
 from typing import Union
 
 import click
-import pyshark
 from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
 from .db import Database, DataLoader
 from .utilities import get_capture_file_path, Formatter, logger_wraps
-from .utilities.app_utilities import get_file_type, IDENTIFIER_HOME
-from .utilities.capture_utilities import collect_traffic
+from .utilities.app_utilities import get_file_type, DATA_DIR
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
 
@@ -106,33 +104,6 @@ def start(ctx):
     commands.run_rpc_server(ctx.db)
 
 
-@app.command("collect")
-@click.option("-t", "--time", type=click.INT, required=False, default=-1, help="Time to capture in seconds.")
-@click.option("-o", "--out", type=click.Path(), required=False, default=None, help="Output file path.")
-@click.argument("interface", nargs=1, type=click.STRING)
-@pass_ctx
-@logger_wraps()
-def collect(ctx, interface, time, out):
-    """
-    Collects all the data from an interface.
-    """
-    file_path = get_capture_file_path(ctx, out)
-    cap = collect_traffic(interface=interface, time=time, output_file=file_path)
-    if cap:
-        logger.success(f"Captured {len(cap)} packets.")
-    else:
-        logger.info(f"No packets captured.")
-
-
-@app.command("show-interfaces")
-def show_interfaces():
-    """
-    The show_interfaces function prints the available interfaces on the machine.
-    """
-    available_interfaces = {i: Path(face) for i, face in enumerate(pyshark.LiveCapture().interfaces)}
-    logger.info(f"Available interfaces:\n {pformat(available_interfaces, indent=57)[1:-1]}")
-
-
 @app.command("read")
 @click.argument("file_path", type=click.Path())
 @click.option(
@@ -209,7 +180,7 @@ def identify(ctx, file_path, model_path, out, model_selector):
 def query(ctx, data_base, statement_name):
     """
     Queries the database.
-    Find all available statements in utilities.queries.
+    Find all available statements in utilities.query_files.
     """
     statement = QUERIES[data_base][statement_name]
     # TODO: handle long list of results / complex results
@@ -275,6 +246,6 @@ def train(ctx, model_selector, training_data_path, training_labels_path):
 
     model.train(train_df[["data_len", "stream_id"]], train_labels)
 
-    save_path = IDENTIFIER_HOME / Path("ml_models/" + model_selector + ".pkl")
+    save_path = DATA_DIR / Path("ml_models/" + model_selector + ".pkl")
     if model.save(save_path):
         logger.success(f"Model {model_selector} saved successfully to {save_path}.")

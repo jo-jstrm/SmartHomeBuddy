@@ -4,17 +4,21 @@ import sys
 from loguru import logger
 from time import sleep
 
+from .utilities.app_utilities import SHB_HOME, DATA_DIR
 from .db import Database, DataLoader
 from .rpc.server import start_rpc_server
 
 
 def start_database(db: Database):
+    logger.debug(f"SHB_HOME: {SHB_HOME}")
+    logger.debug(f"DATA_DIR: {DATA_DIR}")
     db.start()
     sleep(0.5)
     if not db.is_connected():
         logger.error("Database connection failed. Quitting.")
         db.stop_InfluxDB()
         sys.exit(1)
+
 def run_rpc_server(db: Database):
     try:
         start_rpc_server()

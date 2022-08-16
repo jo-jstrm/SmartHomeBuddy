@@ -6,16 +6,31 @@ from loguru import logger
 # ---------------------------------------------------------------------------- #
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
-IDENTIFIER_HOME = Path(__file__).parents[1].resolve()
-SHB_HOME = Path(__file__).parents[3].resolve()
-
+parts = Path(__file__).parts
+parents = Path(__file__).parents
+if "SmartHomeBuddy" in parts and "device-identifier" in parts:
+    # Local dev-setup.
+    for idx in range(len(parents)):
+        if parents[idx].parts[-1] == "device-identifier":
+            DATA_DIR = parents[idx].resolve() / "shbdeviceidentifier"
+        elif parents[idx].parts[-1] == "SmartHomeBuddy":
+            SHB_HOME = parents[idx].resolve()
+elif "smarthomebuddy" in parts and "resources" in parts:
+    # Installed together with electron-app.
+    for idx in range(len(parents)):
+        if parents[idx].parts[-1] == "resources":
+            SHB_HOME = parents[idx].resolve()
+        DATA_DIR = SHB_HOME / "data"
+INFLUXDB_DIR = SHB_HOME / "InfluxData"
+SQLITE_DIR = SHB_HOME / "SQLite"
+QUERY_DIR = DATA_DIR / "utilities" / "query_files"
 
 def get_capture_file_path(ctx, file_path) -> Path:
     """Handling file path for the default capture file."""
 
     # find existing filepath with priority
     # user supplied filepath > context filepath > default filepath
-    paths = (file_path, ctx.latest_capture_file, IDENTIFIER_HOME / Path("pcaps/capture.pcap"))
+    paths = (file_path, ctx.latest_capture_file, DATA_DIR / Path("pcaps/capture.pcap"))
     path = next(filter(lambda p: bool(p), paths))
 
     ctx.latest_capture_file = resolve_file_path(path)
