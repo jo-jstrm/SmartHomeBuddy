@@ -23,7 +23,7 @@
       "packagerConfig": {
         "appCopyright": "GPLv3",
         "extraResource": [
-          "../device-identifier/dist/cli",
+          "../device-identifier/dist/device_identifier_server",
           "../InfluxData/influxdb",
           "../InfluxData/influxdb-client"
         ]
