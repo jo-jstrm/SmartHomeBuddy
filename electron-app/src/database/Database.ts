@@ -1,6 +1,6 @@
 import { config } from "../config";
-const homedir = require('os').homedir();
-const path = require('path');
+const homedir = require("os").homedir();
+const path = require("path");
 let sqlite3 = require("sqlite3");
 
 /**
@@ -16,8 +16,7 @@ export function queryAll(sql: string, params: any[] = []): Promise<any> {
   let dbPath;
   if (isDevMode) {
     dbPath = config.database.dev_dir;
-  }
-  else {
+  } else {
     dbPath = path.join(homedir, config.database.dir);
   }
   console.log("SQLite DB path: " + dbPath);
