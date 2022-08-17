@@ -8,13 +8,15 @@ from loguru import logger
 # ---------------------------------------------------------------------------- #
 parts = Path(__file__).parts
 parents = Path(__file__).parents
-if "SmartHomeBuddy" in parts and "device-identifier" in parts:
+
+# TODO: refactor / improve robustness
+if ("SmartHomeBuddy" in parts or "smarthomebuddy" in parts) and "device-identifier" in parts:
     # Local dev-setup.
     is_installed = False
     for idx in range(len(parents)):
         if parents[idx].parts[-1] == "device-identifier":
             DATA_DIR = parents[idx].resolve() / "shbdeviceidentifier"
-        elif parents[idx].parts[-1] == "SmartHomeBuddy":
+        elif parents[idx].parts[-1] == "SmartHomeBuddy" or parents[idx].parts[-1] == "smarthomebuddy":
             SHB_HOME = parents[idx].resolve()
 elif "smarthomebuddy" in parts and "resources" in parts:
     # Installed together with electron-app.
@@ -23,12 +25,16 @@ elif "smarthomebuddy" in parts and "resources" in parts:
         if parents[idx].parts[-1] == "resources":
             SHB_HOME = parents[idx].resolve()
     DATA_DIR = SHB_HOME / "data"
-INFLUXDB_DIR =  SHB_HOME / "influxdb" if is_installed else SHB_HOME / "InfluxData" / "influxdb"
+else:
+    raise Exception("Could not determine installation location.")
+
+INFLUXDB_DIR = SHB_HOME / "influxdb" if is_installed else SHB_HOME / "InfluxData" / "influxdb"
 INFLUXDB_CLIENT_DIR = SHB_HOME / "influxdb-client" if is_installed else SHB_HOME / "InfluxData" / "influxdb-client"
-# Logs need to be written. You usually do not have write access to the install location.
+# Logs need to be written. You usually do not have write access to the install-location.
 LOG_DIR = Path.home() / ".smarthomebuddy" if is_installed else INFLUXDB_DIR
 SQLITE_DIR = Path.home() / ".smarthomebuddy" / "database" if is_installed else SHB_HOME / "SQLite"
 QUERY_DIR = DATA_DIR / "utilities" / "query_files"
+
 
 def get_capture_file_path(ctx, file_path) -> Path:
     """Handling file path for the default capture file."""
