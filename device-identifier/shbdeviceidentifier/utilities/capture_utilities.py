@@ -1,84 +1,19 @@
-import platform
-import shlex
-import subprocess
-from pathlib import Path
-from typing import List, Union, Optional, Dict, Tuple
+from typing import List, Optional, Dict
 
 import numba as nb
 import numpy as np
 import pandas as pd
-import pyshark
 from loguru import logger
 from numba_progress import ProgressBar
-from pyshark.capture.capture import Capture
 from scapy.all import TCP, UDP, IP
 from scapy.packet import Packet
 
-from .app_utilities import resolve_file_path
 from .logging_utilities import spinner
-
-
-def collect_traffic(
-    interface: Union[Path, str] = None, time: int = -1, output_file: Union[Path, str] = None
-) -> Optional[pyshark.capture.capture.Capture]:
-    """
-    The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
-    Either the interface_id or the interface name must be specified.
-    If no or non-positive time is specified, it will run indefinitely until the user stops it.
-    It can also write the captured packets to an output file if one is provided.
-
-    Parameters
-    ----------
-        interface: str = None
-            The interface to capture traffic on
-        time: int = 0
-            The time limit for the traffic capture in seconds
-        output_file: Union[Path, str]=None
-            The path to the output file
-
-    Returns
-    -------
-
-        A capture object
-
-    Doc Author
-    ----------
-        TB
-    """
-    if not isinstance(interface, Path) and interface.isdigit():
-        ix = int(interface)
-    else:
-        interface = Path(interface)
-        available_interfaces = [Path(face) for face in pyshark.LiveCapture().interfaces]
-        try:
-            ix = available_interfaces.index(interface)
-        except ValueError:
-            logger.error(f"Interface {interface} not found. Available interfaces are {available_interfaces}.")
-            return None
-
-    interface = pyshark.LiveCapture().interfaces[ix]
-
-    if output_file:
-        output_file = Path(output_file).resolve()
-        logger.info(f"Capturing traffic on interface {interface} and saving to {output_file}.")
-    else:
-        logger.info(f"Capturing traffic on interface {interface}. No output file specified.")
-
-    cap = pyshark.LiveCapture(interface=interface, output_file=output_file)
-
-    if time > 0:
-        cap.sniff(timeout=time)
-    else:
-        logger.error("Continuously capturing traffic is currently not supported.")
-        # TODO: add continuous capture support
-        # logger.info("Sniffing indefinitely... (Ctrl-C to stop)")
-        # gen = cap.sniff_continuously()
-    return cap
 
 
 # noinspection PyPep8Naming
 @nb.jit(forceobj=True, parallel=True)
-def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_proxy) -> pd.DataFrame:
+def _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress_proxy) -> pd.DataFrame:
     """
     The _convert_Capture_to_DataFrame_JIT function is the JIT compiled part of the
      convert_Capture_to_DataFrame function.
@@ -119,7 +54,7 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
+def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
     spinner.stop()
     with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
@@ -128,7 +63,7 @@ def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
+def convert_Capture_to_Line(cap, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
@@ -210,33 +145,6 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additiona
     return data
 
 
-def get_conversations(file_path: Union[str, Path]) -> Tuple[Optional[List[dict]], Optional[List[dict]]]:
-    """
-    Gets the conversations statistics from tshark.
-    Returns it as a list of protocols containing a dictionary per conversation.
-    Ordered as tcp, udp.
-    """
-    file_path = resolve_file_path(file_path)
-    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
-    if tshark_path and file_path:
-        # TODO: add support for other operating systems and possibly transport protocols
-
-        # Make sure arguments for tshark call are split properly
-        args_tcp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
-        args_udp = shlex.split(tshark_path.as_posix() + " -q -z conv,udp -r " + file_path.as_posix())
-
-        # Run tshark and get output as text
-        res_tcp = subprocess.run(args_tcp, capture_output=True, text=True).stdout
-        res_udp = subprocess.run(args_udp, capture_output=True, text=True).stdout
-
-        # Parse output into list of dictionaries
-        res_tcp = _conversations_string_to_list(res_tcp, tag={"protocol": "tcp"})
-        res_udp = _conversations_string_to_list(res_udp, tag={"protocol": "udp"})
-
-        # Combine results
-        return res_tcp, res_udp
-
-
 def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
     """Converts a conversations string to a list of dictionaries"""
     # Split into lines
@@ -274,32 +182,6 @@ def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optio
             logger.debug(e)
 
     return res if res else None
-
-
-def get_capinfos(file_path: Union[str, Path]) -> Optional[Dict]:
-    """
-    Gets the capinfos statistics from tshark.
-    Returns it as a dictionary.
-    """
-    file_path = resolve_file_path(file_path)
-    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
-
-    system = platform.system()
-    if system == "Windows":
-        capinfos_path = "capinfos.exe"
-    else:
-        capinfos_path = "capinfos"
-    capinfos_path = resolve_file_path(tshark_path.parents[0] / capinfos_path)
-
-    if capinfos_path and file_path:
-        # Make sure arguments for tshark call are split properly
-        args = shlex.split(capinfos_path.as_posix() + " " + file_path.as_posix())
-
-        # Run tshark and get output as text
-        res = subprocess.run(args, capture_output=True, text=True).stdout
-
-        # Parse output into dictionary
-        return _capinfos_string_to_dict(res)
 
 
 def _capinfos_string_to_dict(capinfos: str) -> Optional[Dict]:
