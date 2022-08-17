@@ -7,12 +7,9 @@ import os
 import platform
 import traceback
 
-import requests
-import sqlite3
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, Generator, List, Optional
 
@@ -20,12 +17,14 @@ import influxdb
 import influxdb_client
 import pandas as pd
 import requests
+import sqlite3
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
 from scapy.all import rdpcap
+from sqlite3 import Error
 
-from .utilities.app_utilities import resolve_file_path, SHB_HOME
+from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
 
@@ -43,22 +42,22 @@ class InfluxDbUser:
 # noinspection PyPep8Naming
 class Database:
     # SQLite database file path
-    db_file = SHB_HOME / Path("SQLite/main.db")
+    db_file = SQLITE_DIR / "main.db"
 
     # InfluxDB database file path
-    binary_name = ""
+    influxdb_binary = ""
     system = platform.system()
     if system == "Linux":
-        binary_name = "influxd"
+        influxdb_binary = "influxd"
     elif system == "Windows":
-        binary_name = "influxd.exe"
+        influxdb_binary = "influxd.exe"
     else:
         logger.error(
             f"Unsupported system: {system}. Please use Linux or Windows. "
             f"Alternatively, start the influxdb server manually."
         )
-    influxdb_binary_path = SHB_HOME / Path("InfluxData/influxdb/", binary_name)
-    influx_log_path = SHB_HOME / Path("InfluxData/logs/influx.log")
+    influxdb_binary_path = INFLUXDB_DIR / influxdb_binary
+    influx_log_path = LOG_DIR / "logs" / "influx.log"
 
     default_username = "user"
     influx_process: Union[None, Popen[bytes], Popen] = None
@@ -91,7 +90,7 @@ class Database:
         error_msg = (
             f"InfluxDB log file {self.influx_log_path} does not exist or could not be created."
             f" Please check your log directory."
-            f" Default log directory is '{SHB_HOME}/InfluxData/logs/influx.log'"
+            f" Default log directory is '{INFLUXDB_DIR}/logs/influx.log'"
             f" Current working directory: {os.getcwd()}"
         )
         self.influx_log_path = resolve_file_path(influx_log_path, error_msg=error_msg)
@@ -104,14 +103,14 @@ class Database:
             Path(db_file).touch()
         error_msg = (
             f"Database file {self.db_file} does not exist or could not be created."
-            f" Please supply a valid database file. Default database file is '{SHB_HOME}/SQLite/main.db'"
+            f" Please supply a valid database file. Default database file is '{SQLITE_DIR}/main.db'"
             f" Current working directory: {os.getcwd()}"
         )
         self.db_file = resolve_file_path(db_file, error_msg=error_msg)
 
         error_msg = (
             f"InfluxDB binary {self.influxdb_binary_path} does not exist."
-            f" Please check your installation path. Default installation path is '{SHB_HOME}/InfluxData/influxdb/'"
+            f" Please check your installation path. Default installation path is '{INFLUXDB_DIR}/influxdb'"
             f" Current working directory: {os.getcwd()}"
         )
         self.influxdb_binary_path = resolve_file_path(influxdb_binary_path, error_msg=error_msg)

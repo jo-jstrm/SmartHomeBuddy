@@ -37,7 +37,7 @@ class PcapDatabaseService(pcap_database_pb2_grpc.PcapDatabaseServicer):
         return pcap_database_pb2.DbLoadResponse(is_done=True)
 
 
-def run_rpc_server():
+def start_rpc_server():
     port = 8090
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     devices_database_pb2_grpc.add_DevicesDatabaseServicer_to_server(DeviceDatabaseService(), server)

@@ -1,7 +1,7 @@
 {
   "name": "smarthomebuddy",
   "productName": "SmartHomeBuddy",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Identify vulnerabilities in your network from IoT devices.",
   "main": ".webpack/main",
   "scripts": {
@@ -23,7 +23,7 @@
       "packagerConfig": {
         "appCopyright": "GPLv3",
         "extraResource": [
-          "../device-identifier/dist/cli",
+          "../device-identifier/dist/device_identifier_server",
           "../InfluxData/influxdb",
           "../InfluxData/influxdb-client"
         ]
