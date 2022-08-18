@@ -1,0 +1,24 @@
+What's new in SmartHomeBuddy 0.1.0
+==================================
+
+Jul 13, 2022
+
+
+General changes
+~~~~~~~~~~~~~~~
+
+We are pleased to announce the release of SmartHomeBuddy 0.1.0, which marks the first release of the SmartHomeBuddy project.
+This release is just a simple proof of concept.
+
+`shbdeviceidentifier`
+~~~~~~~~~~~~~~~~~~~~~
+
+The `shbdeviceidentifier` package is a Python module that can be used to identify smart home devices from a packet capture.
+In it's current form, it only implements basic functionality such as reading data, converting capture files to pandas DataFrames, and a rudimentary Identification of devices.
+
+`electron-app`
+~~~~~~~~~~~~~~~
+
+The `electron-app` is a stand-alone Electron application for Windows and Linux (MacOS is planned for future full releases).
+
+
