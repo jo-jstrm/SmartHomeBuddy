@@ -37,7 +37,7 @@ jobs:
       - name: Build Python distributable for ${{ matrix.os }}
         run: |
           cd device-identifier
-          pyinstaller cli.py
+          pyinstaller device_identifier_server.py
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
