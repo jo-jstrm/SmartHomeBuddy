@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import platform
 import traceback
 
@@ -127,7 +128,13 @@ class Database:
         self.influx_process = self.start_InfluxDB()
         self._create_SQLite_tables()
         if not self._is_InfluxDB_setup():
-            self._do_initial_db_setup()
+            if not self._do_initial_db_setup():
+                logger.error(
+                        "InfluxDB setup not possible."
+                        " It is likely that shbdeviceidentifier could not find an authorization token."
+                        " Please reinstall InfluxDB."
+                    ) # TODO: better error message
+                sys.exit(1)
 
     def _run_influxdb_setup(self) -> Optional[InfluxDbUser]:
         """Runs the "setup" routine from InfluxDBs API. It sets up the admin user for InfluxDB and return an access token.
@@ -179,18 +186,19 @@ class Database:
         logger.trace(f"The following list should be empty: influxdb_user_id = {influxdb_user_id}")
         return True if influxdb_user_id else False
 
-    def _do_initial_db_setup(self):
+    def _do_initial_db_setup(self) -> bool:
         influxdb_admin = self._run_influxdb_setup()
         if influxdb_admin == None:
-            raise ValueError("InfluxDB setup failed for unknown reasons")
+            raise ValueError("InfluxDB setup failed for unknown reasons.")
         elif influxdb_admin.token == None:
             logger.trace(
                 "The InfluxDB setup has already been run. No new token was received. "
                 "Check the SQLite DB, if there is an admin token."
             )
-            return
+            return False
         self._store_InfluxDB_user(influxdb_admin)
         logger.success("Completed initial DB setup.")
+        return True
 
     def _create_SQLite_tables(self):
         """
