@@ -182,9 +182,9 @@ class Database:
     def _do_initial_db_setup(self):
         influxdb_admin = self._run_influxdb_setup()
         if influxdb_admin == None:
-            raise ValueError("InfluxDB setup failed for unknown reasons")
-        elif influxdb_admin.token == None:
-            logger.trace(
+            raise ValueError("InfluxDB setup failed for unknown reasons.")
+        elif influxdb_admin.token != None:
+            logger.debug(
                 "The InfluxDB setup has already been run. No new token was received. "
                 "Check the SQLite DB, if there is an admin token."
             )
