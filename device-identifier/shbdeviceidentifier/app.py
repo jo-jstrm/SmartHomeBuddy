@@ -12,9 +12,9 @@ from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
-from .db import Database, DataLoader
+from .db import Database
+from .dataloader import DataLoader
 from .utilities import get_capture_file_path, Formatter, logger_wraps
-from .utilities.app_utilities import get_file_type, DATA_DIR
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
 
@@ -206,46 +206,4 @@ def train(ctx, model_selector, training_data_path, training_labels_path):
     """
     Trains a model.
     """
-    # HACK: refactor all of this
-
-    model = get_model(model_selector)
-
-    load_train_df = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_data_path}."),
-        "pcap": DataLoader.from_pcap,
-        "pcapng": DataLoader.from_pcap,
-        "csv": DataLoader.from_csv,
-    }[get_file_type(training_data_path)]
-    train_df = load_train_df(training_data_path)
-
-    load_label_lookup = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_labels_path}."),
-        "json": DataLoader.labels_from_json,
-    }[get_file_type(training_labels_path)]
-    label_lookup = load_label_lookup(training_labels_path)
-
-    target_labels = ["Google-Nest-Mini", "ESP-1DC41C"]
-
-    # TODO: consider dst too
-    def get_label(row):
-        # Split IP address and port
-        key = row.rsplit(":", 1)[0]
-
-        # Check if label is available
-        try:
-            label = label_lookup.loc[key, "name"]
-            # Check if label is a desired target label, aka. a device that is supposed to be identified
-            if label not in target_labels:
-                label = "NoLabel"
-        except KeyError:
-            label = "NoLabel"
-
-        return label
-
-    train_labels = train_df["src"].apply(get_label)
-
-    model.train(train_df[["data_len", "stream_id"]], train_labels)
-
-    save_path = DATA_DIR / Path("ml_models/" + model_selector + ".pkl")
-    if model.save(save_path):
-        logger.success(f"Model {model_selector} saved successfully to {save_path}.")
+    commands.traim(model_selector, training_data_path, training_labels_path)
