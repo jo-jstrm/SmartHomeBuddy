@@ -82,12 +82,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Install tox and any other packages
-        run: pip install tox pytest pytest-cov pytest-loguru
-      - name: Run tox
-        run: |
-          cd device-identifier
-          tox -e py
+      - name: Install testing packages
+        run: pip install pytest pytest-cov pytest-loguru
       - name: Test with pytest
         run: |
           pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
