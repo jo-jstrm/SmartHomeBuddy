@@ -86,4 +86,4 @@ jobs:
         run: pip install pytest pytest-cov pytest-loguru
       - name: Test with pytest
         run: |
-          pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+          pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
