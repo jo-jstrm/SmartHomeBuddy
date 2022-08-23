@@ -85,9 +85,9 @@ jobs:
       - name: Install tox and any other packages
         run: pip install tox pytest pytest-cov pytest-loguru
       - name: Run tox
-        run: tox -e py
+        run: |
+          cd device-identifier
+          tox -e py
       - name: Test with pytest
         run: |
-          pip install pytest
-          pip install pytest-cov
           pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
