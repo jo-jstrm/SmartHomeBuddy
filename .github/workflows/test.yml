@@ -76,9 +76,8 @@ jobs:
         run: |
           mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - uses: actions/setup-node@master
-        with:
-          node-version: ${{ matrix.node }}
+          ls -la
+          ls -la InfluxData/influxdb
       - name: Test with pytest
         run: |
           pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
