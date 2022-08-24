@@ -39,12 +39,11 @@ jobs:
 
       - name: Install pipenv
         run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
-      - run: pipenv install
 
       - name: Install Python dependencies
         run: |
-          pipenv install -r device-identifier/requirements.txt          
-          pipenv install pytest pytest-cov pytest-loguru
+          cd device-identifier 
+          pipenv install
 
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
@@ -99,7 +98,7 @@ jobs:
       - name: Test with pytest
         run: |
           cd device-identifier
-          pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
+          pipenv run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v3

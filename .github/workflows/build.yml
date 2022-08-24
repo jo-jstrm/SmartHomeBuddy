@@ -38,16 +38,16 @@ jobs:
 
       - name: Install pipenv
         run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
-      - run: pipenv install
 
       - name: Install Python dependencies
         run: |
-          pipenv install -r device-identifier/requirements.txt
+          cd device-identifier 
+          pipenv install
 
       - name: Build Python distributable for ${{ matrix.os }}
         run: |
           cd device-identifier
-          pyinstaller device_identifier_server.py
+          pipenv run pyinstaller device_identifier_server.py
 
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
