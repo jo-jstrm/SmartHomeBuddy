@@ -42,6 +42,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: electron-app/package.json
 
+      - name: Install nodeJS dependencies
+        run: |
+          cd electron-app
+          npm ci
+
       - name: Retrieve InfluxDB cache
         id: cache-influxdb
         uses: actions/cache@v3
