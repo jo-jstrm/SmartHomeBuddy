@@ -9,6 +9,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: ./SmartHomeBuddy
     env:
       INFLUXDB_URL: https://dl.influxdata.com/influxdb/releases
     strategy:
@@ -27,7 +28,9 @@ jobs:
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
             influxdb_unarchived_name: influxdb2_windows_amd64
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout and show current directory
+        uses: actions/checkout@v3
+        run: ls -lA
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
