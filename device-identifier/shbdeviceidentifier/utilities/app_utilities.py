@@ -18,15 +18,17 @@ if ("SmartHomeBuddy" in parts or "smarthomebuddy" in parts) and "device-identifi
             DATA_DIR = parents[idx].resolve() / "shbdeviceidentifier"
         elif parents[idx].parts[-1] == "SmartHomeBuddy" or parents[idx].parts[-1] == "smarthomebuddy":
             SHB_HOME = parents[idx].resolve()
-elif "smarthomebuddy" in parts and "resources" in parts:
+            break
+elif ("SmartHomeBuddy" in parts or "smarthomebuddy" in parts) and "resources" in parts:
     # Installed together with electron-app.
     is_installed = True
     for idx in range(len(parents)):
         if parents[idx].parts[-1] == "resources":
             SHB_HOME = parents[idx].resolve()
+            break
     DATA_DIR = SHB_HOME / "data"
 else:
-    raise Exception("Could not determine installation location.")
+    raise Exception("Could not determine install location.")
 
 INFLUXDB_DIR = SHB_HOME / "influxdb" if is_installed else SHB_HOME / "InfluxData" / "influxdb"
 INFLUXDB_CLIENT_DIR = SHB_HOME / "influxdb-client" if is_installed else SHB_HOME / "InfluxData" / "influxdb-client"
