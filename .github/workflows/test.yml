@@ -75,13 +75,13 @@ jobs:
           curl --remote-name --silent ${{ env.influxdb_client_full_url }}
 
       - name: Unpack InfluxDB on Linux
-        if: steps.cache-influxdb.outputs.cache-hit != 'true' && ${{ matrix.os_family == 'Linux'}}
+        if: ${{ steps.cache-influxdb.outputs.cache-hit != 'true' && matrix.os_family == 'Linux'}}
         run: |
           tar xzvf ${{ env.influxdb_archive }}          
           tar xzvf ${{ env.influxdb_client_archive }}
 
       - name: Unpack InfluxDB on Windows
-        if: steps.cache-influxdb.outputs.cache-hit != 'true' && ${{ matrix.os_family == 'Windows'}}
+        if: ${{ steps.cache-influxdb.outputs.cache-hit != 'true' && matrix.os_family == 'Windows'}}
         run: |
           unzip ${{ env.influxdb_archive }}          
           unzip ${{ env.influxdb_client_archive }}
