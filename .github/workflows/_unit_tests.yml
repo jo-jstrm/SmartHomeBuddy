@@ -28,6 +28,9 @@ jobs:
           cache-dependency-path: |
             device-identifier/Pipfile.lock
 
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+
       - name: Retrieve InfluxDB cache
         id: cache-influxdb
         uses: actions/cache@v3
