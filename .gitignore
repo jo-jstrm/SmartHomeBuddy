@@ -245,3 +245,6 @@ SQLite/*
 
 # ML model files
 *.pkl
+
+# junit xml reports
+device-identifier/junit/

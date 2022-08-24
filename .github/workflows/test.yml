@@ -97,4 +97,13 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
+          cd device-identifier
+          pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-results
+          path: device-identifier/junit/test-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
