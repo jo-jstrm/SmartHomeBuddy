@@ -91,9 +91,6 @@ jobs:
         run: |
           mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
 
       - name: Test with pytest
         run: |
