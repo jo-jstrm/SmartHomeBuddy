@@ -21,7 +21,8 @@ jobs:
           ref: ${{ github.head_ref }}
 
       # Caches need to be populated first (usually in the _prepare workflow)
-      - uses: actions/setup-python@v4
+      - name: Retrieve python cache
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
           cache: 'pipenv'
@@ -54,8 +55,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          directory: ./device-identifier/
           env_vars: OS,PYTHON
-          files: ./coverage.xml
+          files: ./device-identifier/coverage.xml
           flags: unittests
           verbose: true
