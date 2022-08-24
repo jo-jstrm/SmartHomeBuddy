@@ -33,7 +33,7 @@ else:
 INFLUXDB_DIR = SHB_HOME / "influxdb" if is_installed else SHB_HOME / "InfluxData" / "influxdb"
 INFLUXDB_CLIENT_DIR = SHB_HOME / "influxdb-client" if is_installed else SHB_HOME / "InfluxData" / "influxdb-client"
 # Logs need to be written. You usually do not have write access to the install-location.
-LOG_DIR = Path.home() / ".smarthomebuddy" if is_installed else INFLUXDB_DIR
+LOG_DIR = Path.home() / ".smarthomebuddy"
 SQLITE_DIR = Path.home() / ".smarthomebuddy" / "database" if is_installed else SHB_HOME / "SQLite"
 QUERY_DIR = DATA_DIR / "utilities" / "query_files"
 
