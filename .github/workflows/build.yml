@@ -29,16 +29,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.8'
-          cache: 'pip'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            device-identifier/Pipfile.lock
+
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+      - run: pipenv install
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r device-identifier/requirements.txt
+          pipenv install -r device-identifier/requirements.txt
 
       - name: Build Python distributable for ${{ matrix.os }}
         run: |
