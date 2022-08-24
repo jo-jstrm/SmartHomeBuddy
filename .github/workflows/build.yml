@@ -27,11 +27,12 @@ jobs:
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
             influxdb_unarchived_name: influxdb2_windows_amd64
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: '3.8'
+          cache: 'pip'
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -74,7 +75,7 @@ jobs:
         run: |
           mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - uses: actions/setup-node@master
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: Install nodeJS dependencies
