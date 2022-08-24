@@ -29,10 +29,8 @@ jobs:
             influxdb_unarchived_name: influxdb2_windows_amd64
 
     steps:
-      - name: Checkout
+      - name: Checkout and show current directory
         uses: actions/checkout@v3
-
-      - name: Show current directory
         run: ls -lA
 
       - name: Set up Python 3.8
