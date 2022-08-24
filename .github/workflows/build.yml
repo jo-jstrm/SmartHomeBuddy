@@ -85,7 +85,7 @@ jobs:
 
       - name: Unpack InfluxDB on Windows
         if: steps.cache-influxdb.outputs.cache-hit != 'true' && ${{ matrix.os_family == 'Windows'}}
-        run: |          
+        run: |
           unzip ${{ env.influxdb_archive }}          
           unzip ${{ env.influxdb_client_archive }}
 
@@ -94,9 +94,13 @@ jobs:
         run: |
           mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-      - uses: actions/setup-node@v3
+
+      - name: Install node modules
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: electron-app/package.json
 
       - name: Install nodeJS dependencies
         run: |
