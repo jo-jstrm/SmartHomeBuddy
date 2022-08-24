@@ -26,58 +26,75 @@ jobs:
             influxdb_version: influxdb2-2.3.0-windows-amd64
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
             influxdb_unarchived_name: influxdb2_windows_amd64
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-      - name: Install Python dependencies
+          python-version: '3.8'
+          cache: 'pip'
+
+      - name: Install Python dependencies and testing dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r device-identifier/requirements.txt
-      - name: Install testing packages
-        run: pip install pytest pytest-cov pytest-loguru
-      - name: Build Python distributable for ${{ matrix.os }}
-        run: |
-          cd device-identifier
-          pyinstaller device_identifier_server.py
+          pip install pytest pytest-cov pytest-loguru
+
       - name: Set Linux Environment Variables
         if: ${{ matrix.os_family == 'Linux'}}
         run: |
           echo "influxdb_archive=${{ matrix.influxdb_version }}.tar.gz" >> $GITHUB_ENV          
           echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.tar.gz" >> $GITHUB_ENV
+
       - name: Set Windows Environment Variables
         if: ${{ matrix.os_family == 'Windows'}}
         run: |
           echo "influxdb_archive=${{ matrix.influxdb_version }}.zip" >> $GITHUB_ENV          
           echo "influxdb_client_archive=${{ matrix.influxdb_client_version }}.zip" >> $GITHUB_ENV
+
       - name: Set Derived Environment Variables
         run: |
           echo "influxdb_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_archive }}" >> $GITHUB_ENV
           echo "influxdb_client_full_url=${{ env.INFLUXDB_URL }}/${{ env.influxdb_client_archive }}" >> $GITHUB_ENV
+
+      - name: Cache InfluxDB
+        id: cache-influxdb
+        uses: actions/cache@v3
+        with:
+          path: InfluxData/
+          key: ${{ matrix.os_family }}-InfluxDB
+
       - name: Get InfluxDB and Client
+        if: steps.cache-influxdb.outputs.cache-hit != 'true'
         run: |
           mkdir -p InfluxData/influxdb
           curl --remote-name --silent ${{ env.influxdb_full_url}}
           mkdir -p InfluxData/influxdb-client
           curl --remote-name --silent ${{ env.influxdb_client_full_url }}
+
       - name: Unpack InfluxDB on Linux
-        if: ${{ matrix.os_family == 'Linux'}}
+        if: steps.cache-influxdb.outputs.cache-hit != 'true' && ${{ matrix.os_family == 'Linux'}}
         run: |
           tar xzvf ${{ env.influxdb_archive }}          
           tar xzvf ${{ env.influxdb_client_archive }}
+
       - name: Unpack InfluxDB on Windows
-        if: ${{ matrix.os_family == 'Windows'}}
+        if: steps.cache-influxdb.outputs.cache-hit != 'true' && ${{ matrix.os_family == 'Windows'}}
         run: |
           unzip ${{ env.influxdb_archive }}          
           unzip ${{ env.influxdb_client_archive }}
+
       - name: Move InfluxDB Files
+        if: steps.cache-influxdb.outputs.cache-hit != 'true'
         run: |
           mv ${{ matrix.influxdb_unarchived_name }}/* InfluxData/influxdb
           mv ${{ matrix.influxdb_client_version }}/* InfluxData/influxdb-client
-          ls -la
-          ls -la InfluxData/influxdb
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
       - name: Test with pytest
         run: |
           pytest device-identifier/tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
