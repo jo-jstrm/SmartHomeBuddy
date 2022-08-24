@@ -13,7 +13,7 @@ jobs:
 
   review:
     needs: [ format ]
-    uses: ./.github/workflows/_format.yml
+    uses: ./.github/workflows/_review.yml
 
   test:
     needs: [ prepare ]
