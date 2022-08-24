@@ -4,11 +4,12 @@ on:
     branches: [ main, develop, workflows ]
 
 jobs:
-  prepare:
-    uses: ./.github/workflows/_prepare.yml
-
   format:
     uses: ./.github/workflows/_format.yml
+
+  prepare:
+    needs: [ format ]
+    uses: ./.github/workflows/_prepare.yml
 
   review:
     needs: [ format ]
@@ -19,5 +20,5 @@ jobs:
     uses: ./.github/workflows/_unit_tests.yml
 
   build:
-    needs: [ prepare, lint_and_format ]
+    needs: [ prepare, format ]
     uses: ./.github/workflows/_build.yml
