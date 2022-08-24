@@ -1,10 +1,10 @@
 name: Build
 on:
   push:
-    branches: [main, develop, workflows]
+    branches: [ main, develop, workflows ]
 
 jobs:
-  build:
+  prepare:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -13,8 +13,8 @@ jobs:
       INFLUXDB_URL: https://dl.influxdata.com/influxdb/releases
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest]
-        node: [16]
+        os: [ ubuntu-22.04, windows-latest ]
+        node: [ 16 ]
         include:
           - os: ubuntu-22.04
             os_family: Linux
@@ -26,6 +26,7 @@ jobs:
             influxdb_version: influxdb2-2.3.0-windows-amd64
             influxdb_client_version: influxdb2-client-2.3.0-windows-amd64
             influxdb_unarchived_name: influxdb2_windows_amd64
+
     steps:
       - uses: actions/checkout@v3
 
@@ -83,7 +84,7 @@ jobs:
 
       - name: Unpack InfluxDB on Linux
         if: ${{ steps.cache-influxdb.outputs.cache-hit != 'true' && matrix.os_family == 'Linux'}}
-        run: |          
+        run: |
           tar xzvf ${{ env.influxdb_archive }}          
           tar xzvf ${{ env.influxdb_client_archive }}
 
@@ -111,7 +112,51 @@ jobs:
           cd electron-app
           npm ci
 
+
+  build:
+    needs: [ prepare ]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, windows-latest ]
+        node: [ 16 ]
+        include:
+          - os: ubuntu-22.04
+            os_family: Linux
+          - os: windows-latest
+            os_family: Windows
+
+    steps:
       - name: Build SmartHomeBuddy for ${{ matrix.os }}
         run: |
           cd electron-app
           npm run make
+
+  test:
+    needs: [ prepare ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, windows-latest ]
+        node: [ 16 ]
+        include:
+          - os: ubuntu-22.04
+            os_family: Linux
+          - os: windows-latest
+            os_family: Windows
+    steps:
+      - name: Test with pytest
+        run: |
+          cd device-identifier
+          pipenv run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-results
+          path: device-identifier/junit/test-results.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
