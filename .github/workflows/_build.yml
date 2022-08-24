@@ -1,0 +1,49 @@
+name: '🔧 Build'
+
+on: workflow_call
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, windows-latest ]
+        node: [ 16 ]
+        include:
+          - os: ubuntu-22.04
+            os_family: Linux
+          - os: windows-latest
+            os_family: Windows
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      # Caches need to be populated first (usually in the _prepare workflow)
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            device-identifier/Pipfile.lock
+
+      - name: Retrieve InfluxDB cache
+        id: cache-influxdb
+        uses: actions/cache@v3
+        with:
+          path: InfluxData/
+          key: ${{ matrix.os_family }}-InfluxDB
+
+      - name: Build Python distributable for ${{ matrix.os }}
+        run: |
+          cd device-identifier
+          pipenv run pyinstaller device_identifier_server.py  
+
+      - name: Build SmartHomeBuddy for ${{ matrix.os }}
+        run: |
+          cd electron-app
+          npm run make
