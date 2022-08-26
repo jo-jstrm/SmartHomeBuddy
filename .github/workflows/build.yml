@@ -1,4 +1,5 @@
 name: '🩺 Health & QA Check'
+
 on:
   # Push could be redundant if everybody is consistent with their usage of PR drafts
   # Alternatively, we could use merge queues in the future (currently in limited beta)
@@ -23,6 +24,8 @@ jobs:
   review:
     needs: [ format ]
     uses: ./.github/workflows/_review.yml
+    with:
+      secret-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   build:
     needs: [ prepare, format ]

@@ -1,10 +1,17 @@
-name: '🔍 Codacy Analysis CLI'
+name: '🔍 Codacy Analysis'
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      secret-token:
+        description: 'The authentication token for codacy.'
+        required: true
+        type: string
 
 jobs:
   review:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v3
         with:
@@ -13,7 +20,7 @@ jobs:
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@master
         with:
-          tool: Bandit
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          tool: Bandit, Prospector, Pylint, PMD CPD, Radon
+          project-token: ${{ secret-token }}
           upload: true
           max-allowed-issues: 2147483647
