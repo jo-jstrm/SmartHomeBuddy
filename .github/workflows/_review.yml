@@ -2,11 +2,7 @@ name: '🔍 Codacy Analysis'
 
 on:
   workflow_call:
-    inputs:
-      secret-token:
-        description: 'The authentication token for codacy.'
-        required: true
-        type: string
+    secrets: inherit
 
 jobs:
   review:
@@ -21,6 +17,6 @@ jobs:
         uses: codacy/codacy-analysis-cli-action@master
         with:
           tool: Bandit, Prospector, Pylint, PMD CPD, Radon
-          project-token: ${{ inputs.secret-token }}
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           upload: true
           max-allowed-issues: 2147483647
