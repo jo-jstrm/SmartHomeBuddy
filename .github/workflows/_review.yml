@@ -21,6 +21,6 @@ jobs:
         uses: codacy/codacy-analysis-cli-action@master
         with:
           tool: Bandit, Prospector, Pylint, PMD CPD, Radon
-          project-token: ${{ secret-token }}
+          project-token: ${{ inputs.secret-token }}
           upload: true
           max-allowed-issues: 2147483647
