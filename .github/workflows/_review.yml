@@ -1,4 +1,4 @@
-name: 🔍 Codacy Analysis CLI
+name: '🔍 Codacy Analysis CLI'
 
 on: workflow_call
 

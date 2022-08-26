@@ -1,11 +1,21 @@
-name: Build
+name: '🩺 Health & QA Check'
 on:
+  # Push could be redundant if everybody is consistent with their usage of PR drafts
+  # Alternatively, we could use merge queues in the future (currently in limited beta)
   push:
+    branches: [ main, develop, workflows ]
+
+  pull_request:
+    types: [ ready_for_review ]
     branches: [ main, develop, workflows ]
 
 jobs:
   prepare:
     uses: ./.github/workflows/_prepare.yml
+
+  test:
+    needs: [ prepare ]
+    uses: ./.github/workflows/_unit_tests.yml
 
   format:
     uses: ./.github/workflows/_format.yml
@@ -13,10 +23,6 @@ jobs:
   review:
     needs: [ format ]
     uses: ./.github/workflows/_review.yml
-
-  test:
-    needs: [ prepare ]
-    uses: ./.github/workflows/_unit_tests.yml
 
   build:
     needs: [ prepare, format ]
