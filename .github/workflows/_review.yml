@@ -50,10 +50,12 @@ jobs:
           upload: true
           max-allowed-issues: 2147483647
 
-      - name: Radon
-        uses: codacy/codacy-analysis-cli-action@master
-        with:
-          tool: Radon
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          upload: true
-          max-allowed-issues: 2147483647
+#      # Radon is not supported by the GitHub action (yet?), even though it is listed as a client side tool on
+#      # https://docs.codacy.com/getting-started/supported-languages-and-tools/
+#      - name: Radon
+#        uses: codacy/codacy-analysis-cli-action@master
+#        with:
+#          tool: Radon
+#          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+#          upload: true
+#          max-allowed-issues: 2147483647
