@@ -206,4 +206,5 @@ def train(ctx, model_selector, training_data_path, training_labels_path):
     """
     Trains a model.
     """
-    commands.traim(model_selector, training_data_path, training_labels_path)
+    devices_to_train = ["Google-Nest-Mini", "ESP-1DC41C"]
+    commands.traim(model_selector, training_data_path, training_labels_path, devices_to_train)

@@ -1,12 +1,14 @@
 import sys
+from datetime import datetime
 from pathlib import Path
 from time import sleep
+from typing import Tuple, List
 
 import click
 import pandas as pd
 from loguru import logger
 
-from .dataloader import DataLoader
+from .dataloader import DataLoader, from_file, from_database
 from .db import Database
 from .rpc.server import start_rpc_server
 from .utilities.ml_utilities import get_model
@@ -49,48 +51,23 @@ def read(db: Database, file_path: click.Path, file_type: str):
         else:
             logger.error(f"Failed to read {file_path}.")
 
-def train(model_selector, training_data_path, training_labels_path):
-    """Trains a ML model."""
-    # HACK: refactor all of this
-
+def train(model_selector, use_database: bool, training_data_path: str, training_labels_path: str, devices_to_train: List[str]=None):
+    """Train an ML model."""
+    if use_database:
+        params = {
+            "_start": datetime.strptime("2022-08-01T11:40:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
+            "_stop": datetime.strptime("2022-08-01T13:41:00UTC", "%Y-%m-%dT%H:%M:%S%Z")
+        }
+        query = """
+                    from(bucket: "network-traffic")
+                    |> range(start: _start, stop: _stop)
+                    |> filter(fn: (r) => r["_measurement"] == "packet")  
+                """
+        train_df, train_labels = from_database(query, params, devices_to_train)
+    else:
+        train_df, train_labels = from_file(training_data_path, training_labels_path, devices_to_train)
     model = get_model(model_selector)
-
-    load_train_df = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_data_path}."),
-        "pcap": DataLoader.from_pcap,
-        "pcapng": DataLoader.from_pcap,
-        "csv": DataLoader.from_csv,
-    }[get_file_type(training_data_path)]
-    train_df: pd.DataFrame = load_train_df(training_data_path)
-
-    load_label_lookup = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_labels_path}."),
-        "json": DataLoader.labels_from_json,
-    }[get_file_type(training_labels_path)]
-    label_lookup = load_label_lookup(training_labels_path)
-
-    target_labels = ["Google-Nest-Mini", "ESP-1DC41C"]
-
-    # TODO: consider dst too
-    def get_label(row: pd.Series):
-        # Split IP address and port
-        key = row.rsplit(":", 1)[0]
-
-        # Check if label is available
-        try:
-            label = label_lookup.loc[key, "name"]
-            # Check if label is a desired target label, aka. a device that is supposed to be identified
-            if label not in target_labels:
-                label = "NoLabel"
-        except KeyError:
-            label = "NoLabel"
-
-        return label
-
-    train_labels = train_df["src"].apply(get_label)
-
     model.train(train_df[["data_len", "stream_id"]], train_labels)
-
     save_path = DATA_DIR / Path("ml_models/" + model_selector + ".pkl")
     if model.save(save_path):
         logger.success(f"Model {model_selector} saved successfully to {save_path}.")

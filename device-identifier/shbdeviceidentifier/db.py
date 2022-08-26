@@ -18,6 +18,7 @@ import influxdb_client
 import pandas as pd
 import requests
 import sqlite3
+from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
@@ -213,7 +214,8 @@ class Database:
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
                                                    id integer PRIMARY KEY,
                                                    device_name VARCHAR NOT NULL,
-                                                   mac_address VARCHAR UNIQUE                                             
+                                                   mac_address VARCHAR UNIQUE,
+                                                   ip_address VARCHAR UNIQUE                                             
                                                );"""
         conn = self._get_SQLite_connection()
         if conn:
@@ -240,7 +242,7 @@ class Database:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> list:
+    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> Optional[list]:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
@@ -304,14 +306,17 @@ class Database:
             logger.debug("Could not establish a connection to the InfluxDB database. Try running db.start_InfluxDB().")
         return False
 
+    def get_influxdb_client(self) -> InfluxDBClient:
+        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
+        return InfluxDBClient(url=url, org=org, token=token)
+
     def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None):
         """
         Queries the InfluxDB instance.
         """
-        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
-        client = self._get_InfluxDB_connection(token=token, org=org, url=url)
-        if client:
-            return client.query(query, params, bind_params)
+        client = self.get_influxdb_client()
+        query_api = client.query_api()
+        return query_api.query(query, params, bind_params)
 
     def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
         """
@@ -339,7 +344,7 @@ class Database:
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
-        Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
+        Use the db parameter to specify which database to query. db='influx' for InfluxDB, db='sqlite' for SQLite.
         Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
         """
         if db == "influx":
