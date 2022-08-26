@@ -2,7 +2,10 @@ name: '🔍 Codacy Analysis'
 
 on:
   workflow_call:
-    secrets: CODACY_PROJECT_TOKEN
+    secrets:
+      CODACY_PROJECT_TOKEN:
+        description: 'An authentication token for the Codacy API.'
+        required: true
 
 jobs:
   review:
