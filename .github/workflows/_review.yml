@@ -8,18 +8,52 @@ on:
         required: true
 
 jobs:
-  review:
+  codacy:
     runs-on: ubuntu-latest
     continue-on-error: true
+
+    # Steps for the tools: Bandit, Prospector, Pylint, PMD CPD, Radon
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Run Codacy Analysis CLI
+      - name: Bandit
         uses: codacy/codacy-analysis-cli-action@master
         with:
           tool: Bandit
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          max-allowed-issues: 2147483647
+
+      - name: Prospector
+        uses: codacy/codacy-analysis-cli-action@master
+        with:
+          tool: Prospector
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          max-allowed-issues: 2147483647
+
+      - name: Pylint
+        uses: codacy/codacy-analysis-cli-action@master
+        with:
+          tool: Pylint
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          max-allowed-issues: 2147483647
+
+      - name: PMD CPD
+        uses: codacy/codacy-analysis-cli-action@master
+        with:
+          tool: PMD CPD
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          upload: true
+          max-allowed-issues: 2147483647
+
+      - name: Radon
+        uses: codacy/codacy-analysis-cli-action@master
+        with:
+          tool: Radon
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           upload: true
           max-allowed-issues: 2147483647
