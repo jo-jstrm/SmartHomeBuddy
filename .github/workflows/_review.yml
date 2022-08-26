@@ -2,7 +2,7 @@ name: '🔍 Codacy Analysis'
 
 on:
   workflow_call:
-    secrets: inherit
+    secrets: CODACY_PROJECT_TOKEN
 
 jobs:
   review:

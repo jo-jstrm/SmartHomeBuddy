@@ -24,6 +24,8 @@ jobs:
   review:
     needs: [ format ]
     uses: ./.github/workflows/_review.yml
+    secrets:
+      CODACY_PROJECT_TOKEN: "${{ secrets.CODACY_PROJECT_TOKEN }}"
 
   build:
     needs: [ prepare, format ]
