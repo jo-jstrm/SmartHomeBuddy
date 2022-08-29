@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {createTheme, ThemeProvider} from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -8,11 +8,16 @@ import IconButton from "@mui/material/IconButton";
 import Badge from "@mui/material/Badge";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { Drawer } from "../components/drawer/Drawer";
-import Devices from "./Devices";
-import { AppBar } from "../components/AppBar";
-import { Route, Routes } from "react-router-dom";
+import {Drawer} from "../components/drawer/Drawer";
+import {AppBar} from "../components/AppBar";
+import {Route, Routes} from "react-router-dom";
 import Home from "./Home";
+import Devices from "./Devices";
+import Data from "./Data";
+import Alerts from "./Alerts";
+import Countermeasures from "./Countermeasures";
+import Insights from "./Insights";
+import Settings from "./Settings";
 
 const mdTheme = createTheme();
 
@@ -73,12 +78,17 @@ function FrameContent() {
             overflow: "auto",
           }}
         >
-          <Toolbar />
+          <Toolbar/>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/main_window" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/devices" element={<Devices />} />
+            <Route path="/" element={<Home/>}/>
+            <Route path="/main_window" element={<Home/>}/>
+            <Route path="/home" element={<Home/>}/>
+            <Route path="/devices" element={<Devices/>}/>
+            <Route path="/data" element={<Data/>}/>
+            <Route path="/alerts" element={<Alerts/>}/>
+            <Route path="/countermeasures" element={<Countermeasures/>}/>
+            <Route path="/insights" element={<Insights/>}/>
+            <Route path="/settings" element={<Settings/>}/>
           </Routes>
         </Box>
       </Box>
