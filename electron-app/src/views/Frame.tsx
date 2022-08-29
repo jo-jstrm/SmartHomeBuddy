@@ -10,7 +10,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import {Drawer} from "../components/drawer/Drawer";
 import {AppBar} from "../components/AppBar";
-import {Route, Routes} from "react-router-dom";
+import {Route, Routes, useLocation} from "react-router-dom";
 import Home from "./Home";
 import Devices from "./Devices";
 import Data from "./Data";
@@ -18,6 +18,7 @@ import Alerts from "./Alerts";
 import Countermeasures from "./Countermeasures";
 import Insights from "./Insights";
 import Settings from "./Settings";
+import {route_titles} from "../components/Globals";
 
 const mdTheme = createTheme();
 
@@ -56,7 +57,7 @@ function FrameContent() {
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              SmartHomeBuddy
+              {route_titles[useLocation().pathname]}
             </Typography>
             <IconButton color="inherit">
               <Badge badgeContent={4} color="secondary">
