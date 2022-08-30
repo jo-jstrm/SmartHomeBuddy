@@ -3,39 +3,39 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import {DeviceUnknown} from "@mui/icons-material";
-import InsightsIcon from '@mui/icons-material/Insights';
-import ShieldIcon from '@mui/icons-material/Shield';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
+import { DeviceUnknown } from "@mui/icons-material";
+import InsightsIcon from "@mui/icons-material/Insights";
+import ShieldIcon from "@mui/icons-material/Shield";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function MainNavBarItems() {
   const navigate = useNavigate();
   const drawerItems = [
     {
       text: "Home",
-      icon: <DashboardIcon/>,
+      icon: <DashboardIcon />,
       onClick: () => navigate("/home"),
     },
     {
       text: "Devices",
-      icon: <DeviceUnknown/>,
+      icon: <DeviceUnknown />,
       onClick: () => navigate("/devices"),
     },
     {
       text: "Network Data",
-      icon: <ShowChartIcon/>,
+      icon: <ShowChartIcon />,
       onClick: () => navigate("/data"),
     },
     {
       text: "Insights",
-      icon: <InsightsIcon/>,
+      icon: <InsightsIcon />,
       onClick: () => navigate("/insights"),
     },
     {
       text: "Countermeasures",
-      icon: <ShieldIcon/>,
+      icon: <ShieldIcon />,
       onClick: () => navigate("/countermeasures"),
     },
   ];
@@ -54,4 +54,3 @@ export function MainNavBarItems() {
     </React.Fragment>
   );
 }
-

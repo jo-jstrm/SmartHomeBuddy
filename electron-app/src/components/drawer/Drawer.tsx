@@ -1,13 +1,13 @@
-import {styled} from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
-import {drawerWidth} from "../Globals";
+import { drawerWidth } from "../Globals";
 import * as React from "react";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
-import {MainNavBarItems} from "./DrawerItems";
+import { MainNavBarItems } from "./DrawerItems";
 
 export const StyledDrawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
