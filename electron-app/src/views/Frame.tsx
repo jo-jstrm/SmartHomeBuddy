@@ -53,7 +53,7 @@ function FrameContent() {
             <ThemeProvider theme={theme}>
                 <CssBaseline enableColorScheme/>
                 <Box sx={{display: "flex"}}>
-                    <AppBar position="absolute" open={open}>
+                    <AppBar position="absolute" open={open} color="primary" enableColorOnDark>
                         <Toolbar
                             sx={{
                                 pr: "24px", // keep right padding when drawer closed
@@ -87,10 +87,6 @@ function FrameContent() {
                     <Box
                         component="main"
                         sx={{
-                            backgroundColor: (theme) =>
-                                theme.palette.mode === "light"
-                                    ? theme.palette.grey[100]
-                                    : theme.palette.grey[900],
                             flexGrow: 1,
                             height: "100vh",
                             overflow: "auto",
