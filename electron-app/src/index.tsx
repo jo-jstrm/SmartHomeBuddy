@@ -5,10 +5,9 @@ import {HashRouter} from "react-router-dom";
 
 const container = document.getElementById("root");
 const root = createRoot(container!);
+
 root.render(
-  <React.Fragment>
     <HashRouter>
-      <Frame />
+        <Frame/>
     </HashRouter>
-  </React.Fragment>
 );
