@@ -5,9 +5,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
-import Badge from "@mui/material/Badge";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import {Drawer} from "../components/drawer/Drawer";
 import {AppBar} from "../components/AppBar";
 import {Route, Routes, useLocation} from "react-router-dom";
@@ -59,11 +57,6 @@ function FrameContent() {
             >
               {route_titles[useLocation().pathname]}
             </Typography>
-            <IconButton color="inherit">
-              <Badge badgeContent={4} color="secondary">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
           </Toolbar>
         </AppBar>
         <Drawer open={open} toggleDrawer={toggleDrawer} />
