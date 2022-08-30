@@ -248,3 +248,6 @@ SQLite/*
 
 # junit xml reports
 device-identifier/junit/
+
+# intellj run files
+device-identifier/.run/
