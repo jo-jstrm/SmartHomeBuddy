@@ -197,14 +197,17 @@ def query(ctx, data_base, statement_name):
 
 
 @app.command("train")
-@click.argument("model-selector", nargs=1, type=click.STRING)
+@click.argument("model-name", nargs=1, type=click.STRING)
 @click.argument("training-data-path", nargs=1, type=click.STRING)
 @click.argument("training-labels-path", nargs=1, type=click.STRING)
+@click.argument("use-database", nargs=1, type=click.BOOL, default=False)
 @pass_ctx
 @logger_wraps()
-def train(ctx, model_selector, training_data_path, training_labels_path):
+def train(ctx, model_name, training_data_path, training_labels_path, use_database):
     """
     Trains a model.
     """
     devices_to_train = ["Google-Nest-Mini", "ESP-1DC41C"]
-    commands.traim(model_selector, training_data_path, training_labels_path, devices_to_train)
+    logger.debug(f"Training data path: {training_data_path}.")
+    logger.debug(f"Training labels path: {training_labels_path}.")
+    commands.train(model_name, use_database, training_data_path, training_labels_path, devices_to_train)
