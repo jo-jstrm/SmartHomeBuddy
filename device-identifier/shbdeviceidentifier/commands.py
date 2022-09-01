@@ -37,7 +37,7 @@ def read(db: Database, file_path: click.Path, file_type: str):
             if db.write_to_InfluxDB(
                 packets,
                 data_frame_measurement_name="packet",
-                data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
+                data_frame_tag_columns=["src_address", "src_ip", "src_port", "dst_address", "dst_ip", "dst_port", "L4_protocol", "stream_id"],
             ):
                 logger.success(f"Wrote {file_path} to Database.")
             else:

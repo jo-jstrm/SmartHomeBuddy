@@ -1,4 +1,6 @@
-from typing import List, Optional, Dict
+import logging
+import time
+from typing import List, Optional, Dict, Tuple
 
 import numba as nb
 import numpy as np
@@ -21,49 +23,73 @@ def _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress_proxy) -> pd
     The function is JIT compiled using numba.
     The function is not intended to be used directly, but within a tqdm progress bar.
     """
-    src_series = np.empty((num_of_packets,), dtype=object)
-    dst_series = np.empty((num_of_packets,), dtype=object)
-    ts_series = np.empty((num_of_packets,), dtype=pd.Timestamp)
-    protocol_series = np.empty((num_of_packets,), dtype=object)
-    data_len_series = np.empty((num_of_packets,), dtype="uint16")
+    src_addresses = np.empty((num_of_packets,), dtype=object)
+    src_ips = np.empty((num_of_packets,), dtype=object)
+    src_ports = np.empty((num_of_packets,), dtype=int)
+    dst_addresses = np.empty((num_of_packets,), dtype=object)
+    dst_ips = np.empty((num_of_packets,), dtype=object)
+    dst_ports = np.empty((num_of_packets,), dtype=int)
+    timestamps = np.empty((num_of_packets,), dtype=pd.Timestamp)
+    protocols = np.empty((num_of_packets,), dtype=object)
+    data_lengths = np.empty((num_of_packets,), dtype="uint16")
 
     for i in nb.prange(num_of_packets):
-        src_series[i] = _get_address_from_scapy_packet(cap[i], src=True)
-        dst_series[i] = _get_address_from_scapy_packet(cap[i], src=False)
-        ts_series[i] = _get_timestamp_from_scapy_packet(cap[i])
-        protocol_series[i] = _get_protocol_from_scapy_packet(cap[i])
-        data_len_series[i] = _get_data_len_from_scapy_packet(cap[i])
+        src_addresses[i], src_ips[i], src_ports[i] = _get_address_tuple_from_scapy_packet(
+            cap[i], src=True
+        )
+        dst_addresses[i], dst_ips[i], dst_ports[i] = _get_address_tuple_from_scapy_packet(
+            cap[i], src=False
+        )
+        timestamps[i] = _get_timestamp_from_scapy_packet(cap[i])
+        protocols[i] = _get_protocol_from_scapy_packet(cap[i])
+        data_lengths[i] = _get_data_len_from_scapy_packet(cap[i])
         progress_proxy.update(1)
 
-    df = pd.DataFrame(
-        {"src": src_series, "dst": dst_series, "L4_protocol": protocol_series, "data_len": data_len_series},
-        index=ts_series,
+    return pd.DataFrame(
+        {
+            "src_address": src_addresses,
+            "src_ip": src_ips,
+            "src_port": src_ports,
+            "dst_address": dst_addresses,
+            "dst_ip": dst_ips,
+            "dst_port": dst_ports,
+            "L4_protocol": protocols,
+            "data_len": data_lengths,
+        },
+        index=timestamps,
     )
-
-    # Filter out packets that do not have a transport layer protocol
-    df = df[df["L4_protocol"].astype(bool)]
-
-    # Create stream IDs
-    # TODO: check performance cost of this
-    df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src", "dst"]], axis=1)]
-    df = df.assign(stream_id=df.groupby(["conv"]).ngroup())
-    df.drop(columns=["conv"], inplace=True)
-    df["stream_id"] = df["stream_id"].astype("uint16")
-
-    return df
 
 
 # noinspection PyPep8Naming
 def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
     spinner.stop()
-    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
+    start_time = time.perf_counter()
+    with ProgressBar(
+        update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame"
+    ) as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
+        # Filter out packets that do not have a transport layer protocol
+        df = df[df["L4_protocol"].astype(bool)]
+        # Create stream IDs. Unique pair of src and dst addresses receives its own stream ID.
+        # TODO: check performance cost of this
+        df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src_address", "dst_address"]], axis=1)]
+        df = (
+            df.assign(stream_id=df.groupby(["conv"]).ngroup())
+            .drop(columns=["conv"])
+            .astype({"stream_id": "uint16"})
+        )
+    end_time = time.perf_counter()
+    logger.debug(
+        "Capture to DataFrame conversion took {:.3f} seconds.".format(end_time - start_time)
+    )
     return df
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(cap, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
+def convert_Capture_to_Line(
+    cap, measurement: str = "packet", additional_tags: Dict = None
+) -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
@@ -269,10 +295,8 @@ def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
     Per default the source address is returned. Set src to `False` to get the destination address.
     """
     addr: str = ""
-
     if not IP in packet:
         return addr
-
     if src:
         if hasattr(packet[IP], "src"):
             addr = str(packet[IP].src)
@@ -283,5 +307,32 @@ def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
             addr = str(packet[IP].dst)
             if hasattr(packet[IP], "dport"):
                 addr += ":" + str(packet[IP].dport)
-
     return addr
+
+
+@nb.jit(forceobj=True)
+def _get_address_tuple_from_scapy_packet(packet: Packet, src: bool = True) -> Tuple[str, str, int]:
+    """
+    Returns the source address (ip:port), ip, and port of a scapy packet.
+    Per default the source address is returned. Set src to `False` to get the destination address.
+    """
+    addr: str = ""
+    ip: str = ""
+    port: int = -1
+    if IP not in packet:
+        return addr, ip, port
+    if src:
+        if hasattr(packet[IP], "src"):
+            ip = str(packet[IP].src)
+            addr = ip
+            if hasattr(packet[IP], "sport"):
+                port = int(packet[IP].sport)
+                addr += ":" + str(port)
+    else:
+        if hasattr(packet[IP], "dst"):
+            ip = str(packet[IP].dst)
+            addr = ip
+            if hasattr(packet[IP], "dport"):
+                port = int(packet[IP].dport)
+                addr += ":" + str(port)
+    return addr, ip, port

@@ -437,7 +437,6 @@ class Database:
         org = org_ if not org else org
         url = url_ if not url else url
         bucket = bucket_ if not bucket else bucket
-
         try:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -456,7 +455,6 @@ class Database:
             for line in lines:
                 logger.error(line)
             return False
-
         return True
 
     #####################
@@ -504,7 +502,7 @@ class DataLoader:
         file_path = resolve_file_path(file_path)
         # Get the file size in Gigabyte
         file_size = os.path.getsize(file_path) * 1e-9
-        spinner_text = "Reading file."
+        spinner_text = "Reading file into memory."
         if file_size > 0.25:
             spinner_text += f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
         spinner.text = spinner_text
