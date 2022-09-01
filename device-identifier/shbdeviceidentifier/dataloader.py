@@ -25,12 +25,12 @@ class DataLoader:
         """
         Loads data from the InfluxDB database.
         """
-        client = Database().get_influxdb_client()
-        df = client.query_api().query_data_frame(query=query, params=params)
-        # Cannot chain these together, because pandas will complain about missing columns.
-        df = df.rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"})
-        df = df.drop(columns=[col for col in df.columns if col.startswith("_")], axis=1)
-        return df
+        with Database().get_influxdb_client() as client:
+            df = client.query_api().query_data_frame(query=query, params=params)
+            # Cannot chain these together, because pandas will complain about missing columns.
+            df = df.rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"})
+            df = df.drop(columns=[col for col in df.columns if col.startswith("_")], axis=1)
+            return df
 
     @staticmethod
     def from_csv(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
