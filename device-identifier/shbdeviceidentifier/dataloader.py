@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Union, Generator, Tuple, Dict
 
@@ -20,13 +21,14 @@ class DataLoader:
     """
 
     @staticmethod
-    def from_influxdb(query: str, params: dict = None, bind_params: dict = None) -> pd.DataFrame:
+    def from_influxdb(query: str, params: dict = None) -> pd.DataFrame:
         """
         Loads data from the InfluxDB database.
         """
         client = Database().get_influxdb_client()
-        df = (client.query_api().query_data_frame(query, params, bind_params)
-                .rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"}))
+        df = client.query_api().query_data_frame(query=query, params=params)
+        # Cannot chain these together, because pandas will complain about missing columns.
+        df = df.rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"})
         df = df.drop(columns=[col for col in df.columns if col.startswith("_")], axis=1)
         return df
 
@@ -49,7 +51,9 @@ class DataLoader:
         file_size = os.path.getsize(file_path) * 1e-9
         spinner_text = "Reading file."
         if file_size > 0.25:
-            spinner_text += f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
+            spinner_text += (
+                f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
+            )
         spinner.text = spinner_text
         spinner.start()
         if file_path:
@@ -85,7 +89,9 @@ class DataLoader:
             return None
 
 
-def _get_label(row: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train: List[str]) -> str:
+def _get_label(
+    row: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train: List[str]
+) -> str:
     # Split IP address and port
     key = row.rsplit(":", 1)[0]
     # Check if label is available
@@ -98,30 +104,65 @@ def _get_label(row: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train
         label = "NoLabel"
     return label
 
-def from_file(training_data_path: str, training_labels_path: str, devices_to_train: List[str]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+
+def from_file(
+    training_data_path: str, training_labels_path: str, devices_to_train: List[str]
+) -> Tuple[pd.DataFrame, pd.Series]:
+    """
+    Loads train data and labels from a file.
+    """
     # HACK: refactor all of this
     load_train_df = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_data_path}."),
+        "UNKNOWN": lambda x: logger.error(
+            f"Unsupported file extension for: {training_data_path}."
+        ),
         "pcap": DataLoader.from_pcap,
         "pcapng": DataLoader.from_pcap,
         "csv": DataLoader.from_csv,
     }[get_file_type(training_data_path)]
     X: pd.DataFrame = load_train_df(training_data_path)
     load_label_lookup = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_labels_path}."),
+        "UNKNOWN": lambda x: logger.error(
+            f"Unsupported file extension for: {training_labels_path}."
+        ),
         "json": DataLoader.labels_from_json,
     }[get_file_type(training_labels_path)]
     ip_to_label_map = load_label_lookup(training_labels_path)
-    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train))
+    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
     return X, Y
 
-def from_database(query: str, params: str, devices_to_train: List[str]) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    X = DataLoader.from_influxdb(query, params)
-    query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null;"""
-    devices = Database().query(query=query, db='sqlite')
+
+def from_database(
+    train_data_query: str, params: Dict[str:any], devices_to_train: List[str]
+) -> Optional[Tuple[pd.DataFrame, pd.Series]]:
+    """
+    Loads train data and labels from the database.
+
+    Parameters
+    ----------
+    train_data_query: str
+        The query that retrieves the train data from the database.
+    params: Dict[str: any]
+        The parameters to be passed to the train data query.
+    devices_to_train: List[str]
+        The devices that the model should learn to identify.
+
+    Returns
+    -------
+    Optional[Tuple[pd.DataFrame, pd.Series]]
+        Train data and labels.
+    """
+    X = DataLoader.from_influxdb(train_data_query, params)
+    device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null;"""
+    devices = Database().query(query=device_query, db="sqlite")
+    if not devices:
+        logger.error("No devices with IP addresses found in the database.")
+        return None, None
+    logger.debug(f"Devices: {devices}")
     ip_to_label_map = {}
     for device in devices:
+        # dict = {ip_address: device_name}
         ip_to_label_map[device[1]] = device[0]
     logger.info(f"ip_to_label_map: {ip_to_label_map}")
-    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train))
-    return X,Y
+    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+    return X, Y

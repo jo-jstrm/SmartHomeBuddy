@@ -64,6 +64,7 @@ def resolve_file_path(file_path: Union[Path, str], error_msg=None) -> Optional[P
 def get_file_type(file_path: Union[Path, str]) -> str:
     """Returns the file type of the given file."""
     file_path = resolve_file_path(file_path)
+    logger.debug(f"File type of {file_path} is {file_path.suffix}.")
     if file_path:
         return file_path.suffix[1:]
     return "UNKNOWN"

@@ -308,7 +308,8 @@ class Database:
 
     def get_influxdb_client(self) -> InfluxDBClient:
         user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
-        return InfluxDBClient(url=url, org=org, token=token)
+        logger.debug(f"Creating InfluxDBClient with the following params: url={url}, org={org}, token={token}")
+        return InfluxDBClient(url=url, token=token, org=org)
 
     def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None):
         """

@@ -51,12 +51,12 @@ def read(db: Database, file_path: click.Path, file_type: str):
         else:
             logger.error(f"Failed to read {file_path}.")
 
-def train(model_selector, use_database: bool, training_data_path: str, training_labels_path: str, devices_to_train: List[str]=None):
+def train(model_name, use_database: bool, training_data_path: str, training_labels_path: str, devices_to_train: List[str]=None):
     """Train an ML model."""
     if use_database:
         params = {
             "_start": datetime.strptime("2022-08-01T11:40:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
-            "_stop": datetime.strptime("2022-08-01T13:41:00UTC", "%Y-%m-%dT%H:%M:%S%Z")
+            "_stop": datetime.strptime("2022-08-01T11:41:00UTC", "%Y-%m-%dT%H:%M:%S%Z")
         }
         query = """
                     from(bucket: "network-traffic")
@@ -66,8 +66,8 @@ def train(model_selector, use_database: bool, training_data_path: str, training_
         train_df, train_labels = from_database(query, params, devices_to_train)
     else:
         train_df, train_labels = from_file(training_data_path, training_labels_path, devices_to_train)
-    model = get_model(model_selector)
+    model = get_model(model_name)
     model.train(train_df[["data_len", "stream_id"]], train_labels)
-    save_path = DATA_DIR / Path("ml_models/" + model_selector + ".pkl")
+    save_path = DATA_DIR / Path("ml_models/" + model_name + ".pkl")
     if model.save(save_path):
-        logger.success(f"Model {model_selector} saved successfully to {save_path}.")
+        logger.success(f"Model {model_name} saved successfully to {save_path}.")
