@@ -88,6 +88,68 @@ class DataLoader:
         else:
             return None
 
+    @staticmethod
+    def from_file(
+        training_data_path: str, training_labels_path: str, devices_to_train: List[str]
+    ) -> Tuple[pd.DataFrame, pd.Series]:
+        """
+        Loads train data and labels from a file.
+        """
+        # HACK: refactor all of this
+        load_train_df = {
+            "UNKNOWN": lambda x: logger.error(
+                f"Unsupported file extension for: {training_data_path}."
+            ),
+            "pcap": DataLoader.from_pcap,
+            "pcapng": DataLoader.from_pcap,
+            "csv": DataLoader.from_csv,
+        }[get_file_type(training_data_path)]
+        X: pd.DataFrame = load_train_df(training_data_path)
+        load_label_lookup = {
+            "UNKNOWN": lambda x: logger.error(
+                f"Unsupported file extension for: {training_labels_path}."
+            ),
+            "json": DataLoader.labels_from_json,
+        }[get_file_type(training_labels_path)]
+        ip_to_label_map = load_label_lookup(training_labels_path)
+        Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+        return X, Y
+
+    @staticmethod
+    def from_database(
+        train_data_query: str, params: Dict[str:any], devices_to_train: List[str]
+    ) -> Optional[Tuple[pd.DataFrame, pd.Series]]:
+        """
+        Loads train data and labels from the database.
+
+        Parameters
+        ----------
+        train_data_query: str
+            The query that retrieves the train data from the database.
+        params: Dict[str: any]
+            The parameters to be passed to the train data query.
+        devices_to_train: List[str]
+            The devices that the model should learn to identify.
+
+        Returns
+        -------
+        Optional[Tuple[pd.DataFrame, pd.Series]]
+            Train data and labels.
+        """
+        X = DataLoader.from_influxdb(train_data_query, params)
+        device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null;"""
+        devices = Database().query(query=device_query, db="sqlite")
+        if not devices:
+            logger.error("No devices with IP addresses found in the database.")
+            return None, None
+        logger.debug(f"Devices: {devices}")
+        ip_to_label_map = {}
+        for device in devices:
+            # dict = {ip_address: device_name}
+            ip_to_label_map[device[1]] = device[0]
+        logger.info(f"ip_to_label_map: {ip_to_label_map}")
+        Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+        return X, Y
 
 def _get_label(
     row: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train: List[str]
@@ -103,66 +165,3 @@ def _get_label(
     except KeyError:
         label = "NoLabel"
     return label
-
-
-def from_file(
-    training_data_path: str, training_labels_path: str, devices_to_train: List[str]
-) -> Tuple[pd.DataFrame, pd.Series]:
-    """
-    Loads train data and labels from a file.
-    """
-    # HACK: refactor all of this
-    load_train_df = {
-        "UNKNOWN": lambda x: logger.error(
-            f"Unsupported file extension for: {training_data_path}."
-        ),
-        "pcap": DataLoader.from_pcap,
-        "pcapng": DataLoader.from_pcap,
-        "csv": DataLoader.from_csv,
-    }[get_file_type(training_data_path)]
-    X: pd.DataFrame = load_train_df(training_data_path)
-    load_label_lookup = {
-        "UNKNOWN": lambda x: logger.error(
-            f"Unsupported file extension for: {training_labels_path}."
-        ),
-        "json": DataLoader.labels_from_json,
-    }[get_file_type(training_labels_path)]
-    ip_to_label_map = load_label_lookup(training_labels_path)
-    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
-    return X, Y
-
-
-def from_database(
-    train_data_query: str, params: Dict[str:any], devices_to_train: List[str]
-) -> Optional[Tuple[pd.DataFrame, pd.Series]]:
-    """
-    Loads train data and labels from the database.
-
-    Parameters
-    ----------
-    train_data_query: str
-        The query that retrieves the train data from the database.
-    params: Dict[str: any]
-        The parameters to be passed to the train data query.
-    devices_to_train: List[str]
-        The devices that the model should learn to identify.
-
-    Returns
-    -------
-    Optional[Tuple[pd.DataFrame, pd.Series]]
-        Train data and labels.
-    """
-    X = DataLoader.from_influxdb(train_data_query, params)
-    device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null;"""
-    devices = Database().query(query=device_query, db="sqlite")
-    if not devices:
-        logger.error("No devices with IP addresses found in the database.")
-        return None, None
-    logger.debug(f"Devices: {devices}")
-    ip_to_label_map = {}
-    for device in devices:
-        # dict = {ip_address: device_name}
-        ip_to_label_map[device[1]] = device[0]
-    logger.info(f"ip_to_label_map: {ip_to_label_map}")
-    Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
-    return X, Y

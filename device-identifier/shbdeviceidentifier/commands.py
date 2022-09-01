@@ -8,7 +8,7 @@ import click
 import pandas as pd
 from loguru import logger
 
-from .dataloader import DataLoader, from_file, from_database
+from .dataloader import DataLoader
 from .db import Database
 from .rpc.server import start_rpc_server
 from .utilities.ml_utilities import get_model
@@ -76,9 +76,9 @@ def train(
                     |> range(start: _start, stop: _stop)
                     |> filter(fn: (r) => r["_measurement"] == "packet")  
                 """
-        train_df, train_labels = from_database(query, params, devices_to_train)
+        train_df, train_labels = DataLoader.from_database(query, params, devices_to_train)
     else:
-        train_df, train_labels = from_file(
+        train_df, train_labels = DataLoader.from_file(
             training_data_path, training_labels_path, devices_to_train
         )
     model = get_model(model_name)
