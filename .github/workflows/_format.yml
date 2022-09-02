@@ -1,0 +1,36 @@
+name: '📐 Format Code'
+
+on:
+  workflow_call:
+    inputs:
+      target_ref:
+        description: 'A target reference from the caller workflow to format.'
+        default: ${{ github.head_ref }}
+        required: false
+        type: string
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.target_ref }}
+      - uses: psf/black@stable
+        with:
+          options: "--verbose --color"
+          src: "./device-identifier"
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.target_ref }}
+      - name: Prettify electron app code
+        uses: creyD/prettier_action@v4.2
+        with:
+          # This part is also where you can pass other options, for example:
+          # working_directory: "electron-app/" # Has a bug as of 07/2022
+          prettier_options: --write **/*.{ts,tsx,js,jsx,html,css,scss,sass}

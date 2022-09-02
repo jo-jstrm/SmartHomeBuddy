@@ -1,4 +1,4 @@
-name: '📐 Format Code'
+name: '🧪 Test'
 
 on:
   workflow_dispatch:
@@ -11,6 +11,6 @@ on:
 
 jobs:
   format:
-    uses: ./.github/workflows/_format.yml
+    uses: ./.github/workflows/_unit_tests.yml
     with:
       target_ref: ${{ inputs.target_ref }}
