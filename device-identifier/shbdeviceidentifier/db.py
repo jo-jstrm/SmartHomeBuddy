@@ -11,22 +11,20 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
-from typing import Union, Iterable, Generator, List, Optional
+from typing import Union, Iterable, List, Optional
 
 import influxdb
 import influxdb_client
 import pandas as pd
 import requests
 import sqlite3
+from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
-from scapy.all import rdpcap
 from sqlite3 import Error
 
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
-from .utilities.capture_utilities import convert_Capture_to_DataFrame
-from .utilities.logging_utilities import spinner
 
 
 @dataclass
@@ -216,7 +214,8 @@ class Database:
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
                                                    id integer PRIMARY KEY,
                                                    device_name VARCHAR NOT NULL,
-                                                   mac_address VARCHAR UNIQUE                                             
+                                                   mac_address VARCHAR UNIQUE,
+                                                   ip_address VARCHAR UNIQUE                                             
                                                );"""
         conn = self._get_SQLite_connection()
         if conn:
@@ -243,7 +242,7 @@ class Database:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> list:
+    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> Optional[list]:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
@@ -307,14 +306,18 @@ class Database:
             logger.debug("Could not establish a connection to the InfluxDB database. Try running db.start_InfluxDB().")
         return False
 
+    def get_influxdb_client(self) -> InfluxDBClient:
+        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
+        logger.debug(f"Creating InfluxDBClient with the following params: url={url}, org={org}, token={token}")
+        return InfluxDBClient(url=url, token=token, org=org)
+
     def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None):
         """
         Queries the InfluxDB instance.
         """
-        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
-        client = self._get_InfluxDB_connection(token=token, org=org, url=url)
-        if client:
-            return client.query(query, params, bind_params)
+        client = self.get_influxdb_client()
+        query_api = client.query_api()
+        return query_api.query(query, params, bind_params)
 
     def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
         """
@@ -342,7 +345,7 @@ class Database:
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
-        Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
+        Use the db parameter to specify which database to query. db='influx' for InfluxDB, db='sqlite' for SQLite.
         Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
         """
         if db == "influx":
@@ -472,71 +475,3 @@ class Database:
         sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
         devices = self.query_SQLiteDB(sql_get_devices)
         return devices
-
-
-# noinspection PyPep8Naming
-class DataLoader:
-    """
-    Class for loading data from various sources into a pandas DataFrame.
-    """
-
-    @staticmethod
-    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Optional[List]:
-        """
-        Loads data from the InfluxDB database.
-        """
-        ...
-
-    @staticmethod
-    def from_csv(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a CSV file.
-        """
-        file_path = resolve_file_path(file_path)
-        if file_path:
-            return pd.read_csv(file_path, **kwargs)
-
-    @staticmethod
-    def from_pcap(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a pcap file.
-        """
-        file_path = resolve_file_path(file_path)
-        # Get the file size in Gigabyte
-        file_size = os.path.getsize(file_path) * 1e-9
-        spinner_text = "Reading file."
-        if file_size > 0.25:
-            spinner_text += f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
-        spinner.text = spinner_text
-        spinner.start()
-        if file_path:
-            # Read pcap
-            cap = rdpcap(file_path.as_posix())
-            df = convert_Capture_to_DataFrame(cap)
-            if not df.empty:
-                return df
-
-    @staticmethod
-    def from_generator(generator: Generator) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a generator.
-        """
-        ...
-
-    @staticmethod
-    def from_dict(data: dict) -> Optional[pd.DataFrame]:
-        """
-        Constructs a Dataset from data in memory.
-        """
-        ...
-
-    @staticmethod
-    def labels_from_json(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
-        """
-        Loads labels from a JSON file.
-        """
-        file_path = resolve_file_path(file_path)
-        if file_path:
-            return pd.read_json(file_path, orient="index")
-        else:
-            return None
