@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import traceback
-
+import sqlite3
 import subprocess
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
+from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, Generator, List, Optional
 
@@ -17,12 +18,10 @@ import influxdb
 import influxdb_client
 import pandas as pd
 import requests
-import sqlite3
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
 from scapy.all import rdpcap
-from sqlite3 import Error
 
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
@@ -126,7 +125,10 @@ class Database:
     def start(self):
         self.influx_process = self.start_InfluxDB()
         self._create_SQLite_tables()
-        if not self._is_InfluxDB_setup():
+        if self._is_InfluxDB_setup():
+            logger.debug("InfluxDB is already setup.")
+        else:
+            logger.debug("InfluxDB is not setup. Setting up InfluxDB...")
             self._do_initial_db_setup()
 
     def _run_influxdb_setup(self) -> Optional[InfluxDbUser]:
@@ -182,7 +184,7 @@ class Database:
     def _do_initial_db_setup(self):
         influxdb_admin = self._run_influxdb_setup()
         if influxdb_admin == None:
-            raise ValueError("InfluxDB setup failed for unknown reasons")
+            raise ValueError("InfluxDB setup failed for unknown reasons.")
         elif influxdb_admin.token == None:
             logger.trace(
                 "The InfluxDB setup has already been run. No new token was received. "
@@ -243,7 +245,7 @@ class Database:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> list:
+    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> List:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
@@ -258,8 +260,8 @@ class Database:
         if query_result:
             return query_result[0]
         else:
-            logger.warning(f"Could not find credentials for user id '{user_id}' or user '{user_name}'.")
             logger.debug(f"Query result: {query_result}.")
+            raise ValueError(f"Could not find credentials for user id '{user_id}' or user '{user_name}'.")
 
     def _get_SQLite_connection(self) -> sqlite3.Connection:
         """create a database connection to a SQLite database"""
