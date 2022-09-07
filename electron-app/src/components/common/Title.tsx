@@ -9,11 +9,11 @@ interface TitleProps {
 export default function Title(props: TitleProps) {
   return (
     <Typography
-      component="h2"
-      variant="h6"
-      color="primary"
-      gutterBottom
-      {...props.sx}
+        component="h2"
+        variant="h6"
+        color="inherit"
+        gutterBottom
+        {...props.sx}
     >
       {props.children}
     </Typography>
