@@ -1,3 +1,4 @@
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -11,8 +12,9 @@ from loguru import logger
 from .dataloader import DataLoader
 from .db import Database
 from .rpc.server import start_rpc_server
+from .utilities.app_utilities import SHB_HOME, DATA_DIR
 from .utilities.ml_utilities import get_model
-from .utilities.app_utilities import SHB_HOME, DATA_DIR, get_file_type
+from .utilities.queries import EARLIEST_TIMESTAMP
 
 
 def start_database(db: Database):
@@ -60,29 +62,53 @@ def train(
     training_data_path: str,
     training_labels_path: str,
     devices_to_train: List[str] = None,
+    bucket: str = "network_traffic",
+    ts_train_start: str = None,
+    ts_train_end: str = None,
 ):
     """Train an ML model."""
     logger.debug(
-        "Will perform training with following parameters:"
-        f"model_name={model_name}, use_database={use_database}, training_data_path={training_data_path}, training_labels_path={training_labels_path}, devices_to_train={devices_to_train}"
+        "User provided the following parameters for training:"
+        f"model_name={model_name}, use_database={use_database}, training_data_path={training_data_path}, "
+        f"training_labels_path={training_labels_path}, devices_to_train={devices_to_train}, bucket={bucket}, "
+        f"ts_train_start={ts_train_start}, ts_train_end={ts_train_end}"
     )
     if use_database:
-        params = {
-            "_start": datetime.strptime("2022-08-01T11:40:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
-            "_stop": datetime.strptime("2022-08-01T11:41:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
-        }
+        with Database().get_influxdb_client() as client:
+            query_api = client.query_api()
+            ts_params = {"_start": EARLIEST_TIMESTAMP, "_stop": datetime.now(), "_bucket": bucket}
+            if not ts_train_start:
+                train_start_query = """
+                        from(bucket: _bucket)
+                        |> range(start: _start, stop: _stop)
+                        |> group()
+                        |> first()
+                    """
+                ts_train_start = query_api.query_data_frame(query=train_start_query, params=ts_params)
+                ts_train_start = ts_train_start.iloc[0]["_time"]
+            else:
+                try:
+                    ts_train_start = datetime.strptime(ts_train_start, "%Y-%m-%d %H:%M:%S")
+                except:
+                    logger.error("Invalid timestamp format for timestamp-train-start. Please use YYYY-MM-DD HH:MM:SS")
+            try:
+                ts_train_end = datetime.strptime(ts_train_end, "%Y-%m-%d %H:%M:%S") if ts_train_end else datetime.now()
+            except:
+                logger.error("Invalid timestamp format for timestamp-train-stop. Please use YYYY-MM-DD HH:MM:SS")
+        logger.debug(f"Querying train data in time range {ts_train_start} - {ts_train_end}.")
+        params = {"_start": ts_train_start, "_stop": ts_train_end, "_bucket": bucket}
         query = """
-                    from(bucket: "network-traffic")
+                    from(bucket: _bucket)
                     |> range(start: _start, stop: _stop)
                     |> filter(fn: (r) => r["_measurement"] == "packet")  
                 """
         train_df, train_labels = DataLoader.from_database(query, params, devices_to_train)
     else:
-        train_df, train_labels = DataLoader.from_file(
-            training_data_path, training_labels_path, devices_to_train
-        )
+        train_df, train_labels = DataLoader.from_file(training_data_path, training_labels_path, devices_to_train)
     model = get_model(model_name)
+    logger.debug("Starting training...")
     model.train(train_df[["data_len", "stream_id"]], train_labels)
+    logger.debug("Training finished.")
     save_path = DATA_DIR / Path("ml_models/" + model_name + ".pkl")
     if model.save(save_path):
         logger.success(f"Model {model_name} saved successfully to {save_path}.")

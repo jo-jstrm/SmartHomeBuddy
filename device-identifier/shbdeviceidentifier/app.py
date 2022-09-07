@@ -1,6 +1,7 @@
 import os
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 from importlib import metadata
 from pathlib import Path
@@ -201,13 +202,26 @@ def query(ctx, data_base, statement_name):
 @click.argument("training-data-path", nargs=1, type=click.STRING)
 @click.argument("training-labels-path", nargs=1, type=click.STRING)
 @click.argument("use-database", nargs=1, type=click.BOOL, default=False)
+@click.argument("timestamp-train-start", nargs=1, type=click.STRING, required=False, default=None)
+@click.argument("timestamp-train-stop", nargs=1, type=click.STRING, required=False, default=None)
 @pass_ctx
 @logger_wraps()
-def train(ctx, model_name, training_data_path, training_labels_path, use_database):
+def train(
+    ctx, model_name, training_data_path, training_labels_path, use_database, timestamp_train_start, timestamp_train_stop
+):
     """
     Trains a model.
     """
     devices_to_train = ["Google-Nest-Mini", "ESP-1DC41C"]
     logger.debug(f"Training data path: {training_data_path}.")
     logger.debug(f"Training labels path: {training_labels_path}.")
-    commands.train(model_name, use_database, training_data_path, training_labels_path, devices_to_train)
+    commands.train(
+        model_name=model_name,
+        use_database=use_database,
+        training_data_path=training_data_path,
+        training_labels_path=training_labels_path,
+        devices_to_train=devices_to_train,
+        bucket="network-traffic",
+        ts_train_start=timestamp_train_start,
+        ts_train_end=timestamp_train_stop,
+    )
