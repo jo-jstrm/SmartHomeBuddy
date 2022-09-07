@@ -118,7 +118,7 @@ class DataLoader:
     @staticmethod
     def from_database(
         train_data_query: str, params: Dict[str:any], devices_to_train: List[str]
-    ) -> Optional[Tuple[pd.DataFrame, pd.Series]]:
+    ) -> Union[Tuple[pd.DataFrame, pd.Series], Tuple[None, None]]:
         """
         Loads train data and labels from the database.
 
