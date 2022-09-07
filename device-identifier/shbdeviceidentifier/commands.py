@@ -19,6 +19,7 @@ def start_database(db: Database):
         db.stop_InfluxDB()
         sys.exit(1)
 
+
 def run_rpc_server(db: Database):
     try:
         start_rpc_server()
@@ -29,6 +30,23 @@ def run_rpc_server(db: Database):
     finally:
         db.stop_InfluxDB()
 
+
+def extract_devices() -> None:
+    """Extracts devices from influxdb and write them to the devices table."""
+    db = Database()
+    try:
+        ips = db.get_device_ips_from_influxdb()
+    except Exception:
+        logger.error("Failed to get device ips from influxdb.")
+        return
+    for ip in ips:
+        # Write unique IPs to the database. The user can give them names afterwards.
+        if db.write_device("", "", ip):
+            logger.trace(f"Added {ip} to devices database.")
+        else:
+            logger.debug(f"Failed to add {ip} to devices database.")
+
+
 def read(db: Database, file_path: click.Path, file_type: str):
     """Reads all the data from a capture file."""
     if file_type == "pcap" or file_type == "pcapng":
@@ -37,10 +55,20 @@ def read(db: Database, file_path: click.Path, file_type: str):
             if db.write_to_InfluxDB(
                 packets,
                 data_frame_measurement_name="packet",
-                data_frame_tag_columns=["src_address", "src_ip", "src_port", "dst_address", "dst_ip", "dst_port", "L4_protocol", "stream_id"],
+                data_frame_tag_columns=[
+                    "src_address",
+                    "src_ip",
+                    "src_port",
+                    "dst_address",
+                    "dst_ip",
+                    "dst_port",
+                    "L4_protocol",
+                    "stream_id",
+                ],
             ):
-                logger.success(f"Wrote {file_path} to Database.")
+                logger.success(f"Wrote {file_path} to database.")
             else:
-                logger.error(f"Failed to write {file_path} to Database.")
+                logger.error(f"Failed to write {file_path} to database.")
+            extract_devices()
         else:
             logger.error(f"Failed to read {file_path}.")

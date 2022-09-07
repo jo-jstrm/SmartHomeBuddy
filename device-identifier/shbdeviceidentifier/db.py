@@ -9,6 +9,7 @@ import traceback
 
 import subprocess
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from subprocess import Popen
 from typing import Union, Iterable, Generator, List, Optional
@@ -18,12 +19,14 @@ import influxdb_client
 import pandas as pd
 import requests
 import sqlite3
+from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
 from scapy.all import rdpcap
 from sqlite3 import Error
 
+from .utilities.queries import EARLIEST_TIMESTAMP
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
@@ -215,8 +218,9 @@ class Database:
                                        );"""
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
                                                    id integer PRIMARY KEY,
-                                                   device_name VARCHAR NOT NULL,
-                                                   mac_address VARCHAR UNIQUE                                             
+                                                   device_name VARCHAR,
+                                                   mac_address VARCHAR,
+                                                   ip_address VARCHAR NOT NULL UNIQUE                                     
                                                );"""
         conn = self._get_SQLite_connection()
         if conn:
@@ -306,6 +310,11 @@ class Database:
             sqlite_con.close()
             logger.debug("Could not establish a connection to the InfluxDB database. Try running db.start_InfluxDB().")
         return False
+
+    def get_influxdb_client(self) -> InfluxDBClient:
+        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
+        logger.debug(f"Creating InfluxDBClient with the following params: url={url}, org={org}, token={token}")
+        return InfluxDBClient(url=url, token=token, org=org)
 
     def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None):
         """
@@ -461,15 +470,35 @@ class Database:
     ###### Devices ######
     #####################
 
-    def write_device(self, name, mac_address):
-        sql_write_device = """INSERT INTO devices (device_name, mac_address)
-                                VALUES (?,?);"""
-        self.query_SQLiteDB(sql_write_device, [name, mac_address])
+    def write_device(self, name, mac_address, ip_address):
+        sql_write_device = """INSERT INTO devices (device_name, mac_address, ip_address)
+                                VALUES (?,?,?);"""
+        try:
+            self.query_SQLiteDB(sql_write_device, [name, mac_address, ip_address])
+        except:
+            return False
+        return True
 
     def get_all_devices(self):
         sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
         devices = self.query_SQLiteDB(sql_get_devices)
         return devices
+
+    def get_device_ips_from_influxdb(self, bucket: str = None) -> List[str]:
+        """Returns a list of all unique source IP addresses in the InfluxDB database."""
+        if not bucket:
+            bucket = self.influxdb_bucket
+        params = {"_start": EARLIEST_TIMESTAMP, "_stop": datetime.now(), "_bucket": bucket}
+        unique_query = """
+            from(bucket: _bucket)
+            |> range(start: _start, stop: _stop)
+            |> filter(fn: (r) => r["_measurement"] == "packet")
+            |> group()
+            |> unique(column: "src_ip")
+        """
+        with self.get_influxdb_client() as client:
+            res = client.query_api().query_data_frame(query=unique_query, params=params)
+            return res.src_ip.to_list()
 
 
 # noinspection PyPep8Naming
