@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
-import { MainNavBarItems, secondaryListItems } from "./DrawerItems";
+import { MainNavBarItems } from "./DrawerItems";
 
 export const StyledDrawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
@@ -53,8 +53,6 @@ export function Drawer(props: { open: boolean; toggleDrawer: () => void }) {
       <Divider />
       <List component="nav">
         <MainNavBarItems />
-        <Divider sx={{ my: 1 }} />
-        {secondaryListItems}
       </List>
     </StyledDrawer>
   );

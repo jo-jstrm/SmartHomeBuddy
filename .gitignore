@@ -233,6 +233,7 @@ dmypy.json
 /device-identifier/shbdeviceidentifier/pcaps/*
 !/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
 !/device-identifier/shbdeviceidentifier/pcaps/dummy_labels.json
+!/device-identifier/shbdeviceidentifier/pcaps/dummy.csv
 
 # Python unit tests
 /device-identifier/shbdeviceidentifier/tests/
@@ -245,3 +246,9 @@ SQLite/*
 
 # ML model files
 *.pkl
+
+# junit xml reports
+device-identifier/junit/
+
+# intellj run files
+device-identifier/.run/
