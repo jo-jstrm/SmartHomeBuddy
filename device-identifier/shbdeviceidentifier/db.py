@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import traceback
-
+import sqlite3
 import subprocess
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
+from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, List, Optional
 
@@ -17,12 +18,10 @@ import influxdb
 import influxdb_client
 import pandas as pd
 import requests
-import sqlite3
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
-from sqlite3 import Error
 
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 
