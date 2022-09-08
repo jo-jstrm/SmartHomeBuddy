@@ -1,7 +1,6 @@
 import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime
 from functools import partial
 from importlib import metadata
 from pathlib import Path
@@ -13,12 +12,12 @@ from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
-from .db import Database
 from .dataloader import DataLoader
+from .db import Database
 from .utilities import get_capture_file_path, Formatter, logger_wraps
+from .utilities.app_utilities import DATA_DIR
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
-
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
@@ -121,6 +120,15 @@ def read(ctx, file_path: click.Path, file_type: str):
     """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
     commands.read(ctx.db, file_path, file_type)
+
+
+@app.command("read-labels")
+@click.argument("file_path", type=click.Path(), required=False, default=DATA_DIR / "pcaps" / "dummy_labels.json")
+@pass_ctx
+@logger_wraps()
+def read_labels(ctx, file_path: click.Path):
+    file_path = get_capture_file_path(ctx, file_path)
+    commands.read_labels(ctx.db, file_path)
 
 
 @app.command("identify")

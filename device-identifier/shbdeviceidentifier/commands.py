@@ -1,9 +1,8 @@
-import logging
 import sys
 from datetime import datetime
 from pathlib import Path
 from time import sleep
-from typing import Tuple, List
+from typing import List
 
 import click
 import pandas as pd
@@ -46,8 +45,8 @@ def read(db: Database, file_path: click.Path, file_type: str):
         if isinstance(packets, pd.DataFrame) and not packets.empty:
             if db.write_to_InfluxDB(
                 packets,
-                data_frame_measurement_name="packet",
-                data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
+                    data_frame_measurement_name="packet",
+                    data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
             ):
                 logger.success(f"Wrote {file_path} to Database.")
             else:
@@ -56,15 +55,32 @@ def read(db: Database, file_path: click.Path, file_type: str):
             logger.error(f"Failed to read {file_path}.")
 
 
+def read_labels(db: Database, file_path: click.Path):
+    """Reads all the labels for device IPs from a capture file."""
+    labels = DataLoader.labels_from_json(file_path)
+    if isinstance(labels, pd.DataFrame) and not labels.empty:
+
+        for ip_address, row in labels.iterrows():
+            query = """ INSERT OR IGNORE INTO devices (ip_address, device_name) VALUES (?, ?) """
+            params = (ip_address, row["name"])
+            db.query_SQLiteDB(query, params)
+
+        logger.debug(f"Labels: {labels}")
+        logger.success(f"Wrote labels from {file_path} to Database.")
+    else:
+        logger.error(f"Failed to read {file_path}.")
+        logger.debug(f"Labels: {labels}")
+
+
 def train(
-    model_name,
-    use_database: bool,
-    training_data_path: str,
-    training_labels_path: str,
-    devices_to_train: List[str] = None,
-    bucket: str = "network_traffic",
-    ts_train_start: str = None,
-    ts_train_end: str = None,
+        model_name,
+        use_database: bool,
+        training_data_path: str,
+        training_labels_path: str,
+        devices_to_train: List[str] = None,
+        bucket: str = "network_traffic",
+        ts_train_start: str = None,
+        ts_train_end: str = None,
 ):
     """Train an ML model."""
     logger.debug(
