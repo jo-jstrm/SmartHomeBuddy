@@ -36,19 +36,51 @@ logger.level("DEBUG", color="<light-black>")
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB")
 
 
-@dataclass()
+@dataclass
 class Context:
     flags: dict
     cwd: str
     version: str
-    latest_capture_file: Union[Path, None]
-    db: Database
+    _latest_capture_file: Union[Path, None]
+    _db: Database
+    _measurement: str
 
     def __init__(self):
         self.flags = {}
         self.cwd = os.getcwd()
         self.version = metadata.version("shbdeviceidentifier")
-        self.latest_capture_file = None
+        self._latest_capture_file = None
+        self._measurement = "main"
+
+    @property
+    def latest_capture_file(self):
+        return self._latest_capture_file
+
+    @latest_capture_file.setter
+    def latest_capture_file(self, value):
+        self._latest_capture_file = value
+        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_latest_capture_file"], (value,))
+
+    @property
+    def db(self):
+        return self._db
+
+    @db.setter
+    def db(self, value):
+        self._db = value
+        if not self._latest_capture_file:
+            self.db.latest_capture_file = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])
+        if not self.measurement:
+            self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])
+
+    @property
+    def measurement(self):
+        return self._measurement
+
+    @measurement.setter
+    def measurement(self, value):
+        self._measurement = value
+        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_measurement"], (value,))
 
 
 pass_ctx = click.make_pass_decorator(Context, ensure=True)
@@ -87,16 +119,17 @@ def app(ctx, debug, silent, verbose, version_flag):
         logger.configure(**logger_config)
 
     # Database connections checks
-    ctx.db = Database()
-    commands.start_database(ctx.db)
+    db = Database()
+    commands.start_database(db)
+    ctx.db = db
 
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
 # ---------------------------------------------------------------------------- #
 @app.command("start")
-@logger_wraps()
 @pass_ctx
+@logger_wraps()
 def start(ctx):
     """
     Starts the RPC and database servers.
@@ -114,21 +147,29 @@ def start(ctx):
     type=click.Choice(["pcap", "pcapng"], case_sensitive=False),
     default="pcap",
 )
+@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
+              required=False)
 @pass_ctx
 @logger_wraps()
-def read(ctx, file_path: click.Path, file_type: str):
+def read(ctx, file_path: click.Path, file_type: str, measurement: str):
     """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
-    commands.read(ctx.db, file_path, file_type)
+    if measurement:
+        ctx.measurement = measurement
+    commands.read(ctx.db, file_path, file_type, ctx.measurement)
 
 
 @app.command("read-labels")
 @click.argument("file_path", type=click.Path(), required=False, default=DATA_DIR / "pcaps" / "dummy_labels.json")
+@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
+              required=False)
 @pass_ctx
 @logger_wraps()
-def read_labels(ctx, file_path: click.Path):
+def read_labels(ctx, file_path: click.Path, measurement: str):
     file_path = get_capture_file_path(ctx, file_path)
-    commands.read_labels(ctx.db, file_path)
+    if measurement:
+        ctx.measurement = measurement
+    commands.read_labels(ctx.db, file_path, ctx.measurement)
 
 
 @app.command("identify")
@@ -233,3 +274,14 @@ def train(
         ts_train_start=timestamp_train_start,
         ts_train_end=timestamp_train_stop,
     )
+
+
+@app.command("set-measurement")
+@click.argument("dataset-name", nargs=1, type=click.STRING)
+@pass_ctx
+@logger_wraps()
+def set_measurement(ctx, measurement):
+    """
+    Sets the dataset to use for the current session.
+    """
+    ctx.measurement = measurement

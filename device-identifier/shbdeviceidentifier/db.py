@@ -23,7 +23,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
 
-from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
+from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR, DATA_DIR
+from .utilities.queries import QUERIES
 
 
 @dataclass
@@ -177,6 +178,10 @@ class Database:
         return True if influxdb_user_id else False
 
     def _do_initial_db_setup(self):
+        params = ((DATA_DIR / "pcaps" / "dummy.pcap").as_posix(), "main")
+        self.query_SQLiteDB(QUERIES["sqlite"]["set_context_defaults"], params)
+        logger.debug(f"Set default context values in SQLite DB as {params}.")
+
         influxdb_admin = self._run_influxdb_setup()
         if influxdb_admin == None:
             raise ValueError("InfluxDB setup failed for unknown reasons")
@@ -214,7 +219,13 @@ class Database:
                                                    id integer PRIMARY KEY,
                                                    device_name VARCHAR NOT NULL,
                                                    mac_address VARCHAR UNIQUE,
-                                                   ip_address VARCHAR UNIQUE                                             
+                                                   ip_address VARCHAR,
+                                                   measurement VARCHAR                                             
+                                               );"""
+        sql_context_table = """CREATE TABLE IF NOT EXISTS context (
+                                                   id INTEGER PRIMARY KEY CHECK (id = 1),
+                                                   latest_capture_file VARCHAR,
+                                                   measurement VARCHAR
                                                );"""
         conn = self._get_SQLite_connection()
         if conn:
@@ -227,6 +238,9 @@ class Database:
             # Devices table
             self.query_SQLiteDB(sql_create_devices_table)
             logger.debug("Table 'devices' created successfully.")
+            # Context table
+            self.query_SQLiteDB(sql_context_table)
+            logger.debug("Table 'context' created successfully.")
 
     def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
         """create a database connection to a InfluxDB database server."""
@@ -318,13 +332,16 @@ class Database:
         query_api = client.query_api()
         return query_api.query(query, params, bind_params)
 
-    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
+    # TODO: Returning a list or a boolean is not very elegant, but we need to know if the query was successful,
+    #  while being able to return the results.
+    #  Should be refactored.
+    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Union[List, bool]:
         """
         Queries the SQLite database.
         """
         conn = self._get_SQLite_connection()
         if not conn:
-            return
+            return False
         try:
             c = conn.cursor()
             if params:
@@ -334,12 +351,13 @@ class Database:
             res = c.fetchall()
             conn.commit()
             conn.close()
-            return res
+            return res if res else False
         except Error:
             lines = traceback.format_exc().splitlines()
             for line in lines:
                 logger.error(line)
             logger.error(f"The supplied statements are: {params}")
+            return False
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
         """
