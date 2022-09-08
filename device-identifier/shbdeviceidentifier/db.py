@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import traceback
-
+import sqlite3
 import subprocess
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
+from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, Generator, List, Optional
 
@@ -17,12 +18,10 @@ import influxdb
 import influxdb_client
 import pandas as pd
 import requests
-import sqlite3
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
 from scapy.all import rdpcap
-from sqlite3 import Error
 
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
@@ -238,7 +237,7 @@ class Database:
             client = influxdb.InfluxDBClient(**client_kwargs)
             version = client.ping()
             logger.debug(f"Connected to InfluxDB {version} at {self.influxdb_host}:{self.influxdb_port}.")
-            return client
+            return client if version else None
         except Exception as e:
             logger.debug(e)
             return None
@@ -292,6 +291,10 @@ class Database:
         """
         Check if the Databases are connected.
         """
+        if not self.influx_process:
+            logger.warning("InfluxDB process is not registered in this Database instance.")
+            return False
+
         influx_con = self._get_InfluxDB_connection()
         sqlite_con = self._get_SQLite_connection()
         if influx_con and sqlite_con:
@@ -375,15 +378,31 @@ class Database:
             logger.debug("No InfluxDB process found.")
             return False
 
+    def stop(self, connections: List = None) -> bool:
+        """
+        Stops the InfluxDB process and closes the SQLite connection. Mainly wraps around stop_InfluxDB().
+        """
+        if connections:
+            for con in connections:
+                con.close()
+
+        # Try to stop the InfluxDB process, first with SIGTERM, then with SIGKILL.
+        if self.stop_InfluxDB() or self.stop_InfluxDB(kill=True):
+            logger.success("Databases stopped successfully.")
+            return True
+        else:
+            logger.error("Failed to stop databases.")
+            return False
+
     def write_to_InfluxDB(
-        self,
-        data: Union[List[str], pd.DataFrame],
-        username: str = None,
-        bucket: str = None,
-        org: str = None,
-        token: str = None,
-        url: str = None,
-        **df_kwargs,
+            self,
+            data: Union[List[str], pd.DataFrame],
+            username: str = None,
+            bucket: str = None,
+            org: str = None,
+            token: str = None,
+            url: str = None,
+            **df_kwargs,
     ) -> bool:
         """
         The write_to_influxdb function writes data to an InfluxDB bucket.
