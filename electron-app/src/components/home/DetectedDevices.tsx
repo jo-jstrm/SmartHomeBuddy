@@ -1,46 +1,30 @@
 import * as React from "react";
-import { useState } from "react";
-import { Smartphone } from "@mui/icons-material";
+import {useState} from "react";
+import {Smartphone} from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
-import { queryAll } from "../../database/Database";
-import { Button } from "@mui/material";
-import {DeviceType} from "../../types/DeviceTypes";
+import {queryAll} from "../../database/Database";
+import {Button} from "@mui/material";
+import {DetectedDevice, DbDevice} from "../../types/DeviceTypes";
+import {placeholder_detected_device} from "../common/PlaceholderDevices";
 
-
-const dummy_devices = [
-  {
-    name: "Default Device",
-    mac_address: "00:00:00:00:00:00",
-    icon: <Smartphone fontSize="large" />,
-    status: "Not Identified",
-    action: <WarningAmberIcon color="action" fontSize="large" />,
-  },
-  {
-    name: "Another Default Device",
-    mac_address: "00:00:00:00:00:00",
-    icon: <Smartphone fontSize="large" />,
-    status: "Not Identified",
-    action: <WarningAmberIcon color="action" fontSize="large" />,
-  },
-];
 
 export default function DetectedDevices(props: any) {
-  const [devices, setDevices] = useState(dummy_devices);
+  const [devices, setDevices] = useState(placeholder_detected_device);
   const sql = "SELECT * FROM devices";
-  const queryDevices = () => {
+  const queryDevices = (): void => {
     queryAll(sql)
       .then((rows) => {
         console.log("Received devices: " + rows.toString());
         let devices = rows.map(
-          (device: DeviceType) => {
+          (device: DbDevice): DetectedDevice => {
             console.log(device);
             // TODO Icon, status, and action are hard coded.
             return {
-              name: device.device_name,
+              device_name: device.device_name,
               mac_address: device.mac_address,
               icon: <Smartphone fontSize="large" />,
               status: "Identified",
@@ -52,7 +36,7 @@ export default function DetectedDevices(props: any) {
       })
       .catch((err: Error) => {
         console.log("Catch: " + err.toString());
-        setDevices(dummy_devices);
+        setDevices(placeholder_detected_device);
       });
   };
   return (
@@ -80,11 +64,11 @@ export default function DetectedDevices(props: any) {
             </Paper>
           </Grid>
           {devices.map((device, index) => {
-            const { name, mac_address, icon, status, action } = device;
+            const { device_name, mac_address, icon, status, action } = device;
             return (
               <Device
                 key={index}
-                name={name}
+                name={device_name}
                 icon={icon}
                 status={status}
                 mac_address={mac_address}

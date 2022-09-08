@@ -4,6 +4,20 @@ import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
 import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
+import {styled} from "@mui/system";
+import Typography from "@mui/material/Typography";
+
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  margin: 15,
+  padding: 20
+}));
+
+const StyledDiv = styled('div')(({theme}) => ({
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: 5,
+}));
 
 export default function Classification() {
   const [classifierStatus, setClassifierStatus] = useState(
@@ -21,20 +35,15 @@ export default function Classification() {
       });
   };
   return (
-    <Grid container spacing={1}>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          <Button variant="contained" color="primary" onClick={classifyDevices}>
-            Classify Devices
-          </Button>
-        </Paper>
-      </Grid>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          {/*Trigger page reload*/}
+    <StyledPaper>
+      <StyledDiv>
+        <Button variant="outlined" color="primary" onClick={classifyDevices}>
+          Classify Devices
+        </Button>
+        <Typography align={"center"}>
           {classifierStatus}
-        </Paper>
-      </Grid>
-    </Grid>
+        </Typography>
+      </StyledDiv>
+    </StyledPaper>
   );
 }
