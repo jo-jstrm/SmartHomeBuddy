@@ -8,23 +8,8 @@ import Device from "./Device";
 import Title from "../common/Title";
 import { queryAll } from "../../database/Database";
 import { Button } from "@mui/material";
+import {DeviceType} from "../../types/DeviceTypes";
 
-const deviceList = [
-  {
-    name: "Amazon Echo Dot",
-    icon: <Smartphone fontSize="large" />,
-    status: "Identified",
-    mac_address: "00:a0:00:19:2e:01",
-    action: <WarningAmberIcon color="action" fontSize="large" />,
-  },
-  {
-    name: "Google Home Mini",
-    icon: <Smartphone fontSize="large" />,
-    status: "Identified",
-    mac_address: "ef:00:49:01:1a:ff",
-    action: <WarningAmberIcon color="action" fontSize="large" />,
-  },
-];
 
 const dummy_devices = [
   {
@@ -43,7 +28,7 @@ const dummy_devices = [
   },
 ];
 
-export default function DeviceList(props: any) {
+export default function DetectedDevices(props: any) {
   const [devices, setDevices] = useState(dummy_devices);
   const sql = "SELECT * FROM devices";
   const queryDevices = () => {
@@ -51,12 +36,12 @@ export default function DeviceList(props: any) {
       .then((rows) => {
         console.log("Received devices: " + rows.toString());
         let devices = rows.map(
-          (elem: { device_name: string; mac_address: string }) => {
-            console.log(elem);
+          (device: DeviceType) => {
+            console.log(device);
             // TODO Icon, status, and action are hard coded.
             return {
-              name: elem.device_name,
-              mac_address: elem.mac_address,
+              name: device.device_name,
+              mac_address: device.mac_address,
               icon: <Smartphone fontSize="large" />,
               status: "Identified",
               action: <WarningAmberIcon color="action" fontSize="large" />,
