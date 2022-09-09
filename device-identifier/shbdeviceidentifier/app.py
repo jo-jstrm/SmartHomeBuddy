@@ -15,7 +15,7 @@ import shbdeviceidentifier.commands as commands
 from .dataloader import DataLoader
 from .db import Database
 from .utilities import get_capture_file_path, Formatter, logger_wraps
-from .utilities.app_utilities import DATA_DIR
+from .utilities.app_utilities import DATA_DIR, resolve_file_path
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
 
@@ -59,7 +59,10 @@ class Context:
     @latest_capture_file.setter
     def latest_capture_file(self, value):
         self._latest_capture_file = value
-        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_latest_capture_file"], (value,))
+        params = (value,)
+        if isinstance(value, Path):
+            params = (value.as_posix(),)
+        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_latest_capture_file"], params)
 
     @property
     def db(self):
@@ -69,9 +72,10 @@ class Context:
     def db(self, value):
         self._db = value
         if not self._latest_capture_file:
-            self.db.latest_capture_file = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])
+            self.db.latest_capture_file = Path(
+                self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])[0][0])
         if not self.measurement:
-            self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])
+            self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
 
     @property
     def measurement(self):
@@ -166,7 +170,7 @@ def read(ctx, file_path: click.Path, file_type: str, measurement: str):
 @pass_ctx
 @logger_wraps()
 def read_labels(ctx, file_path: click.Path, measurement: str):
-    file_path = get_capture_file_path(ctx, file_path)
+    file_path = resolve_file_path(file_path)
     if measurement:
         ctx.measurement = measurement
     commands.read_labels(ctx.db, file_path, ctx.measurement)
@@ -248,36 +252,21 @@ def query(ctx, data_base, statement_name):
 
 @app.command("train")
 @click.argument("model-name", nargs=1, type=click.STRING)
-@click.argument("training-data-path", nargs=1, type=click.STRING)
-@click.argument("training-labels-path", nargs=1, type=click.STRING)
-@click.argument("use-database", nargs=1, type=click.BOOL, default=False)
-@click.argument("timestamp-train-start", nargs=1, type=click.STRING, required=False, default=None)
-@click.argument("timestamp-train-stop", nargs=1, type=click.STRING, required=False, default=None)
+@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
+              required=False)
 @pass_ctx
 @logger_wraps()
-def train(
-    ctx, model_name, training_data_path, training_labels_path, use_database, timestamp_train_start, timestamp_train_stop
-):
+def train(ctx, model_name, measurement):
     """
     Trains a model.
     """
-    devices_to_train = ["Google-Nest-Mini", "ESP-1DC41C"]
-    logger.debug(f"Training data path: {training_data_path}.")
-    logger.debug(f"Training labels path: {training_labels_path}.")
-    commands.train(
-        model_name=model_name,
-        use_database=use_database,
-        training_data_path=training_data_path,
-        training_labels_path=training_labels_path,
-        devices_to_train=devices_to_train,
-        bucket="network-traffic",
-        ts_train_start=timestamp_train_start,
-        ts_train_end=timestamp_train_stop,
-    )
+    if not measurement:
+        measurement = ctx.measurement
+    commands.train(ctx.db, model_name=model_name, measurement=measurement)
 
 
 @app.command("set-measurement")
-@click.argument("dataset-name", nargs=1, type=click.STRING)
+@click.argument("measurement", nargs=1, type=click.STRING)
 @pass_ctx
 @logger_wraps()
 def set_measurement(ctx, measurement):
