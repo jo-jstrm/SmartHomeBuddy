@@ -41,7 +41,6 @@ export default function DetectedDevices(props: any) {
   };
   return (
     <React.Fragment>
-      <Title {...props}>Devices</Title>
       <Paper
         sx={{
           p: 2,
@@ -59,9 +58,10 @@ export default function DetectedDevices(props: any) {
           spacing={2}
         >
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-              <Button onClick={queryDevices}>Load devices from database</Button>
-            </Paper>
+            <Title {...props}>Devices</Title>
+          </Grid>
+          <Grid item xs={12}>
+            <Button variant="outlined" size="medium" color="primary" onClick={queryDevices}>Load devices from database</Button>
           </Grid>
           {devices.map((device, index) => {
             const { device_name, mac_address, icon, status, action } = device;

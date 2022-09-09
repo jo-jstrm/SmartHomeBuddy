@@ -1,6 +1,5 @@
 import * as React from "react";
 import Container from "@mui/material/Container";
-import Grid from "@mui/material/Grid";
 import Copyright from "../components/common/Copyright";
 import { Heartbeat } from "../components/home/Heartbeat";
 import DetectedDevices from "../components/home/DetectedDevices";
@@ -8,8 +7,7 @@ import DetectedDevices from "../components/home/DetectedDevices";
 export default function Home() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Grid container spacing={3}>
-        <Heartbeat />
+      {/*<Grid container spacing={3}>        */}
         {/* Chart */}
         {/*<Grid item xs={12} md={8} lg={9}>*/}
         {/*  <Paper*/}
@@ -42,7 +40,8 @@ export default function Home() {
         {/*    <Orders />*/}
         {/*  </Paper>*/}
         {/*</Grid>*/}
-      </Grid>
+      {/*</Grid>*/}
+      <Heartbeat />
       <DetectedDevices sx={{ mt: 2, mb: 2 }}/>
       <Copyright sx={{ pt: 4 }} />
     </Container>
