@@ -16,18 +16,18 @@ const columns: GridColDef[] = [
   { field: 'ip_address', headerName: 'IP Address', width: 150 },
 ];
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  margin: 15,
-  padding: 20
+const StyledPaper = styled(Paper)(() => ({
+  margin: 10,
+  padding: 10
 }));
 
-const StyledDiv = styled('div')(({theme}) => ({
+const StyledDiv = styled('div')(() => ({
   display: "flex",
   justifyContent: "space-between",
-  marginBottom: 5,
+  marginBottom: 10,
 }));
 
-export default function DevicesGrid(props: any): JSX.Element {
+export default function DevicesGrid(): JSX.Element {
   const [devices, setDevices] = useState<DbDevice[]>(placeholder_db_device);
   const queryDevices = () => {
     const query = "SELECT * FROM devices";
@@ -45,8 +45,8 @@ export default function DevicesGrid(props: any): JSX.Element {
     <React.Fragment>
       <StyledPaper>
         <StyledDiv>
-          <Title {...props}>Devices</Title>
-          <Button variant="outlined" color="primary" onClick={queryDevices}>
+          <Title> Devices </Title>
+          <Button variant="outlined" size="small" color="primary" onClick={queryDevices}>
             Load Devices from Database
           </Button>
         </StyledDiv>

@@ -6,9 +6,9 @@ import DevicesGrid from "../components/devices/DevicesGrid";
 
 export default function Devices() {
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ my: 2 }}>
       <Classification />
-      <DevicesGrid sx={{ mt: 2, mb: 2 }} />
+      <DevicesGrid />
       <Copyright sx={{ pt: 4 }} />
     </Container>
   );

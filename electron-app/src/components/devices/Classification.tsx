@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
@@ -8,15 +7,16 @@ import {styled} from "@mui/system";
 import Typography from "@mui/material/Typography";
 
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  margin: 15,
-  padding: 20
+const StyledPaper = styled(Paper)(() => ({
+  margin: 10,
+  padding: 15
 }));
 
-const StyledDiv = styled('div')(({theme}) => ({
+const StyledDiv = styled('div')(() => ({
   display: "flex",
   justifyContent: "space-between",
   marginBottom: 5,
+  alignItems: "center"
 }));
 
 export default function Classification() {
@@ -37,10 +37,10 @@ export default function Classification() {
   return (
     <StyledPaper>
       <StyledDiv>
-        <Button variant="outlined" color="primary" onClick={classifyDevices}>
+        <Button variant="outlined" size="medium" color="primary" onClick={classifyDevices}>
           Classify Devices
         </Button>
-        <Typography align={"center"}>
+        <Typography>
           {classifierStatus}
         </Typography>
       </StyledDiv>
