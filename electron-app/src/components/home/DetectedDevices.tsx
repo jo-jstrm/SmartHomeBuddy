@@ -14,7 +14,7 @@ import {placeholder_detected_device} from "../common/PlaceholderDevices";
 
 export default function DetectedDevices(props: any) {
   const [devices, setDevices] = useState(placeholder_detected_device);
-  const sql = "SELECT * FROM devices";
+  const sql = "SELECT * FROM devices LIMIT 5";
   const queryDevices = (): void => {
     queryAll(sql)
       .then((rows) => {
