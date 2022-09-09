@@ -3,20 +3,19 @@ import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
 import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
-import {styled} from "@mui/system";
+import { styled } from "@mui/system";
 import Typography from "@mui/material/Typography";
-
 
 const StyledPaper = styled(Paper)(() => ({
   margin: 10,
-  padding: 15
+  padding: 15,
 }));
 
-const StyledDiv = styled('div')(() => ({
+const StyledDiv = styled("div")(() => ({
   display: "flex",
   justifyContent: "space-between",
   marginBottom: 5,
-  alignItems: "center"
+  alignItems: "center",
 }));
 
 export default function Classification() {
@@ -37,12 +36,15 @@ export default function Classification() {
   return (
     <StyledPaper>
       <StyledDiv>
-        <Button variant="outlined" size="medium" color="primary" onClick={classifyDevices}>
+        <Button
+          variant="outlined"
+          size="medium"
+          color="primary"
+          onClick={classifyDevices}
+        >
           Classify Devices
         </Button>
-        <Typography>
-          {classifierStatus}
-        </Typography>
+        <Typography>{classifierStatus}</Typography>
       </StyledDiv>
     </StyledPaper>
   );

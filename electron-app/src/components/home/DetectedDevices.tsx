@@ -1,16 +1,15 @@
 import * as React from "react";
-import {useState} from "react";
-import {Smartphone} from "@mui/icons-material";
+import { useState } from "react";
+import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
-import {queryAll} from "../../database/Database";
-import {Button} from "@mui/material";
-import {DetectedDevice, DbDevice} from "../../types/DeviceTypes";
-import {placeholder_detected_device} from "../common/PlaceholderDevices";
-
+import { queryAll } from "../../database/Database";
+import { Button } from "@mui/material";
+import { DetectedDevice, DbDevice } from "../../types/DeviceTypes";
+import { placeholder_detected_device } from "../common/PlaceholderDevices";
 
 export default function DetectedDevices(props: any) {
   const [devices, setDevices] = useState(placeholder_detected_device);
@@ -19,19 +18,17 @@ export default function DetectedDevices(props: any) {
     queryAll(sql)
       .then((rows) => {
         console.log("Received devices: " + rows.toString());
-        let devices = rows.map(
-          (device: DbDevice): DetectedDevice => {
-            console.log(device);
-            // TODO Icon, status, and action are hard coded.
-            return {
-              device_name: device.device_name,
-              mac_address: device.mac_address,
-              icon: <Smartphone fontSize="large" />,
-              status: "Identified",
-              action: <WarningAmberIcon color="action" fontSize="large" />,
-            };
-          }
-        );
+        let devices = rows.map((device: DbDevice): DetectedDevice => {
+          console.log(device);
+          // TODO Icon, status, and action are hard coded.
+          return {
+            device_name: device.device_name,
+            mac_address: device.mac_address,
+            icon: <Smartphone fontSize="large" />,
+            status: "Identified",
+            action: <WarningAmberIcon color="action" fontSize="large" />,
+          };
+        });
         setDevices(devices);
       })
       .catch((err: Error) => {
@@ -61,7 +58,14 @@ export default function DetectedDevices(props: any) {
             <Title {...props}>Devices</Title>
           </Grid>
           <Grid item xs={12}>
-            <Button variant="outlined" size="medium" color="primary" onClick={queryDevices}>Load devices from database</Button>
+            <Button
+              variant="outlined"
+              size="medium"
+              color="primary"
+              onClick={queryDevices}
+            >
+              Load devices from database
+            </Button>
           </Grid>
           {devices.map((device, index) => {
             const { device_name, mac_address, icon, status, action } = device;
