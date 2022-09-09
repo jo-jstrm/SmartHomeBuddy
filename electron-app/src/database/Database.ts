@@ -22,7 +22,7 @@ export function queryAll(query: string, params: any[] = []): Promise<any> {
   console.log("SQLite DB path: " + dbPath);
   let db = new sqlite3.Database(dbPath, sqlite3.OPEN_READ);
   return new Promise((accept, reject) => {
-    db.all(query, params, (err: any, rows: any) => {
+    db.all(query, params, (err: Error, rows: any[]) => {
       if (err) {
         console.log("Error running query: " + query);
         console.log(err);
