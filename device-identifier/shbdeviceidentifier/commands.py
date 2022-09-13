@@ -2,6 +2,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from time import sleep
+from typing import List
 
 import click
 import pandas as pd
@@ -71,46 +72,67 @@ def read_labels(db: Database, file_path: Path, measurement: str = "main"):
         logger.debug(f"Labels: {labels}")
 
 
-def train(db: Database, model_name: str, measurement: str = "main"):
-    """Train a Machine Learning model."""
+def train(
+    model_name: str,
+    measurement: str = "main",
+    from_timestamp: str = None,
+    to_timestamp: str = None,
+    bucket: str = "network-traffic",
+    devices_to_train: List[str] = [],
+) -> None:
+    """Train a Machine Learning model.
 
-    # Get training data
-    bind_params = {
-        "_start": EARLIEST_TIMESTAMP,
-        "_stop": datetime.now(),
-        "_bucket": "network-traffic",
-        "_measurement_name": measurement,
-    }
-    logger.debug(f"Querying train data in time range {bind_params['_start']} - {bind_params['_stop']}.")
-    train_df = db.query_InfluxDB(QUERIES["influx"]["get_data"], bind_params=bind_params, df=True)
+    Parameters
+    ----------
+    model_name: str
+        Name of the model to train. Must be implemented in ml_utilities.get_model(). Default is Random Forest.
+    measurement: str
+        The measurement to train on. Defaults to "main". Measurements are listed in the devices table of the database.
+    from_timestamp: str
+        The timestamp to start training from. Defaults to the earliest timestamp in the database.
+    to_timestamp: str
+        The timestamp to stop training at. Defaults to the current time.
+    bucket: str
+        InfluxDB bucket where the training data is stored. Defaults to "network_traffic".
+    devices_to_train: List[str]
+        List of devices to train on. When empty, defaults to all devices in the database.
 
-    # Get lables
-    train_labels = db.query_SQLiteDB(QUERIES["sqlite"]["get_device_labels"], (measurement,))
-
-    # Modify the data to be in the format required by the model
-    # Drop columns and set time index
-    relevant_columns = ["_time", "src", "dst", "stream_id", "data_len", "L4_protocol"]
-    train_df = train_df[relevant_columns]
-    train_df = train_df.rename(columns={"_time": "timestamp"})
-    train_df = train_df.set_index("timestamp")
-    # Reformat labels to fit df
-    train_labels = {v: k for k, v in train_labels}
-    # TODO: Determine how the label is calculated. Currently only the source IP is used.
-    #  Furthermore we could add them to the data frame and only supply the model with the column names for the labels.
-    #  To add them as columns:
-    # train_df['src_label'] = train_df.apply(lambda row: train_labels.get(row['src'].split(":")[0], "NoLabel"), axis=1)
-    # train_df['dst_label'] = train_df.apply(lambda row: train_labels.get(row['dst'].split(":")[0], "NoLabel"), axis=1)
-    train_labels = train_df.apply(lambda row: train_labels.get(row["src"].split(":")[0], "NoLabel"), axis=1)
-
-    # Retrieving the machine learning model
+    Returns
+    -------
+    None
+    """
+    # Get the data from the database by using the user's input.
+    try:
+        from_timestamp = (
+            datetime.strptime(from_timestamp, "%Y-%m-%d %H:%M:%S") if from_timestamp else EARLIEST_TIMESTAMP
+        )
+    except Exception:
+        logger.info(
+            "Invalid timestamp format for 'from_timestamp'. Using earliest possible timestamp instead. "
+            "Please use YYYY-MM-DD HH:MM:SS format."
+        )
+        from_timestamp = EARLIEST_TIMESTAMP
+    try:
+        to_timestamp = datetime.strptime(to_timestamp, "%Y-%m-%d %H:%M:%S") if to_timestamp else datetime.now()
+    except Exception:
+        logger.info(
+            "Invalid timestamp format for timestamp-train-stop. Using most recent timestamp as instead. "
+            "Please use YYYY-MM-DD HH:MM:SS format."
+        )
+        to_timestamp = datetime.now()
+    logger.debug(f"Querying train data in time range {from_timestamp} - {to_timestamp}.")
+    train_df, train_labels = DataLoader.from_database(
+        from_timestamp, to_timestamp, measurement, bucket, devices_to_train
+    )
+    # Retrieve the machine learning model.
     model = get_model(model_name)
-
-    # Training
-    logger.debug("Starting training...")
+    # Data preprocessing is model specific.
+    train_df = model.prepare_train_data(train_df)
+    logger.info("Starting training. This might take a while.")
     model.train(train_df[["data_len", "stream_id"]], train_labels)
-    logger.debug("Training finished.")
-
-    # Save model
-    save_path = DATA_DIR / Path("ml_models/" + model_name + ".pkl")
+    logger.success("Training finished.")
+    # Save model.
+    time = datetime.now().strftime("%Y%m%d_%H-%M")
+    save_path = DATA_DIR / Path(f"ml_models/{time}_{model_name}.pkl")
     if model.save(save_path):
         logger.success(f"Model {model_name} saved successfully to {save_path}.")

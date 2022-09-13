@@ -266,7 +266,8 @@ def train(ctx, model_name, measurement):
     """
     if not measurement:
         measurement = ctx.measurement
-    commands.train(ctx.db, model_name=model_name, measurement=measurement)
+    # Setting timestamps via the CLI is not supported yet.
+    commands.train(model_name=model_name, measurement=measurement)
 
 
 @app.command("set-measurement")

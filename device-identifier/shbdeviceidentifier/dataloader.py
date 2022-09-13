@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Union, Generator, Tuple, Dict
 
@@ -20,15 +21,29 @@ class DataLoader:
     """
 
     @staticmethod
-    def _from_influxdb(query: str, params: dict = None) -> pd.DataFrame:
+    def _from_influxdb(params: dict = None) -> pd.DataFrame:
         """
         Loads data from the InfluxDB database.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame containing the following columns:
+            'table', 'timestamp', 'L4_protocol', 'dst', 'src', 'stream_id', 'data_len'.
         """
+        query = """
+                from(bucket: _bucket)
+                |> range(start: _start, stop: _stop)
+                |> filter(fn: (r) => r["_measurement"] == _measurement_name)
+                |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+            """
         with Database().get_influxdb_client() as client:
+            logger.info("Loading data from InfluxDB. This might take a while...")
             df = client.query_api().query_data_frame(query=query, params=params)
             # Cannot chain these together, because pandas will complain about missing columns.
             df = df.rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"})
             df = df.drop(columns=[col for col in df.columns if col.startswith("_")], axis=1)
+            logger.debug(f"Loaded {len(df)} rows from InfluxDB. Columns: {df.columns}")
             return df
 
     @staticmethod
@@ -110,50 +125,60 @@ class DataLoader:
 
     @staticmethod
     def from_database(
-        train_data_query: str, params: Dict[str:any], devices_to_train: List[str]
+        from_timestamp: datetime, to_timestamp: datetime, measurement: str, bucket: str, devices_to_train: List[str]
     ) -> Union[Tuple[pd.DataFrame, pd.Series], Tuple[None, None]]:
         """
         Loads train data and labels from the database.
 
         Parameters
         ----------
-        train_data_query: str
-            The query that retrieves the train data from the database.
-        params: Dict[str: any]
-            The parameters to be passed to the train data query.
+        from_timestamp: datetime
+            The earliest timestamp to load.
+        to_timestamp: datetime
+            Most recent timestamp to load.
+        measurement: str
+            Name of the measurement to load.
+        bucket: str
+            Name of the InfluxDB bucket from which the data should be loaded.
         devices_to_train: List[str]
-            The devices that the model should learn to identify.
+            The devices that the model should learn to identify. If empty, all devices will be loaded.
 
         Returns
         -------
-        Optional[Tuple[pd.DataFrame, pd.Series]]
-            Train data and labels.
+        Union[Tuple[pd.DataFrame, pd.Series], Tuple[None, None]]
         """
-        X = DataLoader._from_influxdb(train_data_query, params)
-        device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null;"""
-        devices = Database().query(query=device_query, db="sqlite")
+        X = DataLoader._from_influxdb(
+            params={
+                "_start": from_timestamp,
+                "_stop": to_timestamp,
+                "_bucket": bucket,
+                "_measurement_name": measurement,
+            }
+        )
+        device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null AND measurement = ?;"""
+        devices = Database().query(query=device_query, params=[measurement], db="sqlite")
         if not devices:
-            logger.error("No devices with IP addresses found in the database.")
+            logger.error("No devices with IP addresses found in the devices database.")
             return None, None
         logger.debug(f"Devices: {devices}")
         ip_to_label_map = {}
         for device in devices:
             # dict = {ip_address: device_name}
             ip_to_label_map[device[1]] = device[0]
-        logger.info(f"ip_to_label_map: {ip_to_label_map}")
+        logger.debug(f"ip_to_label_map: {ip_to_label_map}")
         Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
         return X, Y
 
 
-def _get_label(row: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train: List[str]) -> str:
-    # Split IP address and port
-    key = row.rsplit(":", 1)[0]
+def _get_label(cell: pd.Series, ip_to_label_map: Dict[str, any], devices_to_train: List[str]) -> str:
     # Check if label is available
-    try:
-        label = ip_to_label_map.loc[key, "name"]
-        # Check if label is a desired target label, aka. a device that is supposed to be identified
-        if label not in devices_to_train:
-            label = "NoLabel"
-    except KeyError:
+    label = ip_to_label_map.get(cell)
+    if not label:
         label = "NoLabel"
+    # Check if label is a desired target label, aka a device that is supposed to be identified.
+    # If devices_to_train is empty, all devices are used.
+    elif devices_to_train and label not in devices_to_train:
+        label = "NoLabel"
+    logger.debug(f"cell: {cell}")
+    logger.debug(f"label: {label}")
     return label
