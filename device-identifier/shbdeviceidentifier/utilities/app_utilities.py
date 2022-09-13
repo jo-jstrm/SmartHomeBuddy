@@ -3,6 +3,8 @@ from typing import Union, Optional
 
 from loguru import logger
 
+from db import Database
+
 # ---------------------------------------------------------------------------- #
 #                                App Utilities                                 #
 # ---------------------------------------------------------------------------- #
@@ -69,3 +71,19 @@ def get_file_type(file_path: Union[Path, str]) -> str:
     if file_path:
         return file_path.suffix[1:]
     return "UNKNOWN"
+
+
+def extract_devices() -> None:
+    """Extracts devices from influxdb and write them to the devices table."""
+    db = Database()
+    try:
+        ips = db.get_device_ips_from_influxdb()
+    except Exception:
+        logger.error("Failed to get device ips from influxdb.")
+        return
+    for ip in ips:
+        # Write unique IPs to the database. The user can give them names afterwards.
+        if db.write_device("", "", ip):
+            logger.trace(f"Added {ip} to devices database.")
+        else:
+            logger.debug(f"Failed to add {ip} to devices database.")

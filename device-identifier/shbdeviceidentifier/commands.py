@@ -4,7 +4,7 @@ import sys
 from loguru import logger
 from time import sleep
 
-from .utilities.app_utilities import SHB_HOME, DATA_DIR
+from .utilities.app_utilities import SHB_HOME, DATA_DIR, extract_devices
 from .db import Database, DataLoader
 from .rpc.server import start_rpc_server
 
@@ -29,22 +29,6 @@ def run_rpc_server(db: Database):
         logger.info("System exit. Stopping InfluxDB...")
     finally:
         db.stop_InfluxDB()
-
-
-def extract_devices() -> None:
-    """Extracts devices from influxdb and write them to the devices table."""
-    db = Database()
-    try:
-        ips = db.get_device_ips_from_influxdb()
-    except Exception:
-        logger.error("Failed to get device ips from influxdb.")
-        return
-    for ip in ips:
-        # Write unique IPs to the database. The user can give them names afterwards.
-        if db.write_device("", "", ip):
-            logger.trace(f"Added {ip} to devices database.")
-        else:
-            logger.debug(f"Failed to add {ip} to devices database.")
 
 
 def read(db: Database, file_path: click.Path, file_type: str):
