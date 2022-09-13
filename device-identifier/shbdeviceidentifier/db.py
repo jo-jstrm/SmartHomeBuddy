@@ -68,16 +68,16 @@ class Database:
     influxdb_bucket = "network-traffic"
 
     def __init__(
-            self,
-            db_file=db_file,
-            influxdb_binary_path=influxdb_binary_path,
-            influx_log_path=influx_log_path,
-            default_username=default_username,
-            influxdb_host=influxdb_host,
-            influxdb_port=influxdb_port,
-            influxdb_org=influxdb_org,
-            influxdb_bucket=influxdb_bucket,
-            influxdb_pw=influxdb_pw,
+        self,
+        db_file=db_file,
+        influxdb_binary_path=influxdb_binary_path,
+        influx_log_path=influx_log_path,
+        default_username=default_username,
+        influxdb_host=influxdb_host,
+        influxdb_port=influxdb_port,
+        influxdb_org=influxdb_org,
+        influxdb_bucket=influxdb_bucket,
+        influxdb_pw=influxdb_pw,
     ):
         # Handle file paths to make sure they exist and are absolute
         if not Path(influx_log_path).exists():
@@ -325,8 +325,9 @@ class Database:
         logger.debug(f"Creating InfluxDBClient with the following params: url={url}, org={org}, token={token}")
         return InfluxDBClient(url=url, token=token, org=org)
 
-    def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None, df: bool = False) \
-            -> Union[TableList, pd.DataFrame]:
+    def query_InfluxDB(
+        self, query: str, params: dict = None, bind_params: dict = None, df: bool = False
+    ) -> Union[TableList, pd.DataFrame]:
         """
         Queries the InfluxDB instance.
         """
@@ -402,14 +403,14 @@ class Database:
             return False
 
     def write_to_InfluxDB(
-            self,
-            data: Union[List[str], pd.DataFrame],
-            username: str = None,
-            bucket: str = None,
-            org: str = None,
-            token: str = None,
-            url: str = None,
-            **df_kwargs,
+        self,
+        data: Union[List[str], pd.DataFrame],
+        username: str = None,
+        bucket: str = None,
+        org: str = None,
+        token: str = None,
+        url: str = None,
+        **df_kwargs,
     ) -> bool:
         """
         The write_to_influxdb function writes data to an InfluxDB bucket.
@@ -477,7 +478,7 @@ class Database:
                 # write the data sequence to the bucket
                 write_api.write(bucket=bucket, org=org, record=data, **df_kwargs)
                 client.close()
-        except Exception as e:
+        except Exception:
             lines = traceback.format_exc().splitlines()
             for line in lines:
                 logger.error(line)
@@ -493,8 +494,3 @@ class Database:
         sql_write_device = """INSERT INTO devices (device_name, mac_address)
                                 VALUES (?,?);"""
         self.query_SQLiteDB(sql_write_device, [name, mac_address])
-
-    def get_all_devices(self):
-        sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
-        devices = self.query_SQLiteDB(sql_get_devices)
-        return devices
