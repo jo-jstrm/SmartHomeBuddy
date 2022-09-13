@@ -1,4 +1,4 @@
-name: '📐 Format Code'
+name: '📐 Format Code Dispatch'
 
 on:
   workflow_dispatch:
