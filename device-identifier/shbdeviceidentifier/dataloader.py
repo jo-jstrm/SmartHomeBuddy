@@ -179,6 +179,4 @@ def _get_label(cell: pd.Series, ip_to_label_map: Dict[str, any], devices_to_trai
     # If devices_to_train is empty, all devices are used.
     elif devices_to_train and label not in devices_to_train:
         label = "NoLabel"
-    logger.debug(f"cell: {cell}")
-    logger.debug(f"label: {label}")
     return label
