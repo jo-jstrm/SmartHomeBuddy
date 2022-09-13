@@ -202,32 +202,33 @@ class Database:
         # engine = create_engine("sqlite+pysqlite://"+db_file, echo=False, future=True)
 
         sql_create_users_table = """CREATE TABLE IF NOT EXISTS users (
-                                               id integer PRIMARY KEY,
-                                               username VARCHAR NOT NULL UNIQUE
-                                           );"""
+                                       id       INTEGER PRIMARY KEY,
+                                       username VARCHAR NOT NULL UNIQUE
+                                );"""
         sql_create_influxdb_table = """CREATE TABLE IF NOT EXISTS influxdb (
-                                           id integer PRIMARY KEY,
-                                           user_id integer NOT NULL UNIQUE,
-                                           token VARCHAR,
-                                           bucket VARCHAR,
-                                           url VARCHAR,
-                                           org VARCHAR,
+                                           id       INTEGER PRIMARY KEY,
+                                           user_id  INTEGER NOT NULL UNIQUE,
+                                           token    VARCHAR,
+                                           bucket   VARCHAR,
+                                           url      VARCHAR,
+                                           org      VARCHAR,
                                            CONSTRAINT fk_users_id
                                                FOREIGN KEY (user_id) 
                                                REFERENCES users (id)
-                                       );"""
+                                   );"""
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
-                                                   id integer PRIMARY KEY,
-                                                   device_name VARCHAR NOT NULL,
-                                                   mac_address VARCHAR UNIQUE,
-                                                   ip_address VARCHAR,
-                                                   measurement VARCHAR                                             
-                                               );"""
+                                           id           INTEGER PRIMARY KEY,
+                                           device_name  VARCHAR NOT NULL,
+                                           mac_address  VARCHAR,
+                                           ip_address   VARCHAR,
+                                           measurement  VARCHAR,
+                                           UNIQUE(ip_address, measurement)                                             
+                                   );"""
         sql_context_table = """CREATE TABLE IF NOT EXISTS context (
-                                                   id INTEGER PRIMARY KEY CHECK (id = 1),
-                                                   latest_capture_file VARCHAR,
-                                                   measurement VARCHAR
-                                               );"""
+                                   id                   INTEGER PRIMARY KEY CHECK (id = 1),
+                                   latest_capture_file  VARCHAR,
+                                   measurement          VARCHAR
+                               );"""
         conn = self._get_SQLite_connection()
         if conn:
             # Users table

@@ -43,9 +43,9 @@ def read(db: Database, file_path: click.Path, file_type: str, measurement: str =
         packets = DataLoader.from_pcap(file_path)
         if isinstance(packets, pd.DataFrame) and not packets.empty:
             if db.write_to_InfluxDB(
-                    packets,
-                    data_frame_measurement_name=measurement,
-                    data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
+                packets,
+                data_frame_measurement_name=measurement,
+                data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
             ):
                 logger.success(f"Wrote {file_path} to Database.")
             else:
@@ -58,10 +58,11 @@ def read_labels(db: Database, file_path: Path, measurement: str = "main"):
     """Reads all the labels for device IPs from a capture file."""
     labels = DataLoader.labels_from_json(file_path)
     if isinstance(labels, pd.DataFrame) and not labels.empty:
-
         for ip_address, row in labels.iterrows():
-            query = """ INSERT OR IGNORE INTO devices (ip_address, device_name, measurement) VALUES (?, ?, ?) """
-            params = (ip_address, row["name"], measurement)
+            # On duplicate IPs, overwrite device_name and measurement.
+            query = """ INSERT INTO devices (ip_address, device_name, measurement) VALUES (?, ?, ?) 
+                        ON CONFLICT (ip_address, measurement) DO UPDATE SET device_name = ?, measurement = ?;"""
+            params = (ip_address, row["name"], measurement, row["name"], measurement)
             db.query_SQLiteDB(query, params)
         logger.trace(f"Labels: {labels}")
         logger.success(f"Wrote labels from {file_path} to Database.")
@@ -74,8 +75,12 @@ def train(db: Database, model_name: str, measurement: str = "main"):
     """Train a Machine Learning model."""
 
     # Get training data
-    bind_params = {"_start": EARLIEST_TIMESTAMP, "_stop": datetime.now(), "_bucket": "network-traffic",
-                   "_measurement_name": measurement}
+    bind_params = {
+        "_start": EARLIEST_TIMESTAMP,
+        "_stop": datetime.now(),
+        "_bucket": "network-traffic",
+        "_measurement_name": measurement,
+    }
     logger.debug(f"Querying train data in time range {bind_params['_start']} - {bind_params['_stop']}.")
     train_df = db.query_InfluxDB(QUERIES["influx"]["get_data"], bind_params=bind_params, df=True)
 
@@ -95,7 +100,7 @@ def train(db: Database, model_name: str, measurement: str = "main"):
     #  To add them as columns:
     # train_df['src_label'] = train_df.apply(lambda row: train_labels.get(row['src'].split(":")[0], "NoLabel"), axis=1)
     # train_df['dst_label'] = train_df.apply(lambda row: train_labels.get(row['dst'].split(":")[0], "NoLabel"), axis=1)
-    train_labels = train_df.apply(lambda row: train_labels.get(row['src'].split(":")[0], "NoLabel"), axis=1)
+    train_labels = train_df.apply(lambda row: train_labels.get(row["src"].split(":")[0], "NoLabel"), axis=1)
 
     # Retrieving the machine learning model
     model = get_model(model_name)
