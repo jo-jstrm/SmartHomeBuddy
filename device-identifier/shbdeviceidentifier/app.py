@@ -72,8 +72,9 @@ class Context:
     def db(self, value):
         self._db = value
         if not self._latest_capture_file:
-            self.db.latest_capture_file = Path(
-                self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])[0][0])
+            latest_capture_res = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])
+            if latest_capture_res:
+                self._latest_capture_file = Path(latest_capture_res[0][0])
         if not self.measurement:
             self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
 
@@ -151,8 +152,9 @@ def start(ctx):
     type=click.Choice(["pcap", "pcapng"], case_sensitive=False),
     default="pcap",
 )
-@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
-              required=False)
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @pass_ctx
 @logger_wraps()
 def read(ctx, file_path: click.Path, file_type: str, measurement: str):
@@ -165,8 +167,9 @@ def read(ctx, file_path: click.Path, file_type: str, measurement: str):
 
 @app.command("read-labels")
 @click.argument("file_path", type=click.Path(), required=False, default=DATA_DIR / "pcaps" / "dummy_labels.json")
-@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
-              required=False)
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @pass_ctx
 @logger_wraps()
 def read_labels(ctx, file_path: click.Path, measurement: str):
@@ -252,8 +255,9 @@ def query(ctx, data_base, statement_name):
 
 @app.command("train")
 @click.argument("model-name", nargs=1, type=click.STRING)
-@click.option("--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.",
-              required=False)
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @pass_ctx
 @logger_wraps()
 def train(ctx, model_name, measurement):
