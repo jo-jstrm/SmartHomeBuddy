@@ -5,27 +5,32 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import sqlite3
 import subprocess
 import traceback
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, List, Optional
+import warnings
 
 import influxdb
 import influxdb_client
 import pandas as pd
 import requests
+import sqlite3
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.flux_table import TableList
+from influxdb_client.client.warnings import MissingPivotFunction
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
+from sqlite3 import Error
 
+from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR, DATA_DIR
-from .utilities.queries import QUERIES
+
+warnings.simplefilter("ignore", MissingPivotFunction)
 
 
 @dataclass
@@ -218,9 +223,9 @@ class Database:
                                    );"""
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
                                            id           INTEGER PRIMARY KEY,
-                                           device_name  VARCHAR NOT NULL,
+                                           device_name  VARCHAR,
                                            mac_address  VARCHAR,
-                                           ip_address   VARCHAR,
+                                           ip_address   VARCHAR NOT NULL,
                                            measurement  VARCHAR,
                                            UNIQUE(ip_address, measurement)                                             
                                    );"""
@@ -465,7 +470,6 @@ class Database:
         org = org_ if not org else org
         url = url_ if not url else url
         bucket = bucket_ if not bucket else bucket
-
         try:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -491,7 +495,59 @@ class Database:
     ###### Devices ######
     #####################
 
-    def write_device(self, name, mac_address):
-        sql_write_device = """INSERT INTO devices (device_name, mac_address)
-                                VALUES (?,?);"""
-        self.query_SQLiteDB(sql_write_device, [name, mac_address])
+    def write_device(self, name, mac_address, ip_address, measurement):
+        sql_write_device = """INSERT INTO devices (device_name, mac_address, ip_address, measurement)
+                                VALUES (?,?,?,?);"""
+        try:
+            self.query_SQLiteDB(sql_write_device, [name, mac_address, ip_address, measurement])
+        except Exception:
+            return False
+        return True
+
+    def get_all_devices(self):
+        sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
+        devices = self.query_SQLiteDB(sql_get_devices)
+        return devices
+
+    def get_device_ips_from_influxdb(self, measurement: str, bucket: str = None) -> pd.Series:
+        """Returns a list of all unique source IP addresses in the InfluxDB database."""
+        if not bucket:
+            bucket = self.influxdb_bucket
+        params = {
+            "_start": EARLIEST_TIMESTAMP,
+            "_stop": datetime.now(),
+            "_measurement_name": measurement,
+            "_bucket": bucket,
+        }
+        unique_query = """
+            from(bucket: _bucket)
+            |> range(start: _start, stop: _stop)
+            |> filter(fn: (r) => r["_measurement"] == _measurement_name)
+            |> keep(columns: ["_time", "src_ip"])                        
+            |> unique(column: "src_ip")         
+        """
+        with self.get_influxdb_client() as client:
+            res = client.query_api().query_data_frame(query=unique_query, params=params)
+            return res[res.src_ip != "nan"].src_ip
+
+
+def extract_devices(measurement: str) -> None:
+    """Extract devices from InfluxDB and write them to the devices table.
+
+    Parameters
+    ----------
+    measurement : str
+        The InfluxDB measurement for which to extract devices.
+    """
+    db = Database()
+    try:
+        ips = db.get_device_ips_from_influxdb(measurement)
+    except Exception:
+        logger.error("Failed to get device ips from influxdb.")
+        return
+    for ip in ips:
+        # Write unique IPs to the database. The user can give them names afterwards.
+        if db.write_device("", "", ip, measurement):
+            logger.trace(f"Added {ip}, {measurement} to devices database.")
+        else:
+            logger.debug(f"Failed to add {ip} to devices database.")

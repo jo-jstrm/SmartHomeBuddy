@@ -21,7 +21,7 @@ class DataLoader:
     """
 
     @staticmethod
-    def _from_influxdb(params: dict = None) -> pd.DataFrame:
+    def _from_influxdb(params: dict) -> pd.DataFrame:
         """
         Loads data from the InfluxDB database.
 
@@ -158,7 +158,7 @@ class DataLoader:
         device_query = """SELECT device_name, ip_address FROM devices WHERE ip_address not null AND measurement = ?;"""
         devices = Database().query(query=device_query, params=[measurement], db="sqlite")
         if not devices:
-            logger.error("No devices with IP addresses found in the devices database.")
+            logger.error("No devices found in the devices database.")
             return None, None
         logger.debug(f"Devices: {devices}")
         ip_to_label_map = {}
@@ -166,7 +166,7 @@ class DataLoader:
             # dict = {ip_address: device_name}
             ip_to_label_map[device[1]] = device[0]
         logger.debug(f"ip_to_label_map: {ip_to_label_map}")
-        Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+        Y = X["src_ip"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
         return X, Y
 
 

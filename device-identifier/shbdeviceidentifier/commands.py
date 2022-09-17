@@ -9,11 +9,11 @@ import pandas as pd
 from loguru import logger
 
 from .dataloader import DataLoader
-from .db import Database
+from .db import Database, extract_devices
 from .rpc.server import start_rpc_server
 from .utilities.app_utilities import SHB_HOME, DATA_DIR
 from .utilities.ml_utilities import get_model
-from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
+from .utilities.queries import EARLIEST_TIMESTAMP
 
 
 def start_database(db: Database):
@@ -46,11 +46,21 @@ def read(db: Database, file_path: click.Path, file_type: str, measurement: str =
             if db.write_to_InfluxDB(
                 packets,
                 data_frame_measurement_name=measurement,
-                data_frame_tag_columns=["src", "dst", "L4_protocol", "stream_id"],
+                data_frame_tag_columns=[
+                    "src_address",
+                    "src_ip",
+                    "src_port",
+                    "dst_address",
+                    "dst_ip",
+                    "dst_port",
+                    "L4_protocol",
+                    "stream_id",
+                ],
             ):
-                logger.success(f"Wrote {file_path} to Database.")
+                logger.success(f"Wrote {file_path} to database.")
             else:
-                logger.error(f"Failed to write {file_path} to Database.")
+                logger.error(f"Failed to write {file_path} to database.")
+            extract_devices(measurement)
         else:
             logger.error(f"Failed to read {file_path}.")
 
