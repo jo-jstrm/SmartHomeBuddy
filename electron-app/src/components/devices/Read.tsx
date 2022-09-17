@@ -6,6 +6,8 @@ import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
 import { styled } from "@mui/system";
 import Typography from "@mui/material/Typography";
 
+const { ipcRenderer } = window.require('electron');
+
 const StyledPaper = styled(Paper)(() => ({
   margin: 10,
   padding: 15,
@@ -40,7 +42,10 @@ export default function Read() {
           variant="outlined"
           size="medium"
           color="primary"
-          onClick={classifyDevices}
+          onClick={()=>{
+            console.log("Button: using IPC.");
+            ipcRenderer.send('getFilePath', 'some nice path')
+          }}
         >
           Read Data from Capture File
         </Button>
