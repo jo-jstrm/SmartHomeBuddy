@@ -34,12 +34,8 @@ def _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress_proxy) -> pd
     data_lengths = np.empty((num_of_packets,), dtype="uint16")
 
     for i in nb.prange(num_of_packets):
-        src_addresses[i], src_ips[i], src_ports[i] = _get_address_tuple_from_scapy_packet(
-            cap[i], src=True
-        )
-        dst_addresses[i], dst_ips[i], dst_ports[i] = _get_address_tuple_from_scapy_packet(
-            cap[i], src=False
-        )
+        src_addresses[i], src_ips[i], src_ports[i] = _get_address_tuple_from_scapy_packet(cap[i], src=True)
+        dst_addresses[i], dst_ips[i], dst_ports[i] = _get_address_tuple_from_scapy_packet(cap[i], src=False)
         timestamps[i] = _get_timestamp_from_scapy_packet(cap[i])
         protocols[i] = _get_protocol_from_scapy_packet(cap[i])
         data_lengths[i] = _get_data_len_from_scapy_packet(cap[i])
@@ -65,31 +61,21 @@ def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
     spinner.stop()
     start_time = time.perf_counter()
-    with ProgressBar(
-        update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame"
-    ) as progress:
+    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
         # Filter out packets that do not have a transport layer protocol
         df = df[df["L4_protocol"].astype(bool)]
         # Create stream IDs. Unique pair of src and dst addresses receives its own stream ID.
         # TODO: check performance cost of this
         df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src_address", "dst_address"]], axis=1)]
-        df = (
-            df.assign(stream_id=df.groupby(["conv"]).ngroup())
-            .drop(columns=["conv"])
-            .astype({"stream_id": "uint16"})
-        )
+        df = df.assign(stream_id=df.groupby(["conv"]).ngroup()).drop(columns=["conv"]).astype({"stream_id": "uint16"})
     end_time = time.perf_counter()
-    logger.debug(
-        "Capture to DataFrame conversion took {:.3f} seconds.".format(end_time - start_time)
-    )
+    logger.debug("Capture to DataFrame conversion took {:.3f} seconds.".format(end_time - start_time))
     return df
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(
-    cap, measurement: str = "packet", additional_tags: Dict = None
-) -> List[str]:
+def convert_Capture_to_Line(cap, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
