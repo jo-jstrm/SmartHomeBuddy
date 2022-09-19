@@ -14,6 +14,7 @@ from .utilities.app_utilities import resolve_file_path, get_file_type
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
 
+
 # noinspection PyPep8Naming
 class DataLoader:
     """
@@ -120,7 +121,7 @@ class DataLoader:
             "json": DataLoader.labels_from_json,
         }[get_file_type(training_labels_path)]
         ip_to_label_map = load_label_lookup(training_labels_path)
-        Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+        Y = X["src_ip"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
         return X, Y
 
     @staticmethod
