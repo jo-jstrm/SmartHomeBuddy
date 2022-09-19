@@ -1,4 +1,6 @@
 import pytest
+from _pytest.logging import LogCaptureFixture
+from loguru import logger
 
 
 class TestDatabase:
@@ -6,24 +8,27 @@ class TestDatabase:
     Test class for the Database class in the db module.
     """
 
+    @pytest.fixture
+    def caplog(self, caplog: LogCaptureFixture):
+        handler_id = logger.add(caplog.handler, format="{message}")
+        yield caplog
+        logger.remove(handler_id)
+
     def test_start(self, db):
         db.start()
         assert db.is_connected()
         db.stop()
-        del db
 
     def test_stop(self, db):
         db.start()
         db.stop()
         assert not db.is_connected()
-        del db
 
     def test_is_connected(self, db):
         db.start()
         assert db.is_connected()
         assert db.stop()
         assert not db.is_connected()
-        del db
 
     @pytest.mark.skip(reason="Not implemented yet.")
     def test_query_influx_db(self):
