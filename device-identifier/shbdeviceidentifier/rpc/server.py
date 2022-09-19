@@ -1,19 +1,20 @@
-import grpc
 from concurrent import futures
+
+import grpc
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
 import shbdeviceidentifier.commands as commands
-from ..utilities.ml_utilities import classify_devices
-from ..db import Database
 from .proto import devices_database_pb2_grpc, devices_database_pb2
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 from .proto import pcap_database_pb2_grpc, pcap_database_pb2
+from ..db import Database
+from ..utilities.ml_utilities import classify_devices
 
 
 class DeviceDatabaseService(devices_database_pb2_grpc.DevicesDatabaseServicer):
     def ClassifyDevices(
-        self, request: devices_database_pb2.ClassifyRequest, context
+            self, request: devices_database_pb2.ClassifyRequest, context
     ) -> devices_database_pb2.ClassifyResponse:
         logger.debug("GRPC Server received a ClassifyDevices request.")
         classify_devices(Database())

@@ -5,6 +5,8 @@ import pandas as pd
 
 
 class MLModel(ABC):
+    """Base class for all ML models. Derived models must implement all methods."""
+
     name: str = None
     version: str = None
     description: str = None
@@ -26,4 +28,9 @@ class MLModel(ABC):
 
     @abstractmethod
     def load(self, path: str) -> None:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def prepare_train_data(train_df: pd.DataFrame) -> pd.DataFrame:
         pass

@@ -1,9 +1,22 @@
 import { useState } from "react";
-import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
 import { callHeartbeatService } from "../../rpc/clients/HeartbeatClient";
+import { styled } from "@mui/system";
+import Typography from "@mui/material/Typography";
+
+const StyledPaper = styled(Paper)(() => ({
+  margin: 10,
+  padding: 15,
+}));
+
+const StyledDiv = styled("div")(() => ({
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: 5,
+  alignItems: "center",
+}));
 
 export function Heartbeat() {
   const [identifierStatus, setIdentifierStatus] = useState(
@@ -21,19 +34,19 @@ export function Heartbeat() {
   };
   return (
     <React.Fragment>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          <Button variant="contained" color="primary" onClick={checkHeartbeat}>
+      <StyledPaper>
+        <StyledDiv>
+          <Button
+            variant="contained"
+            size="medium"
+            color="primary"
+            onClick={checkHeartbeat}
+          >
             Check Status of Device Identifier
           </Button>
-        </Paper>
-      </Grid>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          {/*Trigger page reload*/}
-          {identifierStatus}
-        </Paper>
-      </Grid>
+          <Typography>{identifierStatus}</Typography>
+        </StyledDiv>
+      </StyledPaper>
     </React.Fragment>
   );
 }
