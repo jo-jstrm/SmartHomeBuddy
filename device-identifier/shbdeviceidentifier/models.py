@@ -5,15 +5,18 @@ import pandas as pd
 
 
 class MLModel(ABC):
-    name: str = None
-    version: str = None
-    description: str = None
+    """Base class for all ML models. Derived models must implement all methods."""
+
+    name: str
+    version: str
+    description: str
+    progress_range: range
 
     def __init__(self):
         ...
 
     @abstractmethod
-    def train(self, X: pd.DataFrame, y: np.ndarray) -> bool:
+    def train(self, X: pd.DataFrame, y: np.ndarray, progress_callback=None) -> bool:
         pass
 
     @abstractmethod
@@ -26,4 +29,9 @@ class MLModel(ABC):
 
     @abstractmethod
     def load(self, path: str) -> None:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def prepare_train_data(train_df: pd.DataFrame) -> pd.DataFrame:
         pass

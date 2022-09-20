@@ -2,7 +2,7 @@ import * as React from "react";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Copyright from "../components/common/Copyright";
-import DeviceList from "../components/devices/DeviceList";
+import DetectedDevices from "../components/home/DetectedDevices";
 import {Typography} from "@mui/material";
 
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
                     Welcome to SmartHomeBuddy!
                 </Typography>
             </Grid>
-            <DeviceList sx={{mt: 2, mb: 2}}/>
+            <DetectedDevices sx={{ mt: 2, mb: 2 }} />
             <Copyright sx={{pt: 4}}/>
         </Container>
   );

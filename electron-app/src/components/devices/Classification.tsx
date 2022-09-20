@@ -1,9 +1,22 @@
 import { useState } from "react";
-import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
 import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
+import { styled } from "@mui/system";
+import Typography from "@mui/material/Typography";
+
+const StyledPaper = styled(Paper)(() => ({
+  margin: 10,
+  padding: 15,
+}));
+
+const StyledDiv = styled("div")(() => ({
+  display: "flex",
+  justifyContent: "space-between",
+  marginBottom: 5,
+  alignItems: "center",
+}));
 
 export default function Classification() {
   const [classifierStatus, setClassifierStatus] = useState(
@@ -21,20 +34,18 @@ export default function Classification() {
       });
   };
   return (
-    <Grid container spacing={1}>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          <Button variant="contained" color="primary" onClick={classifyDevices}>
-            Classify Devices
-          </Button>
-        </Paper>
-      </Grid>
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-          {/*Trigger page reload*/}
-          {classifierStatus}
-        </Paper>
-      </Grid>
-    </Grid>
+    <StyledPaper>
+      <StyledDiv>
+        <Button
+          variant="outlined"
+          size="medium"
+          color="primary"
+          onClick={classifyDevices}
+        >
+          Classify Devices
+        </Button>
+        <Typography>{classifierStatus}</Typography>
+      </StyledDiv>
+    </StyledPaper>
   );
 }
