@@ -2,155 +2,131 @@
 # source: shbdeviceidentifier/rpc/proto/devices_database.proto
 
 import sys
-
-_b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
+_b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
+
+
 DESCRIPTOR = _descriptor.FileDescriptor(
-    name="shbdeviceidentifier/rpc/proto/devices_database.proto",
-    package="SmartHomeBuddy",
-    syntax="proto3",
-    serialized_options=None,
-    serialized_pb=_b(
-        '\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy" \n\x0f\x43lassifyRequest\x12\r\n\x05param\x18\x01 \x01(\t"#\n\x10\x43lassifyResponse\x12\x0f\n\x07is_done\x18\x01 \x01(\x08\x32g\n\x0f\x44\x65vicesDatabase\x12T\n\x0f\x43lassifyDevices\x12\x1f.SmartHomeBuddy.ClassifyRequest\x1a .SmartHomeBuddy.ClassifyResponseb\x06proto3'
-    ),
+  name='shbdeviceidentifier/rpc/proto/devices_database.proto',
+  package='SmartHomeBuddy',
+  syntax='proto3',
+  serialized_options=None,
+  serialized_pb=_b('\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy\" \n\x0f\x43lassifyRequest\x12\r\n\x05param\x18\x01 \x01(\t\"#\n\x10\x43lassifyResponse\x12\x0f\n\x07is_done\x18\x01 \x01(\x08\x32g\n\x0f\x44\x65vicesDatabase\x12T\n\x0f\x43lassifyDevices\x12\x1f.SmartHomeBuddy.ClassifyRequest\x1a .SmartHomeBuddy.ClassifyResponseb\x06proto3')
 )
 
 
+
+
 _CLASSIFYREQUEST = _descriptor.Descriptor(
-    name="ClassifyRequest",
-    full_name="SmartHomeBuddy.ClassifyRequest",
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name="param",
-            full_name="SmartHomeBuddy.ClassifyRequest.param",
-            index=0,
-            number=1,
-            type=9,
-            cpp_type=9,
-            label=1,
-            has_default_value=False,
-            default_value=_b("").decode("utf-8"),
-            message_type=None,
-            enum_type=None,
-            containing_type=None,
-            is_extension=False,
-            extension_scope=None,
-            serialized_options=None,
-            file=DESCRIPTOR,
-        ),
-    ],
-    extensions=[],
-    nested_types=[],
-    enum_types=[],
-    serialized_options=None,
-    is_extendable=False,
-    syntax="proto3",
-    extension_ranges=[],
-    oneofs=[],
-    serialized_start=72,
-    serialized_end=104,
+  name='ClassifyRequest',
+  full_name='SmartHomeBuddy.ClassifyRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='param', full_name='SmartHomeBuddy.ClassifyRequest.param', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=72,
+  serialized_end=104,
 )
 
 
 _CLASSIFYRESPONSE = _descriptor.Descriptor(
-    name="ClassifyResponse",
-    full_name="SmartHomeBuddy.ClassifyResponse",
-    filename=None,
-    file=DESCRIPTOR,
-    containing_type=None,
-    fields=[
-        _descriptor.FieldDescriptor(
-            name="is_done",
-            full_name="SmartHomeBuddy.ClassifyResponse.is_done",
-            index=0,
-            number=1,
-            type=8,
-            cpp_type=7,
-            label=1,
-            has_default_value=False,
-            default_value=False,
-            message_type=None,
-            enum_type=None,
-            containing_type=None,
-            is_extension=False,
-            extension_scope=None,
-            serialized_options=None,
-            file=DESCRIPTOR,
-        ),
-    ],
-    extensions=[],
-    nested_types=[],
-    enum_types=[],
-    serialized_options=None,
-    is_extendable=False,
-    syntax="proto3",
-    extension_ranges=[],
-    oneofs=[],
-    serialized_start=106,
-    serialized_end=141,
+  name='ClassifyResponse',
+  full_name='SmartHomeBuddy.ClassifyResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='is_done', full_name='SmartHomeBuddy.ClassifyResponse.is_done', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=106,
+  serialized_end=141,
 )
 
-DESCRIPTOR.message_types_by_name["ClassifyRequest"] = _CLASSIFYREQUEST
-DESCRIPTOR.message_types_by_name["ClassifyResponse"] = _CLASSIFYRESPONSE
+DESCRIPTOR.message_types_by_name['ClassifyRequest'] = _CLASSIFYREQUEST
+DESCRIPTOR.message_types_by_name['ClassifyResponse'] = _CLASSIFYRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-ClassifyRequest = _reflection.GeneratedProtocolMessageType(
-    "ClassifyRequest",
-    (_message.Message,),
-    dict(
-        DESCRIPTOR=_CLASSIFYREQUEST,
-        __module__="shbdeviceidentifier.rpc.proto.devices_database_pb2"
-        # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyRequest)
-    ),
-)
+ClassifyRequest = _reflection.GeneratedProtocolMessageType('ClassifyRequest', (_message.Message,), dict(
+  DESCRIPTOR = _CLASSIFYREQUEST,
+  __module__ = 'shbdeviceidentifier.rpc.proto.devices_database_pb2'
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyRequest)
+  ))
 _sym_db.RegisterMessage(ClassifyRequest)
 
-ClassifyResponse = _reflection.GeneratedProtocolMessageType(
-    "ClassifyResponse",
-    (_message.Message,),
-    dict(
-        DESCRIPTOR=_CLASSIFYRESPONSE,
-        __module__="shbdeviceidentifier.rpc.proto.devices_database_pb2"
-        # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyResponse)
-    ),
-)
+ClassifyResponse = _reflection.GeneratedProtocolMessageType('ClassifyResponse', (_message.Message,), dict(
+  DESCRIPTOR = _CLASSIFYRESPONSE,
+  __module__ = 'shbdeviceidentifier.rpc.proto.devices_database_pb2'
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyResponse)
+  ))
 _sym_db.RegisterMessage(ClassifyResponse)
 
 
+
 _DEVICESDATABASE = _descriptor.ServiceDescriptor(
-    name="DevicesDatabase",
-    full_name="SmartHomeBuddy.DevicesDatabase",
-    file=DESCRIPTOR,
+  name='DevicesDatabase',
+  full_name='SmartHomeBuddy.DevicesDatabase',
+  file=DESCRIPTOR,
+  index=0,
+  serialized_options=None,
+  serialized_start=143,
+  serialized_end=246,
+  methods=[
+  _descriptor.MethodDescriptor(
+    name='ClassifyDevices',
+    full_name='SmartHomeBuddy.DevicesDatabase.ClassifyDevices',
     index=0,
+    containing_service=None,
+    input_type=_CLASSIFYREQUEST,
+    output_type=_CLASSIFYRESPONSE,
     serialized_options=None,
-    serialized_start=143,
-    serialized_end=246,
-    methods=[
-        _descriptor.MethodDescriptor(
-            name="ClassifyDevices",
-            full_name="SmartHomeBuddy.DevicesDatabase.ClassifyDevices",
-            index=0,
-            containing_service=None,
-            input_type=_CLASSIFYREQUEST,
-            output_type=_CLASSIFYRESPONSE,
-            serialized_options=None,
-        ),
-    ],
-)
+  ),
+])
 _sym_db.RegisterServiceDescriptor(_DEVICESDATABASE)
 
-DESCRIPTOR.services_by_name["DevicesDatabase"] = _DEVICESDATABASE
+DESCRIPTOR.services_by_name['DevicesDatabase'] = _DEVICESDATABASE
 
 # @@protoc_insertion_point(module_scope)

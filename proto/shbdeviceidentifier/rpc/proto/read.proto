@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package SmartHomeBuddy;
+
+message ReadRequest {
+  string capture_file_path = 1;
+}
+
+message ReadResponse {
+  bool is_done = 1;
+}
+
+message UpdateReadStatusRequest {
+  int32 progress = 1;
+}
+
+message UpdateReadStatusResponse {}
+
+service ReadService {
+  rpc Read(ReadRequest) returns (ReadResponse);
+  rpc UpdateReadStatus(UpdateReadStatusRequest) returns (UpdateReadStatusResponse);
+}
