@@ -5,30 +5,30 @@ from __future__ import annotations
 import logging
 import os
 import platform
+import sqlite3
 import subprocess
 import traceback
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from sqlite3 import Error
 from subprocess import Popen
 from typing import Union, Iterable, List, Optional
-import warnings
 
 import influxdb
 import influxdb_client
 import pandas as pd
 import requests
-import sqlite3
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.flux_table import TableList
 from influxdb_client.client.warnings import MissingPivotFunction
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
-from sqlite3 import Error
 
-from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
 from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR, DATA_DIR
+from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
 
 warnings.simplefilter("ignore", MissingPivotFunction)
 
@@ -365,11 +365,19 @@ class Database:
             conn.commit()
             conn.close()
             return res if res else False
-        except Error:
-            lines = traceback.format_exc().splitlines()
-            for line in lines:
-                logger.error(line)
-            logger.error(f"The supplied statements are: {params}")
+        except Error as err:
+            # Do not send to error log when only the UNIQUE constraint is violated.
+            # Send to debug instead.
+            if isinstance(err, sqlite3.IntegrityError):
+                lines = traceback.format_exc().splitlines()
+                for line in lines:
+                    logger.debug(line)
+                logger.debug(f"The supplied statements are: {params}")
+            else:
+                lines = traceback.format_exc().splitlines()
+                for line in lines:
+                    logger.error(line)
+                logger.error(f"The supplied statements are: {params}")
             return False
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
