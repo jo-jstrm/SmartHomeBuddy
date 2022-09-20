@@ -15,8 +15,8 @@ const createWindow = (): void => {
   // Create the browser window.
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const mainWindow = new BrowserWindow({
-    minHeight: 200,
-    minWidth: 200,
+    minHeight: 500,
+    minWidth: 500,
     height: height * 0.5,
     width: width * 0.5,
     // icon: "media/app-icons/shb_icon.png",
@@ -36,7 +36,7 @@ const createWindow = (): void => {
   // Show once it is ready
   mainWindow.once('ready-to-show', () => {
     // possible duplicate with BrowserWindow props
-    mainWindow.setMinimumSize(200, 200);
+    mainWindow.setMinimumSize(500, 500);
     mainWindow.show();
   })
 
