@@ -53,7 +53,7 @@
             "description": "Identify vulnerabilities in your network from IoT devices.",
             "genericName": "Network Device Identifier",
             "homepage": "https://github.com/jo-jstrm/SmartHomeBuddy",
-            "icon": "media/app-icons/background.png",
+            "icon": "media/app-icons/shb_icon.png",
             "maintainer": "Tobias Becher and Johannes Jestram",
             "name": "smarthomebuddy",
             "productName": "SmartHomeBuddy"

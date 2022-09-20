@@ -1,4 +1,4 @@
-import { ThemeOptions } from "@mui/material";
+import {ThemeOptions} from "@mui/material";
 
 export const lightTheme: ThemeOptions = {
   palette: {
@@ -13,6 +13,10 @@ export const lightTheme: ThemeOptions = {
       main: "#f44336",
       dark: "#ba000d",
       contrastText: "#fff",
+    },
+    background: {
+      default: "#f1f1f1",
+      paper: "#fff"
     },
     mode: "light",
   },
