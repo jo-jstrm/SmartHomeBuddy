@@ -86,12 +86,12 @@ def read_labels(db: Database, file_path: Path, measurement: str = "main"):
 
 
 def train(
-    model_name: str,
-    measurement: str = "main",
-    from_timestamp: str = None,
-    to_timestamp: str = None,
-    bucket: str = "network-traffic",
-    devices_to_train: List[str] = [],
+        model_name: str,
+        measurement: str = "main",
+        from_timestamp: str = None,
+        to_timestamp: str = None,
+        bucket: str = "network-traffic",
+        devices_to_train: List[str] = None,
 ) -> None:
     """Train a Machine Learning model.
 
@@ -114,6 +114,8 @@ def train(
     -------
     None
     """
+    if not devices_to_train:
+        devices_to_train = []
 
     # Get the data from the database by using the user's input.
     try:
