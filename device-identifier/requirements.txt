@@ -5,7 +5,7 @@ grpcio-tools==1.16.1
 halo==0.0.31
 loguru==0.6.0
 influxdb>=5.3.1
-influxdb-client==1.32.0
+influxdb-client==1.31.0
 numba==0.55.2
 numba-progress==0.0.3
 pandas==1.4.3

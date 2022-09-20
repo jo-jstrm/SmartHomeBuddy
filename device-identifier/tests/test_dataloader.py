@@ -5,27 +5,10 @@ import pytest
 
 from shbdeviceidentifier.commands import read
 from shbdeviceidentifier.dataloader import DataLoader
-from shbdeviceidentifier.db import Database
-from shbdeviceidentifier.utilities.app_utilities import DATA_DIR
+from shbdeviceidentifier.utilities.queries import EARLIEST_TIMESTAMP
 
 
 class TestDataLoader:
-    @pytest.fixture(scope="class")
-    def db(self):
-        return Database()
-
-    @pytest.fixture(scope="class")
-    def dummy_pcap(self):
-        return (DATA_DIR / "pcaps" / "dummy.pcap").as_posix()
-
-    @pytest.fixture(scope="class")
-    def dummy_csv(self):
-        return (DATA_DIR / "pcaps" / "dummy.csv").as_posix()
-
-    @pytest.fixture(scope="class")
-    def dummy_labels_json(self):
-        return (DATA_DIR / "pcaps" / "dummy_labels.json").as_posix()
-
     @pytest.mark.skip(reason="Included in test_from_database().")
     def test_from_influxdb(self):
         pass
@@ -81,25 +64,17 @@ class TestDataLoader:
     def test_from_database(self, devices_to_train, data_path, db, request):
         data_path = request.getfixturevalue(data_path)
 
-        params = {
-            "_start": datetime.strptime("2021-08-01T11:40:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
-            "_stop": datetime.strptime("2023-08-01T11:41:00UTC", "%Y-%m-%dT%H:%M:%S%Z"),
-        }
-        query = """
-                            from(bucket: "network-traffic")
-                            |> range(start: _start, stop: _stop)
-                            |> filter(fn: (r) => r["_measurement"] == "packet")  
-                        """
         db.start()
         read(db, data_path, "pcap")
-        train_df, train_labels = DataLoader.from_database(query, params, devices_to_train)
-        db.stop_InfluxDB()
+        train_df, train_labels = DataLoader.from_database(from_timestamp=EARLIEST_TIMESTAMP,
+                                                          to_timestamp=datetime.now(), measurement="main",
+                                                          bucket="network-traffic", devices_to_train=devices_to_train)
+        db.stop()
 
         # TODO: improve this test
         # Since `from_database` can return (None, None) this is still correct,
         # but does not tell us much about the actual purpose of the method.
-        if train_df:
-            assert isinstance(train_df, pd.DataFrame)
+        if isinstance(train_df, pd.DataFrame):
             assert isinstance(train_labels, pd.Series)
             # TODO: make sure db contains values and test for empty
             # [...]
