@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
@@ -35,6 +35,14 @@ export default function Read() {
         setReadStatus("No response from Device Identifier.");
       });
   };
+  useEffect( () => {
+    ipcRenderer.on('captureFilePath', (event, filePaths) => {
+      // Display capture file path.
+      setReadStatus("Reading files from: " + filePaths[0]);
+      // Call read via RPC.
+
+    });
+  });
   return (
     <StyledPaper>
       <StyledDiv>
@@ -44,7 +52,7 @@ export default function Read() {
           color="primary"
           onClick={()=>{
             console.log("Button: using IPC.");
-            ipcRenderer.send('getFilePath', 'some nice path')
+            ipcRenderer.send('getCaptureFilePath');
           }}
         >
           Read Data from Capture File

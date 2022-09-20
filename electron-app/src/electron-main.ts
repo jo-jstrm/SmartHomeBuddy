@@ -57,13 +57,17 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-ipcMain.on('getFilePath', (event, path) => {
+ipcMain.on('getCaptureFilePath', (event) => {
   dialog.showOpenDialog({
-    properties: ['openFile', 'openDirectory']
+    filters: [
+      { name: 'Capture Files', extensions: ['pcap', 'pcapng'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    properties: ['openFile']
   }).then(result => {
     console.log(result.canceled);
     console.log(result.filePaths);
-    event.sender.send('getFilePath', result.filePaths);
+    event.sender.send('captureFilePath', result.filePaths);
   }).catch(err => {
     console.log(err);
   });
