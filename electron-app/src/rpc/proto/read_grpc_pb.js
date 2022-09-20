@@ -51,7 +51,7 @@ function deserialize_SmartHomeBuddy_UpdateReadStatusResponse(buffer_arg) {
 
 var ReadServiceService = exports.ReadServiceService = {
   read: {
-    path: '/SmartHomeBuddy.ReadService/Read',
+    path: '/SmartHomeBuddy.ReadService/read',
     requestStream: false,
     responseStream: false,
     requestType: read_pb.ReadRequest,
@@ -62,7 +62,7 @@ var ReadServiceService = exports.ReadServiceService = {
     responseDeserialize: deserialize_SmartHomeBuddy_ReadResponse,
   },
   updateReadStatus: {
-    path: '/SmartHomeBuddy.ReadService/UpdateReadStatus',
+    path: '/SmartHomeBuddy.ReadService/updateReadStatus',
     requestStream: false,
     responseStream: false,
     requestType: read_pb.UpdateReadStatusRequest,
