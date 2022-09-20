@@ -17,6 +17,6 @@ message UpdateReadStatusRequest {
 message UpdateReadStatusResponse {}
 
 service ReadService {
-  rpc read(ReadRequest) returns (ReadResponse);
-  rpc updateReadStatus(UpdateReadStatusRequest) returns (UpdateReadStatusResponse);
+  rpc Read(ReadRequest) returns (ReadResponse);
+  rpc UpdateReadStatus(UpdateReadStatusRequest) returns (UpdateReadStatusResponse);
 }

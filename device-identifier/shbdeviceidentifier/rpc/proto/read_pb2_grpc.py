@@ -14,13 +14,13 @@ class ReadServiceStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.read = channel.unary_unary(
-        '/SmartHomeBuddy.ReadService/read',
+    self.Read = channel.unary_unary(
+        '/SmartHomeBuddy.ReadService/Read',
         request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.ReadRequest.SerializeToString,
         response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.ReadResponse.FromString,
         )
-    self.updateReadStatus = channel.unary_unary(
-        '/SmartHomeBuddy.ReadService/updateReadStatus',
+    self.UpdateReadStatus = channel.unary_unary(
+        '/SmartHomeBuddy.ReadService/UpdateReadStatus',
         request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.UpdateReadStatusRequest.SerializeToString,
         response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.UpdateReadStatusResponse.FromString,
         )
@@ -30,14 +30,14 @@ class ReadServiceServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def read(self, request, context):
+  def Read(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def updateReadStatus(self, request, context):
+  def UpdateReadStatus(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -47,13 +47,13 @@ class ReadServiceServicer(object):
 
 def add_ReadServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'read': grpc.unary_unary_rpc_method_handler(
-          servicer.read,
+      'Read': grpc.unary_unary_rpc_method_handler(
+          servicer.Read,
           request_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.ReadRequest.FromString,
           response_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.ReadResponse.SerializeToString,
       ),
-      'updateReadStatus': grpc.unary_unary_rpc_method_handler(
-          servicer.updateReadStatus,
+      'UpdateReadStatus': grpc.unary_unary_rpc_method_handler(
+          servicer.UpdateReadStatus,
           request_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.UpdateReadStatusRequest.FromString,
           response_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_read__pb2.UpdateReadStatusResponse.SerializeToString,
       ),

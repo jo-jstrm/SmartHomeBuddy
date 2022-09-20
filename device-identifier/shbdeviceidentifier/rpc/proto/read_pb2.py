@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='SmartHomeBuddy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n(shbdeviceidentifier/rpc/proto/read.proto\x12\x0eSmartHomeBuddy\"(\n\x0bReadRequest\x12\x19\n\x11\x63\x61pture_file_path\x18\x01 \x01(\t\"\x1f\n\x0cReadResponse\x12\x0f\n\x07is_done\x18\x01 \x01(\x08\"+\n\x17UpdateReadStatusRequest\x12\x10\n\x08progress\x18\x01 \x01(\x05\"\x1a\n\x18UpdateReadStatusResponse2\xb7\x01\n\x0bReadService\x12\x41\n\x04read\x12\x1b.SmartHomeBuddy.ReadRequest\x1a\x1c.SmartHomeBuddy.ReadResponse\x12\x65\n\x10updateReadStatus\x12\'.SmartHomeBuddy.UpdateReadStatusRequest\x1a(.SmartHomeBuddy.UpdateReadStatusResponseb\x06proto3')
+  serialized_pb=_b('\n(shbdeviceidentifier/rpc/proto/read.proto\x12\x0eSmartHomeBuddy\"(\n\x0bReadRequest\x12\x19\n\x11\x63\x61pture_file_path\x18\x01 \x01(\t\"\x1f\n\x0cReadResponse\x12\x0f\n\x07is_done\x18\x01 \x01(\x08\"+\n\x17UpdateReadStatusRequest\x12\x10\n\x08progress\x18\x01 \x01(\x05\"\x1a\n\x18UpdateReadStatusResponse2\xb7\x01\n\x0bReadService\x12\x41\n\x04Read\x12\x1b.SmartHomeBuddy.ReadRequest\x1a\x1c.SmartHomeBuddy.ReadResponse\x12\x65\n\x10UpdateReadStatus\x12\'.SmartHomeBuddy.UpdateReadStatusRequest\x1a(.SmartHomeBuddy.UpdateReadStatusResponseb\x06proto3')
 )
 
 
@@ -187,8 +187,8 @@ _READSERVICE = _descriptor.ServiceDescriptor(
   serialized_end=392,
   methods=[
   _descriptor.MethodDescriptor(
-    name='read',
-    full_name='SmartHomeBuddy.ReadService.read',
+    name='Read',
+    full_name='SmartHomeBuddy.ReadService.Read',
     index=0,
     containing_service=None,
     input_type=_READREQUEST,
@@ -196,8 +196,8 @@ _READSERVICE = _descriptor.ServiceDescriptor(
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
-    name='updateReadStatus',
-    full_name='SmartHomeBuddy.ReadService.updateReadStatus',
+    name='UpdateReadStatus',
+    full_name='SmartHomeBuddy.ReadService.UpdateReadStatus',
     index=1,
     containing_service=None,
     input_type=_UPDATEREADSTATUSREQUEST,
