@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -8,9 +10,12 @@ class MLModel(ABC):
     """Base class for all ML models. Derived models must implement all methods."""
 
     name: str
+    alias: str
+    ext_aliases: List[str]
     version: str
     description: str
     progress_range: range
+    save_path: Path
 
     def __init__(self):
         ...
@@ -24,11 +29,11 @@ class MLModel(ABC):
         pass
 
     @abstractmethod
-    def save(self, path: str) -> None:
+    def save(self, path: str = None) -> None:
         pass
 
     @abstractmethod
-    def load(self, path: str) -> None:
+    def load(self, path: str = None) -> None:
         pass
 
     @staticmethod

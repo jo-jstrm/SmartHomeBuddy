@@ -15,7 +15,7 @@ from .rpc.server import start_rpc_server
 from .utilities.app_utilities import SHB_HOME, DATA_DIR
 from .utilities.logging_utilities import spinner, PROGRESS_BAR_FORMAT
 from .utilities.ml_utilities import get_model
-from .utilities.queries import EARLIEST_TIMESTAMP
+from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
 
 
 def start_database(db: Database):
@@ -169,6 +169,66 @@ def train(
         return
 
     # Save model.
-    save_path = DATA_DIR / Path(f"ml_models/{model_name}_{model.version}.pkl")
-    if model.save(save_path):
-        logger.success(f"Model {model_name} saved successfully to {save_path}.")
+    if not model.save_path:
+        model.save_path = DATA_DIR / Path(f"ml_models/{model.alias}_{model.version}.pkl")
+    if model.save(model.save_path):
+        logger.success(f"Model {model_name} saved successfully to {model.save_path}.")
+
+
+def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
+    model = get_model(model_selector)
+
+    # Load model with internal save path
+    # TODO: We should improve the way we handle the save path, maybe we can save the paths in the database?
+    model.load()
+
+    df, _ = DataLoader.from_database(
+        from_timestamp=EARLIEST_TIMESTAMP,
+        to_timestamp=datetime.now(),
+        measurement=measurement,
+        bucket="network-traffic",
+        devices_to_train=[],
+    )
+    if not isinstance(df, pd.DataFrame):
+        logger.error("No data found. Exiting.")
+        sys.exit(1)
+    else:
+        # Type hint for linting (Should be obsolete if from_database returns a DataFrame)
+        df: pd.DataFrame
+
+    # Get predictions for every row
+    res = model.predict(df[["data_len", "stream_id"]])
+
+    # Get majority voting on prediction label for every IP address
+    df["prediction"] = res["prediction"]
+    res = df[["src_ip", "prediction"]].groupby("src_ip").agg(lambda x: pd.Series.mode(x)[0])
+    res["confidence"] = (
+        df[["src_ip", "prediction"]].groupby("src_ip").agg(lambda x: x.value_counts().iloc[0] / pd.Series.count(x))
+    )
+
+    if not res.empty:
+        logger.success(f"Identified {len(res)} devices.")
+    else:
+        logger.info("No devices identified.")
+
+    # Update devices table
+    for index, row in res.iterrows():
+        ip = index
+        name = row["prediction"]
+
+        # Skip if it's an unidentified device
+        if name == "NoLabel":
+            continue
+
+        current_name = db.query_SQLiteDB(QUERIES["sqlite"]["get_device_name"], (ip, measurement))[0][0]
+        if not current_name:
+            if db.query_SQLiteDB(QUERIES["sqlite"]["update_devices"], (name, ip, measurement)):
+                logger.trace(f"Updated device {ip} to {name}.")
+            else:
+                # TODO: Check if this is intended
+                #  This happens e.g. if the device is not yet in the devices table.
+                logger.debug(f"Could not update device {ip} to {name}.")
+        else:
+            logger.trace(f"Device {ip} already in devices database as {current_name}.")
+
+    return res

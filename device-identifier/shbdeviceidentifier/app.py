@@ -11,12 +11,10 @@ from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
-from .dataloader import DataLoader
 from .db import Database
 from .utilities import get_capture_file_path, logger_wraps
 from .utilities.app_utilities import DATA_DIR, resolve_file_path
 from .utilities.logging_utilities import configure_logging
-from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
 
 # ---------------------------------------------------------------------------- #
@@ -110,7 +108,6 @@ def app(ctx, debug, silent, verbose, version_flag):
         click.echo(figlet.renderText("SmartHomeBuddy"))
 
     if verbose:
-        ctx.verbose = True
         configure_logging(level="INFO")
 
     if debug:
@@ -177,47 +174,25 @@ def read_labels(ctx, file_path: click.Path, measurement: str):
 
 
 @app.command("identify")
-@click.option("-f", "--file_path", type=click.Path(), required=False, default="")
-@click.argument("model-path", type=click.Path())
-@click.option("-o", "--out", type=click.STRING, required=False, default="stdout")  # TODO: refactor
+@click.option(
+    "--measurement",
+    "-m",
+    help="Name of the measurement in the InfluxDB. Defaults to `main`.",
+    required=False,
+    default="main",
+)
 @click.option("-M", "--model", "model_selector", type=click.STRING, required=False, default="default")
 @pass_ctx
 @logger_wraps()
-def identify(ctx, file_path, model_path, out, model_selector):
+def identify(ctx, measurement, model_selector):
     """
-    Identifies a device.
+    Identifies devices in a dataset. Per default the main measurement with the default model is used.
+    Before using identify you can use `read -m <MEASUREMENT>` to read in a capture file and label it as <MEASUREMENT>.
     """
-    file_path = get_capture_file_path(ctx, file_path)
-    df = DataLoader.from_pcap(file_path)
+    res = commands.identify_devices(ctx.db, measurement, model_selector)
 
-    if not model_selector:
-        model_selector = "default"
-    model = get_model(model_selector)
-    model.load(model_path)
-
-    res = model.predict(df[["data_len", "stream_id"]])
-    del df
-
-    if not res.empty:
-        logger.success(f"Identified {len(res)} devices.")
-
-    if out == "stdout":
+    if ctx.flags["verbose"] or ctx.flags["debug"]:
         pprint(res)
-    elif out == "sqlite":
-        # TODO: write res to sqlite db
-        ...
-    elif out == "influx" or out == "influxdb":
-        # TODO: write res to influxdb
-        ...
-    elif out == "json":
-        # TODO: write res to json file in ctx.home_dir
-        ...
-    elif out == "csv":
-        # TODO: write res to csv file in ctx.home_dir
-        ...
-    else:
-        logger.debug(f"Unknown output format: {out}")
-
 
 @app.command("query")
 @click.option(
