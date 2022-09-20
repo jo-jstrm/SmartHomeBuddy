@@ -9,7 +9,7 @@ from numba_progress import ProgressBar
 from scapy.all import TCP, UDP, IP
 from scapy.packet import Packet
 
-from .logging_utilities import spinner
+from .logging_utilities import spinner, PROGRESS_BAR_FORMAT
 
 
 # noinspection PyPep8Naming
@@ -62,7 +62,12 @@ def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     #  this will fail or display the wrong message
     spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished reading file into memory.")
     start_time = time.perf_counter()
-    with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
+    with ProgressBar(
+            update_interval=1,
+            total=num_of_packets,
+            desc="   Converting file to pandas DataFrame",
+            bar_format=PROGRESS_BAR_FORMAT
+    ) as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
         # Filter out packets that do not have a transport layer protocol
         df = df[df["L4_protocol"].astype(bool)]

@@ -13,7 +13,7 @@ from .dataloader import DataLoader
 from .db import Database, extract_devices
 from .rpc.server import start_rpc_server
 from .utilities.app_utilities import SHB_HOME, DATA_DIR
-from .utilities.logging_utilities import spinner
+from .utilities.logging_utilities import spinner, PROGRESS_BAR_FORMAT
 from .utilities.ml_utilities import get_model
 from .utilities.queries import EARLIEST_TIMESTAMP
 
@@ -153,8 +153,11 @@ def train(
     spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished preparing data.")
 
     # Train the model.
-    with ProgressBar(update_interval=1, total=len(model.progress_range) - 1,
-                     desc=f"Training {model_name}.") as progress:
+    with ProgressBar(update_interval=1,
+                     total=len(model.progress_range) - 1,
+                     desc=f"   Training {model_name}",
+                     bar_format=PROGRESS_BAR_FORMAT
+                     ) as progress:
         success = model.train(train_df[["data_len", "stream_id"]], train_labels, progress_callback=progress.update)
         # TODO: If progress_callback is not used we might have to call finish() manually.
         # if not progress.finished:

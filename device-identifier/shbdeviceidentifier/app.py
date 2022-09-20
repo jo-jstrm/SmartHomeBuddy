@@ -1,7 +1,6 @@
 import os
 import sys
 from dataclasses import dataclass
-from functools import partial
 from importlib import metadata
 from pathlib import Path
 from pprint import pprint
@@ -14,8 +13,9 @@ from pyfiglet import Figlet
 import shbdeviceidentifier.commands as commands
 from .dataloader import DataLoader
 from .db import Database
-from .utilities import get_capture_file_path, Formatter, logger_wraps
+from .utilities import get_capture_file_path, logger_wraps
 from .utilities.app_utilities import DATA_DIR, resolve_file_path
+from .utilities.logging_utilities import configure_logging
 from .utilities.ml_utilities import get_model
 from .utilities.queries import QUERIES
 
@@ -23,17 +23,12 @@ from .utilities.queries import QUERIES
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
 
-logger.remove()
-formatter = Formatter()
-logger_config = {"handlers": [{"sink": sys.stdout, "format": formatter.format, "level": "SUCCESS"}]}
-logger.configure(**logger_config)
-logger.opt = partial(logger.opt, colors=True)
-logger.level("DEBUG", color="<light-black>")
+configure_logging(level="SUCCESS")
 
 # ---------------------------------------------------------------------------- #
 #                                    App                                       #
 # ---------------------------------------------------------------------------- #
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB")
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB", max_content_width=800)
 
 
 @dataclass
@@ -89,14 +84,14 @@ class Context:
 
 
 pass_ctx = click.make_pass_decorator(Context, ensure=True)
-flag_default_options = dict(is_flag=True, default=False, show_default=True)
+FLAG_DEFAULT_OPTIONS = dict(is_flag=True, default=False, show_default=True)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=False, chain=True)
-@click.option("--debug", "-d", help="Enable debug output.", **flag_default_options)
-@click.option("--silent", "-s", help="Disable logging.", **flag_default_options)
-@click.option("--verbose", "-v", help="Enable verbose output.", **flag_default_options)
-@click.option("--version", "version_flag", help="Show current app version.", **flag_default_options)
+@click.option("--debug", "-d", help="Enable debug output.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--silent", "-s", help="Disable logging.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--verbose", "-v", help="Enable verbose output.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--version", "version_flag", help="Show current app version.", **FLAG_DEFAULT_OPTIONS)
 @pass_ctx
 def app(ctx, debug, silent, verbose, version_flag):
     """
@@ -116,12 +111,10 @@ def app(ctx, debug, silent, verbose, version_flag):
 
     if verbose:
         ctx.verbose = True
-        logger_config["handlers"][0]["level"] = "INFO"
-        logger.configure(**logger_config)
+        configure_logging(level="INFO")
 
     if debug:
-        logger_config["handlers"][0]["level"] = "DEBUG"
-        logger.configure(**logger_config)
+        configure_logging(level="DEBUG")
 
     # Database connections checks
     db = Database()
