@@ -194,6 +194,7 @@ def identify(ctx, measurement, model_selector):
     if ctx.flags["verbose"] or ctx.flags["debug"]:
         pprint(res)
 
+
 @app.command("query")
 @click.option(
     "-D",

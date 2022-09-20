@@ -70,7 +70,8 @@ def configure_logging(level: Union[int, str] = 3):
     logger.opt = partial(logger.opt, colors=True)
     logger.level("DEBUG", color="<light-black>")
     if level >= 3:
-        logger.level("SUCCESS", color="<light-black>", icon="✔")
+        # logger.level("SUCCESS", color="<light-black>", icon="✔")
+        logger.level("SUCCESS", color="<white>", icon="✅")
     else:
         logger.level("SUCCESS", color="<green>")
 
