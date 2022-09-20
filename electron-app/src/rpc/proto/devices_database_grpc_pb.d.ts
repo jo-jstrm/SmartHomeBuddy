@@ -12,10 +12,6 @@ interface IDevicesDatabaseService
     devices_database_pb.ClassifyRequest,
     devices_database_pb.ClassifyResponse
   >;
-  getAllDevices: grpc.MethodDefinition<
-    devices_database_pb.DevicesRequest,
-    devices_database_pb.Devices
-  >;
 }
 
 export const DevicesDatabaseService: IDevicesDatabaseService;
@@ -25,10 +21,6 @@ export interface IDevicesDatabaseServer
   classifyDevices: grpc.handleUnaryCall<
     devices_database_pb.ClassifyRequest,
     devices_database_pb.ClassifyResponse
-  >;
-  getAllDevices: grpc.handleUnaryCall<
-    devices_database_pb.DevicesRequest,
-    devices_database_pb.Devices
   >;
 }
 
@@ -52,20 +44,5 @@ export class DevicesDatabaseClient extends grpc.Client {
     metadata: grpc.Metadata | null,
     options: grpc.CallOptions | null,
     callback: grpc.requestCallback<devices_database_pb.ClassifyResponse>
-  ): grpc.ClientUnaryCall;
-  getAllDevices(
-    argument: devices_database_pb.DevicesRequest,
-    callback: grpc.requestCallback<devices_database_pb.Devices>
-  ): grpc.ClientUnaryCall;
-  getAllDevices(
-    argument: devices_database_pb.DevicesRequest,
-    metadataOrOptions: grpc.Metadata | grpc.CallOptions | null,
-    callback: grpc.requestCallback<devices_database_pb.Devices>
-  ): grpc.ClientUnaryCall;
-  getAllDevices(
-    argument: devices_database_pb.DevicesRequest,
-    metadata: grpc.Metadata | null,
-    options: grpc.CallOptions | null,
-    callback: grpc.requestCallback<devices_database_pb.Devices>
   ): grpc.ClientUnaryCall;
 }

@@ -20,12 +20,13 @@ classifiers = [
 "Bug Tracker" = "https://github.com/jo-jstrm/SmartHomeBuddy/issues"
 
 [build-system]
-requires = ["setuptools",
-            "wheel",
-            "cython"]
+requires = ["setuptools", "wheel", "cython"]
+
+[tool.setuptools.package-data]
+shbdeviceidentifier = ["utilities/queries/*.sql", "utilities/queries/*.flux"]
 
 [project.scripts]
-shbdeviceidentifier = "shbdeviceidentifier:__main__"
+shbdeviceidentifier = "shbdeviceidentifier.app:app"
 
 [tool.black]
 line-length = 120

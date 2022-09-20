@@ -1,0 +1,16 @@
+name: '🧪 Test Dispatch'
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: 'A target reference to format.'
+        default: ${{ github.head_ref }}
+        required: false
+        type: string
+
+jobs:
+  format:
+    uses: ./.github/workflows/_unit_tests.yml
+    with:
+      target_ref: ${{ inputs.target_ref }}

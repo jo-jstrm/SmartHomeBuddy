@@ -1,8 +1,9 @@
+from datetime import datetime
 from pathlib import Path
 
-from .app_utilities import IDENTIFIER_HOME
-
-q_path = IDENTIFIER_HOME / Path("utilities/queries").resolve()
+from .query_files.custom_query import custom_query
+from .query_files.custom_query_flux import custom_query_flux
+from .query_files.get_data_flux import get_data_flux
 
 
 def query_file_to_string(file_path: Path) -> str:
@@ -10,13 +11,16 @@ def query_file_to_string(file_path: Path) -> str:
         return f.read()
 
 
-INFLUX_QUERIES = {
-    "get_all_devices": query_file_to_string(q_path / "get_all_devices.flux"),
-    "custom_query": query_file_to_string(q_path / "custom_query.flux"),
-}
-
+EARLIEST_TIMESTAMP = datetime.strptime("1970-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+INFLUX_QUERIES = {"custom_query": custom_query_flux, "get_data": get_data_flux}
 SQLITE_QUERIES = {
-    "custom_query": query_file_to_string(q_path / "custom_query.sql"),
+    "get_all_devices": """SELECT * FROM devices""",
+    "custom_query": custom_query,
+    "get_latest_capture_file": """SELECT latest_capture_file FROM context;""",
+    "set_latest_capture_file": """UPDATE context SET latest_capture_file=? WHERE id=1;""",
+    "get_measurement": """SELECT measurement FROM context;""",
+    "set_measurement": """UPDATE context SET measurement=? WHERE id=1;""",
+    "set_context_defaults": """INSERT INTO context (id, latest_capture_file, measurement) VALUES (1, ?, ?);""",
+    "get_device_labels": """SELECT device_name, ip_address FROM devices WHERE measurement==?;""",
 }
-
 QUERIES = {"influx": INFLUX_QUERIES, "sqlite": SQLITE_QUERIES}

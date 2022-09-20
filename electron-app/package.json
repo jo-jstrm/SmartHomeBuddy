@@ -1,11 +1,11 @@
 {
   "name": "smarthomebuddy",
   "productName": "SmartHomeBuddy",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Identify vulnerabilities in your network from IoT devices.",
   "main": ".webpack/main",
   "scripts": {
-    "start": "cross-env DEV_MODE=true electron-forge start",
+    "start": "DEV_MODE=true electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -23,7 +23,7 @@
       "packagerConfig": {
         "appCopyright": "GPLv3",
         "extraResource": [
-          "../device-identifier/dist/cli",
+          "../device-identifier/dist/device_identifier_server",
           "../InfluxData/influxdb",
           "../InfluxData/influxdb-client"
         ]
@@ -135,6 +135,7 @@
     "@grpc/grpc-js": "^1.6.8",
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.8.7",
+    "@mui/x-data-grid": "^5.17.1",
     "better-sqlite3": "^7.6.2",
     "electron-squirrel-startup": "^1.0.0",
     "google-protobuf": "^3.20.1",

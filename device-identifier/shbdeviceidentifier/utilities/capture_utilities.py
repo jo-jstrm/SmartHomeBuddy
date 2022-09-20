@@ -1,84 +1,21 @@
-import platform
-import shlex
-import subprocess
-from pathlib import Path
-from typing import List, Union, Optional, Dict, Tuple
+import logging
+import time
+from typing import List, Optional, Dict, Tuple
 
 import numba as nb
 import numpy as np
 import pandas as pd
-import pyshark
 from loguru import logger
 from numba_progress import ProgressBar
-from pyshark.capture.capture import Capture
 from scapy.all import TCP, UDP, IP
 from scapy.packet import Packet
 
-from .app_utilities import resolve_file_path
 from .logging_utilities import spinner
-
-
-def collect_traffic(
-    interface: Union[Path, str] = None, time: int = -1, output_file: Union[Path, str] = None
-) -> Optional[pyshark.capture.capture.Capture]:
-    """
-    The collect_traffic function is used to capture traffic on a specified interface for a specified amount of time.
-    Either the interface_id or the interface name must be specified.
-    If no or non-positive time is specified, it will run indefinitely until the user stops it.
-    It can also write the captured packets to an output file if one is provided.
-
-    Parameters
-    ----------
-        interface: str = None
-            The interface to capture traffic on
-        time: int = 0
-            The time limit for the traffic capture in seconds
-        output_file: Union[Path, str]=None
-            The path to the output file
-
-    Returns
-    -------
-
-        A capture object
-
-    Doc Author
-    ----------
-        TB
-    """
-    if not isinstance(interface, Path) and interface.isdigit():
-        ix = int(interface)
-    else:
-        interface = Path(interface)
-        available_interfaces = [Path(face) for face in pyshark.LiveCapture().interfaces]
-        try:
-            ix = available_interfaces.index(interface)
-        except ValueError:
-            logger.error(f"Interface {interface} not found. Available interfaces are {available_interfaces}.")
-            return None
-
-    interface = pyshark.LiveCapture().interfaces[ix]
-
-    if output_file:
-        output_file = Path(output_file).resolve()
-        logger.info(f"Capturing traffic on interface {interface} and saving to {output_file}.")
-    else:
-        logger.info(f"Capturing traffic on interface {interface}. No output file specified.")
-
-    cap = pyshark.LiveCapture(interface=interface, output_file=output_file)
-
-    if time > 0:
-        cap.sniff(timeout=time)
-    else:
-        logger.error("Continuously capturing traffic is currently not supported.")
-        # TODO: add continuous capture support
-        # logger.info("Sniffing indefinitely... (Ctrl-C to stop)")
-        # gen = cap.sniff_continuously()
-    return cap
 
 
 # noinspection PyPep8Naming
 @nb.jit(forceobj=True, parallel=True)
-def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_proxy) -> pd.DataFrame:
+def _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress_proxy) -> pd.DataFrame:
     """
     The _convert_Capture_to_DataFrame_JIT function is the JIT compiled part of the
      convert_Capture_to_DataFrame function.
@@ -86,49 +23,59 @@ def _convert_Capture_to_DataFrame_JIT(cap: Capture, num_of_packets, progress_pro
     The function is JIT compiled using numba.
     The function is not intended to be used directly, but within a tqdm progress bar.
     """
-    src_series = np.empty((num_of_packets,), dtype=object)
-    dst_series = np.empty((num_of_packets,), dtype=object)
-    ts_series = np.empty((num_of_packets,), dtype=pd.Timestamp)
-    protocol_series = np.empty((num_of_packets,), dtype=object)
-    data_len_series = np.empty((num_of_packets,), dtype="uint16")
+    src_addresses = np.empty((num_of_packets,), dtype=object)
+    src_ips = np.empty((num_of_packets,), dtype=object)
+    src_ports = np.empty((num_of_packets,), dtype=int)
+    dst_addresses = np.empty((num_of_packets,), dtype=object)
+    dst_ips = np.empty((num_of_packets,), dtype=object)
+    dst_ports = np.empty((num_of_packets,), dtype=int)
+    timestamps = np.empty((num_of_packets,), dtype=pd.Timestamp)
+    protocols = np.empty((num_of_packets,), dtype=object)
+    data_lengths = np.empty((num_of_packets,), dtype="uint16")
 
     for i in nb.prange(num_of_packets):
-        src_series[i] = _get_address_from_scapy_packet(cap[i], src=True)
-        dst_series[i] = _get_address_from_scapy_packet(cap[i], src=False)
-        ts_series[i] = _get_timestamp_from_scapy_packet(cap[i])
-        protocol_series[i] = _get_protocol_from_scapy_packet(cap[i])
-        data_len_series[i] = _get_data_len_from_scapy_packet(cap[i])
+        src_addresses[i], src_ips[i], src_ports[i] = _get_address_tuple_from_scapy_packet(cap[i], src=True)
+        dst_addresses[i], dst_ips[i], dst_ports[i] = _get_address_tuple_from_scapy_packet(cap[i], src=False)
+        timestamps[i] = _get_timestamp_from_scapy_packet(cap[i])
+        protocols[i] = _get_protocol_from_scapy_packet(cap[i])
+        data_lengths[i] = _get_data_len_from_scapy_packet(cap[i])
         progress_proxy.update(1)
 
-    df = pd.DataFrame(
-        {"src": src_series, "dst": dst_series, "L4_protocol": protocol_series, "data_len": data_len_series},
-        index=ts_series,
+    return pd.DataFrame(
+        {
+            "src_address": src_addresses,
+            "src_ip": src_ips,
+            "src_port": src_ports,
+            "dst_address": dst_addresses,
+            "dst_ip": dst_ips,
+            "dst_port": dst_ports,
+            "L4_protocol": protocols,
+            "data_len": data_lengths,
+        },
+        index=timestamps,
     )
 
-    # Filter out packets that do not have a transport layer protocol
-    df = df[df["L4_protocol"].astype(bool)]
-
-    # Create stream IDs
-    # TODO: check performance cost of this
-    df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src", "dst"]], axis=1)]
-    df = df.assign(stream_id=df.groupby(["conv"]).ngroup())
-    df.drop(columns=["conv"], inplace=True)
-    df["stream_id"] = df["stream_id"].astype("uint16")
-
-    return df
-
 
 # noinspection PyPep8Naming
-def convert_Capture_to_DataFrame(cap: Capture) -> pd.DataFrame:
+def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
     spinner.stop()
+    start_time = time.perf_counter()
     with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
+        # Filter out packets that do not have a transport layer protocol
+        df = df[df["L4_protocol"].astype(bool)]
+        # Create stream IDs. Unique pair of src and dst addresses receives its own stream ID.
+        # TODO: check performance cost of this
+        df["conv"] = [" <-> ".join(i) for i in np.sort(df[["src_address", "dst_address"]], axis=1)]
+        df = df.assign(stream_id=df.groupby(["conv"]).ngroup()).drop(columns=["conv"]).astype({"stream_id": "uint16"})
+    end_time = time.perf_counter()
+    logger.debug("Capture to DataFrame conversion took {:.3f} seconds.".format(end_time - start_time))
     return df
 
 
 # noinspection PyPep8Naming
-def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
+def convert_Capture_to_Line(cap, measurement: str = "packet", additional_tags: Dict = None) -> List[str]:
     """
     The write_cap_to_db function writes a pyshark.capture.Capture object to an InfluxDB database
         using the Line Protocol format (see https://v2.docs.influxdata.com/v2.0/write-data/#line-protocol).
@@ -210,33 +157,6 @@ def convert_Capture_to_Line(cap: Capture, measurement: str = "packet", additiona
     return data
 
 
-def get_conversations(file_path: Union[str, Path]) -> Tuple[Optional[List[dict]], Optional[List[dict]]]:
-    """
-    Gets the conversations statistics from tshark.
-    Returns it as a list of protocols containing a dictionary per conversation.
-    Ordered as tcp, udp.
-    """
-    file_path = resolve_file_path(file_path)
-    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
-    if tshark_path and file_path:
-        # TODO: add support for other operating systems and possibly transport protocols
-
-        # Make sure arguments for tshark call are split properly
-        args_tcp = shlex.split(tshark_path.as_posix() + " -q -z conv,tcp -r " + file_path.as_posix())
-        args_udp = shlex.split(tshark_path.as_posix() + " -q -z conv,udp -r " + file_path.as_posix())
-
-        # Run tshark and get output as text
-        res_tcp = subprocess.run(args_tcp, capture_output=True, text=True).stdout
-        res_udp = subprocess.run(args_udp, capture_output=True, text=True).stdout
-
-        # Parse output into list of dictionaries
-        res_tcp = _conversations_string_to_list(res_tcp, tag={"protocol": "tcp"})
-        res_udp = _conversations_string_to_list(res_udp, tag={"protocol": "udp"})
-
-        # Combine results
-        return res_tcp, res_udp
-
-
 def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optional[List[Dict]]:
     """Converts a conversations string to a list of dictionaries"""
     # Split into lines
@@ -274,32 +194,6 @@ def _conversations_string_to_list(conversations: str, tag: Dict = None) -> Optio
             logger.debug(e)
 
     return res if res else None
-
-
-def get_capinfos(file_path: Union[str, Path]) -> Optional[Dict]:
-    """
-    Gets the capinfos statistics from tshark.
-    Returns it as a dictionary.
-    """
-    file_path = resolve_file_path(file_path)
-    tshark_path = resolve_file_path(pyshark.tshark.tshark.get_process_path())
-
-    system = platform.system()
-    if system == "Windows":
-        capinfos_path = "capinfos.exe"
-    else:
-        capinfos_path = "capinfos"
-    capinfos_path = resolve_file_path(tshark_path.parents[0] / capinfos_path)
-
-    if capinfos_path and file_path:
-        # Make sure arguments for tshark call are split properly
-        args = shlex.split(capinfos_path.as_posix() + " " + file_path.as_posix())
-
-        # Run tshark and get output as text
-        res = subprocess.run(args, capture_output=True, text=True).stdout
-
-        # Parse output into dictionary
-        return _capinfos_string_to_dict(res)
 
 
 def _capinfos_string_to_dict(capinfos: str) -> Optional[Dict]:
@@ -387,10 +281,8 @@ def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
     Per default the source address is returned. Set src to `False` to get the destination address.
     """
     addr: str = ""
-
     if not IP in packet:
         return addr
-
     if src:
         if hasattr(packet[IP], "src"):
             addr = str(packet[IP].src)
@@ -401,5 +293,32 @@ def _get_address_from_scapy_packet(packet: Packet, src: bool = True) -> str:
             addr = str(packet[IP].dst)
             if hasattr(packet[IP], "dport"):
                 addr += ":" + str(packet[IP].dport)
-
     return addr
+
+
+@nb.jit(forceobj=True)
+def _get_address_tuple_from_scapy_packet(packet: Packet, src: bool = True) -> Tuple[str, str, int]:
+    """
+    Returns the source address (ip:port), ip, and port of a scapy packet.
+    Per default the source address is returned. Set src to `False` to get the destination address.
+    """
+    addr: str = ""
+    ip: str = ""
+    port: int = -1
+    if IP not in packet:
+        return addr, ip, port
+    if src:
+        if hasattr(packet[IP], "src"):
+            ip = str(packet[IP].src)
+            addr = ip
+            if hasattr(packet[IP], "sport"):
+                port = int(packet[IP].sport)
+                addr += ":" + str(port)
+    else:
+        if hasattr(packet[IP], "dst"):
+            ip = str(packet[IP].dst)
+            addr = ip
+            if hasattr(packet[IP], "dport"):
+                port = int(packet[IP].dport)
+                addr += ":" + str(port)
+    return addr, ip, port
