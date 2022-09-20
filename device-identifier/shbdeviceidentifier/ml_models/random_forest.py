@@ -16,15 +16,28 @@ class RandomForest(MLModel):
     def __init__(self, **kwargs):
         super().__init__()
         self.name = "Random Forest Classifier"
-        self.version = "0.0"
+        self.version = "v0"
         self.description = "Random Forest Classifier"
+        self.progress_range = range(0, 2, 1)
 
         self.model_kwargs = dict(n_estimators=100, random_state=0)
         self.model_kwargs.update(kwargs)
         self.model = RandomForestClassifier(**self.model_kwargs)
 
-    def train(self, X, y) -> None:
-        self.model.fit(X, y)
+    def train(self, X, y, progress_callback=None) -> bool:
+
+        try:
+            # Train
+            self.model.fit(X, y)
+        except Exception as e:
+            logger.debug(e)
+            return False
+
+        # Update the progress bar
+        # Since we only have one step, we can just set it to 100% once we're done
+        # For more complicated models a callback should be used when fitting
+        progress_callback(self.progress_range.step)
+        return True
 
     def predict(self, X: pd.DataFrame) -> pd.DataFrame:
         return X.assign(prediction=self.model.predict(X))
@@ -46,7 +59,7 @@ class RandomForest(MLModel):
     def prepare_train_data(train_df: pd.DataFrame) -> pd.DataFrame:
         # Modify the data to be in the format required by the model
         # Drop columns and set time index
-        relevant_columns = ["timestamp", "src", "dst", "stream_id", "data_len", "L4_protocol"]
+        relevant_columns = ["timestamp", "stream_id", "data_len", "L4_protocol"]
         train_df = train_df[relevant_columns]
         # TODO: Determine how the label is calculated. Currently only the source IP is used.
         #  Furthermore we could add them to the data frame and only supply the model with the column names for the labels.

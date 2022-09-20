@@ -1,7 +1,7 @@
 # Local Development Setup
 
 ## electron-app
-- `make electronapp` or `cd electron-app && npm install && npm start`
+- `make electronapp` or `cd electron-app && npm install --save-dev cross-env && npm start`
 
 ## device-identifier
 - `make deviceidentifier` or `cd device-identifier && source .venv/bin/activate && python -m shbdeviceidentifier`
