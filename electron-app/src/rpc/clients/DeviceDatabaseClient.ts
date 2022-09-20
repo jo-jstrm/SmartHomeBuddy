@@ -6,7 +6,7 @@ import {
 import { config } from "../../config";
 import { DevicesDatabaseClient } from "../proto/devices_database_grpc_pb";
 
-export function callClassifyDevices(): Promise<any> {
+export function callClassifyDevices(): Promise<boolean> {
   const client = new DevicesDatabaseClient(
     config.grpc.server_url,
     ChannelCredentials.createInsecure()
