@@ -2,9 +2,9 @@ import {useEffect, useState} from "react";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
 import * as React from "react";
-import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
 import { styled } from "@mui/system";
 import Typography from "@mui/material/Typography";
+import {callRead} from "../../rpc/clients/ReadClient";
 
 const { ipcRenderer } = window.require('electron');
 
@@ -24,23 +24,20 @@ export default function Read() {
   const [readStatus, setReadStatus] = useState(
     "Read network data from a capture file."
   );
-  const classifyDevices = () => {
-    setReadStatus("Reading capture file. This might take up to 15 minutes...");
-    callClassifyDevices()
-      .then(() => {
-        setReadStatus("Succefully read all data!");
-      })
-      .catch((err: Error) => {
-        console.error("Catch: " + err.toString());
-        setReadStatus("No response from Device Identifier.");
-      });
-  };
   useEffect( () => {
     ipcRenderer.on('captureFilePath', (event, filePaths) => {
+      console.log("ipc renderer.")
       // Display capture file path.
-      setReadStatus("Reading files from: " + filePaths[0]);
+      setReadStatus("Reading file at path: " + filePaths[0] + ". This might take up to 15 minutes...");
       // Call read via RPC.
-
+      callRead(filePaths[0])
+        .then(() => {
+          setReadStatus("Succefully read all data!");
+        })
+        .catch((err: Error) => {
+          console.error("Catch: " + err.toString());
+          setReadStatus("No response from Device Identifier.");
+        });
     });
   });
   return (
