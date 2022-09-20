@@ -7,7 +7,6 @@ from loguru import logger
 import shbdeviceidentifier.commands as commands
 from .proto import devices_database_pb2_grpc, devices_database_pb2
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
-from .proto import pcap_database_pb2_grpc, pcap_database_pb2
 from .proto import read_pb2_grpc, read_pb2
 from ..db import Database
 from ..utilities.ml_utilities import classify_devices
@@ -31,10 +30,11 @@ class HeartbeatService(heartbeat_pb2_grpc.HeartbeatServicer):
 
 class ReadService(read_pb2_grpc.ReadServiceServicer):
     def Read(self, request: read_pb2.ReadRequest, context) -> read_pb2.ReadResponse:
-        logger.debug(f"GRPC Server received a {type(request)} for the Pcap database.")
-        file_type = request.file_path.split(".")[-1]
-        commands.read(Database(), request.file_path, file_type, measurement="main")
-        logger.debug("Processed LoadPcapIntoDatabase request.")
+        logger.debug(f"GRPC Server received a read request.")
+        file_type = request.capture_file_path.split(".")[-1]
+        logger.debug(f"Capture file path: {request.capture_file_path}")
+        commands.read(Database(), request.capture_file_path, file_type, measurement="main")
+        logger.debug("Processed read request.")
         return read_pb2.ReadResponse()
 
 
