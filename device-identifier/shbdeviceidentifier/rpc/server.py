@@ -33,7 +33,7 @@ class ReadService(read_pb2_grpc.ReadServiceServicer):
         logger.debug(f"GRPC Server received a read request.")
         file_type = request.capture_file_path.split(".")[-1]
         logger.debug(f"Capture file path: {request.capture_file_path}")
-        commands.read(Database(), request.capture_file_path, file_type, measurement="main")
+        commands.read(Database(), request.capture_file_path, file_type, measurement=request.measurement)
         logger.debug("Processed read request.")
         return read_pb2.ReadResponse()
 
