@@ -1,13 +1,14 @@
 import {useEffect, useState} from "react";
-import Paper from "@mui/material/Paper";
-import {Box, Button, InputAdornment} from "@mui/material";
 import * as React from "react";
-import { styled } from "@mui/system";
-import Typography from "@mui/material/Typography";
-import {callRead} from "../../rpc/clients/ReadClient";
-import IconButton from "@mui/material/IconButton";
 import {FileOpen} from "@mui/icons-material";
+import CloseIcon from '@mui/icons-material/Close';
+import {Alert, Box, Button, Collapse, InputAdornment} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
 import TextField from '@mui/material/TextField';
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/system";
+import {callRead} from "../../rpc/clients/ReadClient";
 
 const { ipcRenderer } = window.require('electron');
 
@@ -23,10 +24,13 @@ const StyledDiv = styled("div")(() => ({
   alignItems: "center",
 }));
 
+
 export function Read() {
   const [readStatus, setReadStatus] = useState("");
   const [path, setPath] = useState("");
-  const [measurement, setMeasurement] = useState("");
+  const [measurement, setMeasurement] = useState("main");
+  const [successOpen, setSuccessOpen] = React.useState(false);
+  const [failureOpen, setFailureOpen] = React.useState(false);
   useEffect( () => {
     ipcRenderer.on('captureFilePath', (event, filePaths) => {
       console.log("IPC: 'captureFilePath'")
@@ -35,6 +39,48 @@ export function Read() {
   });
   return (
     <StyledPaper>
+      <Box sx={{ width: '100%' }}>
+        <Collapse in={successOpen}>
+          <Alert
+            severity="success"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setSuccessOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Successfully read all data!
+          </Alert>
+        </Collapse>
+        <Collapse in={failureOpen}>
+          <Alert
+            severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => {
+                  setFailureOpen(false);
+                }}
+              >
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            }
+            sx={{ mb: 2 }}
+          >
+            Failed to read data.
+          </Alert>
+        </Collapse>
+      </Box>
       <Box
         component="form"
         sx={{ p: '2px 4px', display: 'flex', alignItems: 'center'}}
@@ -47,11 +93,11 @@ export function Read() {
                   // Call read via RPC.
                   callRead(path, measurement)
                     .then(() => {
-                      setReadStatus("Succefully read all data!");
+                      setSuccessOpen(true);
                     })
                     .catch((err: Error) => {
                       console.error("Catch: " + err.toString());
-                      setReadStatus("No response from Device Identifier.");
+                      setFailureOpen(true);
                     });
                 }}
         >
@@ -93,9 +139,6 @@ export function Read() {
           }}
         />
       </Box>
-    <StyledDiv>
-      <Typography>{readStatus}</Typography>
-    </StyledDiv>
     </StyledPaper>
 
   );
