@@ -135,7 +135,8 @@ proto.SmartHomeBuddy.ReadRequest.prototype.toObject = function(opt_includeInstan
  */
 proto.SmartHomeBuddy.ReadRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    captureFilePath: jspb.Message.getFieldWithDefault(msg, 1, "")
+    captureFilePath: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    measurement: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -176,6 +177,10 @@ proto.SmartHomeBuddy.ReadRequest.deserializeBinaryFromReader = function(msg, rea
       var value = /** @type {string} */ (reader.readString());
       msg.setCaptureFilePath(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setMeasurement(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -212,6 +217,13 @@ proto.SmartHomeBuddy.ReadRequest.serializeBinaryToWriter = function(message, wri
       f
     );
   }
+  f = message.getMeasurement();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
 };
 
 
@@ -230,6 +242,24 @@ proto.SmartHomeBuddy.ReadRequest.prototype.getCaptureFilePath = function() {
  */
 proto.SmartHomeBuddy.ReadRequest.prototype.setCaptureFilePath = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string measurement = 2;
+ * @return {string}
+ */
+proto.SmartHomeBuddy.ReadRequest.prototype.getMeasurement = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.SmartHomeBuddy.ReadRequest} returns this
+ */
+proto.SmartHomeBuddy.ReadRequest.prototype.setMeasurement = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -265,7 +295,7 @@ proto.SmartHomeBuddy.ReadResponse.prototype.toObject = function(opt_includeInsta
  */
 proto.SmartHomeBuddy.ReadResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    isDone: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
+
   };
 
   if (includeInstance) {
@@ -302,10 +332,6 @@ proto.SmartHomeBuddy.ReadResponse.deserializeBinaryFromReader = function(msg, re
     }
     var field = reader.getFieldNumber();
     switch (field) {
-    case 1:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setIsDone(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -335,31 +361,6 @@ proto.SmartHomeBuddy.ReadResponse.prototype.serializeBinary = function() {
  */
 proto.SmartHomeBuddy.ReadResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getIsDone();
-  if (f) {
-    writer.writeBool(
-      1,
-      f
-    );
-  }
-};
-
-
-/**
- * optional bool is_done = 1;
- * @return {boolean}
- */
-proto.SmartHomeBuddy.ReadResponse.prototype.getIsDone = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.SmartHomeBuddy.ReadResponse} returns this
- */
-proto.SmartHomeBuddy.ReadResponse.prototype.setIsDone = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 1, value);
 };
 
 

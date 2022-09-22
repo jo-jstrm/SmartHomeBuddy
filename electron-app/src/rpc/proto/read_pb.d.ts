@@ -7,6 +7,9 @@ export class ReadRequest extends jspb.Message {
   getCaptureFilePath(): string;
   setCaptureFilePath(value: string): void;
 
+  getMeasurement(): string;
+  setMeasurement(value: string): void;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ReadRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ReadRequest): ReadRequest.AsObject;
@@ -20,13 +23,11 @@ export class ReadRequest extends jspb.Message {
 export namespace ReadRequest {
   export type AsObject = {
     captureFilePath: string,
+    measurement: string,
   }
 }
 
 export class ReadResponse extends jspb.Message {
-  getIsDone(): boolean;
-  setIsDone(value: boolean): void;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ReadResponse.AsObject;
   static toObject(includeInstance: boolean, msg: ReadResponse): ReadResponse.AsObject;
@@ -39,7 +40,6 @@ export class ReadResponse extends jspb.Message {
 
 export namespace ReadResponse {
   export type AsObject = {
-    isDone: boolean,
   }
 }
 

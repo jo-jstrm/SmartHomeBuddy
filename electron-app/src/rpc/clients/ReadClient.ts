@@ -3,7 +3,7 @@ import { ReadRequest, ReadResponse } from "../proto/read_pb";
 import { config } from "../../config";
 import { ReadServiceClient } from "../proto/read_grpc_pb";
 
-export function callRead(path: string): Promise<boolean> {
+export function callRead(path: string, measurement: string): Promise<boolean> {
   console.log("callRead called.");
   const client = new ReadServiceClient(
     config.grpc.server_url,
@@ -11,6 +11,7 @@ export function callRead(path: string): Promise<boolean> {
   );
   let readRequest = new ReadRequest();
   readRequest.setCaptureFilePath(path);
+  readRequest.setMeasurement(measurement);
   return new Promise<boolean>((accept, reject) => {
     client.read(
       readRequest,

@@ -4,11 +4,10 @@ package SmartHomeBuddy;
 
 message ReadRequest {
   string capture_file_path = 1;
+  string measurement = 2;
 }
 
-message ReadResponse {
-  bool is_done = 1;
-}
+message ReadResponse {}
 
 message UpdateReadStatusRequest {
   int32 progress = 1;

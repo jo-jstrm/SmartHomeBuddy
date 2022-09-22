@@ -1,10 +1,13 @@
 import {useEffect, useState} from "react";
 import Paper from "@mui/material/Paper";
-import { Button } from "@mui/material";
+import {Box, Button, InputAdornment} from "@mui/material";
 import * as React from "react";
 import { styled } from "@mui/system";
 import Typography from "@mui/material/Typography";
 import {callRead} from "../../rpc/clients/ReadClient";
+import IconButton from "@mui/material/IconButton";
+import {FileOpen} from "@mui/icons-material";
+import TextField from '@mui/material/TextField';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -20,42 +23,80 @@ const StyledDiv = styled("div")(() => ({
   alignItems: "center",
 }));
 
-export default function Read() {
-  const [readStatus, setReadStatus] = useState(
-    "Read network data from a capture file."
-  );
+export function Read() {
+  const [readStatus, setReadStatus] = useState("");
+  const [path, setPath] = useState("");
+  const [measurement, setMeasurement] = useState("");
   useEffect( () => {
     ipcRenderer.on('captureFilePath', (event, filePaths) => {
-      console.log("ipc renderer.")
-      // Display capture file path.
-      setReadStatus("Reading file at path: " + filePaths[0] + ". This might take up to 15 minutes...");
-      // Call read via RPC.
-      callRead(filePaths[0])
-        .then(() => {
-          setReadStatus("Succefully read all data!");
-        })
-        .catch((err: Error) => {
-          console.error("Catch: " + err.toString());
-          setReadStatus("No response from Device Identifier.");
-        });
+      console.log("IPC: 'captureFilePath'")
+      setPath(filePaths[0]);
     });
   });
   return (
     <StyledPaper>
-      <StyledDiv>
-        <Button
-          variant="outlined"
-          size="medium"
-          color="primary"
-          onClick={()=>{
-            console.log("Button: using IPC.");
-            ipcRenderer.send('getCaptureFilePath');
-          }}
+      <Box
+        component="form"
+        sx={{ p: '2px 4px', display: 'flex', alignItems: 'center'}}
+      >
+        <Button sx={{p: '10px'}}
+                aria-label="submit"
+                variant="contained"
+                onClick={()=>{
+                  console.log("Button: using IPC.");
+                  // Call read via RPC.
+                  callRead(path, measurement)
+                    .then(() => {
+                      setReadStatus("Succefully read all data!");
+                    })
+                    .catch((err: Error) => {
+                      console.error("Catch: " + err.toString());
+                      setReadStatus("No response from Device Identifier.");
+                    });
+                }}
         >
-          Read Data from Capture File
+          Read
         </Button>
-        <Typography>{readStatus}</Typography>
-      </StyledDiv>
+        <TextField
+          label="Path"
+          id="capture-path-input-field"
+          variant="filled"
+          required
+          sx={{ ml: 1, flex: 1 }}
+          value={path}
+          placeholder="Enter path to capture file"
+          onChange={(event) => {
+            setPath(event.target.value);
+          }}
+          InputProps={{
+            endAdornment: <InputAdornment position="start"><IconButton
+              aria-label="toggle password visibility"
+              onClick={() => {
+                console.log("Button: using IPC.");
+                ipcRenderer.send('getCaptureFilePath');
+              }}
+              edge="end"
+            >
+              <FileOpen/>
+            </IconButton></InputAdornment>,
+          }}
+        />
+        <TextField
+          label="Measurement"
+          id="measurement-input-field"
+          variant="filled"
+          sx={{ ml: 1, flex: 1 }}
+          value={measurement}
+          placeholder="Default: main"
+          onChange={(event) => {
+            setMeasurement(event.target.value);
+          }}
+        />
+      </Box>
+    <StyledDiv>
+      <Typography>{readStatus}</Typography>
+    </StyledDiv>
     </StyledPaper>
+
   );
 }

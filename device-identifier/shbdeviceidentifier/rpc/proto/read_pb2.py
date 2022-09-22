@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='SmartHomeBuddy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n(shbdeviceidentifier/rpc/proto/read.proto\x12\x0eSmartHomeBuddy\"(\n\x0bReadRequest\x12\x19\n\x11\x63\x61pture_file_path\x18\x01 \x01(\t\"\x1f\n\x0cReadResponse\x12\x0f\n\x07is_done\x18\x01 \x01(\x08\"+\n\x17UpdateReadStatusRequest\x12\x10\n\x08progress\x18\x01 \x01(\x05\"\x1a\n\x18UpdateReadStatusResponse2\xb7\x01\n\x0bReadService\x12\x41\n\x04Read\x12\x1b.SmartHomeBuddy.ReadRequest\x1a\x1c.SmartHomeBuddy.ReadResponse\x12\x65\n\x10UpdateReadStatus\x12\'.SmartHomeBuddy.UpdateReadStatusRequest\x1a(.SmartHomeBuddy.UpdateReadStatusResponseb\x06proto3')
+  serialized_pb=_b('\n(shbdeviceidentifier/rpc/proto/read.proto\x12\x0eSmartHomeBuddy\"=\n\x0bReadRequest\x12\x19\n\x11\x63\x61pture_file_path\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\"\x0e\n\x0cReadResponse\"+\n\x17UpdateReadStatusRequest\x12\x10\n\x08progress\x18\x01 \x01(\x05\"\x1a\n\x18UpdateReadStatusResponse2\xb7\x01\n\x0bReadService\x12\x41\n\x04Read\x12\x1b.SmartHomeBuddy.ReadRequest\x1a\x1c.SmartHomeBuddy.ReadResponse\x12\x65\n\x10UpdateReadStatus\x12\'.SmartHomeBuddy.UpdateReadStatusRequest\x1a(.SmartHomeBuddy.UpdateReadStatusResponseb\x06proto3')
 )
 
 
@@ -39,34 +39,10 @@ _READREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=60,
-  serialized_end=100,
-)
-
-
-_READRESPONSE = _descriptor.Descriptor(
-  name='ReadResponse',
-  full_name='SmartHomeBuddy.ReadResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
     _descriptor.FieldDescriptor(
-      name='is_done', full_name='SmartHomeBuddy.ReadResponse.is_done', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='measurement', full_name='SmartHomeBuddy.ReadRequest.measurement', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -82,8 +58,32 @@ _READRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=102,
-  serialized_end=133,
+  serialized_start=60,
+  serialized_end=121,
+)
+
+
+_READRESPONSE = _descriptor.Descriptor(
+  name='ReadResponse',
+  full_name='SmartHomeBuddy.ReadResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=123,
+  serialized_end=137,
 )
 
 
@@ -113,8 +113,8 @@ _UPDATEREADSTATUSREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=135,
-  serialized_end=178,
+  serialized_start=139,
+  serialized_end=182,
 )
 
 
@@ -137,8 +137,8 @@ _UPDATEREADSTATUSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=180,
-  serialized_end=206,
+  serialized_start=184,
+  serialized_end=210,
 )
 
 DESCRIPTOR.message_types_by_name['ReadRequest'] = _READREQUEST
@@ -183,8 +183,8 @@ _READSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=209,
-  serialized_end=392,
+  serialized_start=213,
+  serialized_end=396,
   methods=[
   _descriptor.MethodDescriptor(
     name='Read',
