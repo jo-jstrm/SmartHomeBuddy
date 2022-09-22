@@ -34,11 +34,11 @@ const createWindow = (): void => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Show once it is ready
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.once("ready-to-show", () => {
     // possible duplicate with BrowserWindow props
     mainWindow.setMinimumSize(500, 500);
     mainWindow.show();
-  })
+  });
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -69,18 +69,21 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-ipcMain.on('getCaptureFilePath', (event) => {
-  dialog.showOpenDialog({
-    filters: [
-      { name: 'Capture Files', extensions: ['pcap', 'pcapng'] },
-      { name: 'All Files', extensions: ['*'] }
-    ],
-    properties: ['openFile']
-  }).then(result => {
-    console.log(result.canceled);
-    console.log(result.filePaths);
-    event.sender.send('captureFilePath', result.filePaths);
-  }).catch(err => {
-    console.log(err);
-  });
+ipcMain.on("getCaptureFilePath", (event) => {
+  dialog
+    .showOpenDialog({
+      filters: [
+        { name: "Capture Files", extensions: ["pcap", "pcapng"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+      properties: ["openFile"],
+    })
+    .then((result) => {
+      console.log(result.canceled);
+      console.log(result.filePaths);
+      event.sender.send("captureFilePath", result.filePaths);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
