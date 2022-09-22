@@ -5,6 +5,7 @@ from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
 import shbdeviceidentifier.commands as commands
+from . import config
 from .proto import devices_database_pb2_grpc, devices_database_pb2
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 from .proto import read_pb2_grpc, read_pb2
@@ -39,7 +40,7 @@ class ReadService(read_pb2_grpc.ReadServiceServicer):
 
 
 def start_rpc_server():
-    port = 8090
+    port = config.PYTHON_SERVER_PORT
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     devices_database_pb2_grpc.add_DevicesDatabaseServicer_to_server(DeviceDatabaseService(), server)
     heartbeat_pb2_grpc.add_HeartbeatServicer_to_server(HeartbeatService(), server)

@@ -9,13 +9,13 @@ message ReadRequest {
 
 message ReadResponse {}
 
-message UpdateReadStatusRequest {
-  int32 progress = 1;
+message UpdatedReadStatusMsg {
+  int32 progress_pct = 1;
 }
 
 message UpdateReadStatusResponse {}
 
 service ReadService {
   rpc Read(ReadRequest) returns (ReadResponse);
-  rpc UpdateReadStatus(UpdateReadStatusRequest) returns (UpdateReadStatusResponse);
+  rpc UpdateReadStatus(UpdatedReadStatusMsg) returns (UpdateReadStatusResponse);
 }
