@@ -14,6 +14,7 @@ from .utilities.app_utilities import resolve_file_path, get_file_type
 from .utilities.capture_utilities import convert_Capture_to_DataFrame
 from .utilities.logging_utilities import spinner
 
+
 # noinspection PyPep8Naming
 class DataLoader:
     """
@@ -38,12 +39,18 @@ class DataLoader:
                 |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
             """
         with Database().get_influxdb_client() as client:
-            logger.info("Loading data from InfluxDB. This might take a while...")
+            logger.info("Loading data. Depending on the size of the data this might take a while.")
+            spinner.start(text="Loading data from InfluxDB...")
             df = client.query_api().query_data_frame(query=query, params=params)
+
+            # Bring DataFrame into the correct format
             # Cannot chain these together, because pandas will complain about missing columns.
             df = df.rename(columns={"_value": "data_len", "_time": "timestamp", "result": "_result"})
             df = df.drop(columns=[col for col in df.columns if col.startswith("_")], axis=1)
-            logger.debug(f"Loaded {len(df)} rows from InfluxDB. Columns: {df.columns}")
+
+            spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Finished loading data from InfluxDB.")
+            logger.debug(f"Loaded {len(df)} rows from InfluxDB.")
+            logger.trace(f"Columns: {df.columns}")
             return df
 
     @staticmethod
@@ -63,11 +70,10 @@ class DataLoader:
         file_path = resolve_file_path(file_path)
         # Get the file size in Gigabyte
         file_size = os.path.getsize(file_path) * 1e-9
-        spinner_text = "Reading file."
+        spinner_text = "Reading file..."
         if file_size > 0.25:
             spinner_text += f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
-        spinner.text = spinner_text
-        spinner.start()
+        spinner.start(spinner_text)
         if file_path:
             # Read pcap
             cap = rdpcap(file_path.as_posix())
@@ -120,7 +126,7 @@ class DataLoader:
             "json": DataLoader.labels_from_json,
         }[get_file_type(training_labels_path)]
         ip_to_label_map = load_label_lookup(training_labels_path)
-        Y = X["src"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
+        Y = X["src_ip"].apply(_get_label, args=(ip_to_label_map, devices_to_train)).rename("label")
         return X, Y
 
     @staticmethod

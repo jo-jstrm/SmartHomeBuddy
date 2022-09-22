@@ -7,15 +7,16 @@ import pandas as pd
 class MLModel(ABC):
     """Base class for all ML models. Derived models must implement all methods."""
 
-    name: str = None
-    version: str = None
-    description: str = None
+    name: str
+    version: str
+    description: str
+    progress_range: range
 
     def __init__(self):
         ...
 
     @abstractmethod
-    def train(self, X: pd.DataFrame, y: np.ndarray) -> bool:
+    def train(self, X: pd.DataFrame, y: np.ndarray, progress_callback=None) -> bool:
         pass
 
     @abstractmethod

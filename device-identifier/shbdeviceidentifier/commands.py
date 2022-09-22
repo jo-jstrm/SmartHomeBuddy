@@ -7,11 +7,13 @@ from typing import List
 import click
 import pandas as pd
 from loguru import logger
+from numba_progress import ProgressBar
 
 from .dataloader import DataLoader
 from .db import Database, extract_devices
 from .rpc.server import start_rpc_server
 from .utilities.app_utilities import SHB_HOME, DATA_DIR
+from .utilities.logging_utilities import spinner
 from .utilities.ml_utilities import get_model
 from .utilities.queries import EARLIEST_TIMESTAMP
 
@@ -40,6 +42,7 @@ def run_rpc_server(db: Database):
 
 def read(db: Database, file_path: click.Path, file_type: str, measurement: str = "main"):
     """Reads all the data from a capture file."""
+    logger.info(f"Reading {file_path}.")
     if file_type == "pcap" or file_type == "pcapng":
         packets = DataLoader.from_pcap(file_path)
         if isinstance(packets, pd.DataFrame) and not packets.empty:
@@ -83,12 +86,12 @@ def read_labels(db: Database, file_path: Path, measurement: str = "main"):
 
 
 def train(
-    model_name: str,
-    measurement: str = "main",
-    from_timestamp: str = None,
-    to_timestamp: str = None,
-    bucket: str = "network-traffic",
-    devices_to_train: List[str] = [],
+        model_name: str,
+        measurement: str = "main",
+        from_timestamp: str = None,
+        to_timestamp: str = None,
+        bucket: str = "network-traffic",
+        devices_to_train: List[str] = None,
 ) -> None:
     """Train a Machine Learning model.
 
@@ -111,6 +114,9 @@ def train(
     -------
     None
     """
+    if not devices_to_train:
+        devices_to_train = []
+
     # Get the data from the database by using the user's input.
     try:
         from_timestamp = (
@@ -134,15 +140,32 @@ def train(
     train_df, train_labels = DataLoader.from_database(
         from_timestamp, to_timestamp, measurement, bucket, devices_to_train
     )
+
+    logger.info("Starting training. Depending on the model this might take a while.")
     # Retrieve the machine learning model.
+    spinner.start(text="Retrieving model...")
     model = get_model(model_name)
-    # Data preprocessing is model specific.
+    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Model retrieved.")
+
+    # Model specific data preprocessing.
+    spinner.start(text=f"Preparing training data for {model_name}...")
     train_df = model.prepare_train_data(train_df)
-    logger.info("Starting training. This might take a while.")
-    model.train(train_df[["data_len", "stream_id"]], train_labels)
-    logger.success("Training finished.")
+    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished preparing data.")
+
+    # Train the model.
+    with ProgressBar(update_interval=1, total=len(model.progress_range) - 1,
+                     desc=f"Training {model_name}.") as progress:
+        success = model.train(train_df[["data_len", "stream_id"]], train_labels, progress_callback=progress.update)
+        # TODO: If progress_callback is not used we might have to call finish() manually.
+        # if not progress.finished:
+        #     progress.finish()
+    if success:
+        logger.success("Training finished successfully.")
+    else:
+        logger.error("Training failed for unknown reasons. Try activating debug mode for more information.")
+        return
+
     # Save model.
-    time = datetime.now().strftime("%Y%m%d_%H-%M")
-    save_path = DATA_DIR / Path(f"ml_models/{time}_{model_name}.pkl")
+    save_path = DATA_DIR / Path(f"ml_models/{model_name}_{model.version}.pkl")
     if model.save(save_path):
         logger.success(f"Model {model_name} saved successfully to {save_path}.")

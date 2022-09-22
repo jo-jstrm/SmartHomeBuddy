@@ -73,7 +73,7 @@ class Context:
         self._db = value
         if not self._latest_capture_file:
             latest_capture_res = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])
-            if latest_capture_res:
+            if latest_capture_res and latest_capture_res[0][0]:
                 self._latest_capture_file = Path(latest_capture_res[0][0])
         if not self.measurement:
             self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
@@ -160,6 +160,10 @@ def start(ctx):
 def read(ctx, file_path: click.Path, file_type: str, measurement: str):
     """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
+    if not file_path:
+        logger.error("No capture file found.")
+        sys.exit(1)
+
     if measurement:
         ctx.measurement = measurement
     commands.read(ctx.db, file_path, file_type, ctx.measurement)

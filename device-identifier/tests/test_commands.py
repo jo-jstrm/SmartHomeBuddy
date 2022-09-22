@@ -7,7 +7,6 @@ from loguru import logger
 
 from shbdeviceidentifier.commands import start_database, run_rpc_server, read
 from shbdeviceidentifier.db import Database
-from shbdeviceidentifier.utilities.app_utilities import DATA_DIR
 
 
 class TestCommands:
@@ -21,19 +20,10 @@ class TestCommands:
         yield caplog
         logger.remove(handler_id)
 
-    @pytest.fixture(scope="class")
-    def db(self):
-        return Database()
-
-    @pytest.fixture(scope="class")
-    def dummy_pcap(self):
-        return (DATA_DIR / "pcaps" / "dummy.pcap").as_posix()
-
     def test_start_database(self, db):
         start_database(db)
-        db.start()
         assert db.is_connected()
-        db.stop_InfluxDB()
+        db.stop()
 
     def test_run_rpc_server(self):
         # Create db instance, because fixture is not available in a separate process
@@ -58,3 +48,4 @@ class TestCommands:
         read(db, dummy_pcap, "pcap")
         assert "Wrote" in caplog.text
         assert "Failed to write" not in caplog.text
+        db.stop()

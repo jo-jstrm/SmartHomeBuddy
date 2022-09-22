@@ -1,4 +1,3 @@
-import logging
 import time
 from typing import List, Optional, Dict, Tuple
 
@@ -59,7 +58,9 @@ def _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress_proxy) -> pd
 # noinspection PyPep8Naming
 def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
-    spinner.stop()
+    # FIXME: if this function is called from any function other than DataLoader.from_pcap()
+    #  this will fail or display the wrong message
+    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished reading file into memory.")
     start_time = time.perf_counter()
     with ProgressBar(update_interval=1, total=num_of_packets, desc="Converting file to pandas DataFrame") as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)

@@ -15,8 +15,13 @@ const createWindow = (): void => {
   // Create the browser window.
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const mainWindow = new BrowserWindow({
+    minHeight: 500,
+    minWidth: 500,
     height: height * 0.5,
     width: width * 0.5,
+    // icon: "media/app-icons/shb_icon.png",
+    useContentSize: true,
+    show: false,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: true,
@@ -25,8 +30,15 @@ const createWindow = (): void => {
     autoHideMenuBar: true,
   });
 
-  // and load the index.html of the app.
+  // Load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  // Show once it is ready
+  mainWindow.once('ready-to-show', () => {
+    // possible duplicate with BrowserWindow props
+    mainWindow.setMinimumSize(500, 500);
+    mainWindow.show();
+  })
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();

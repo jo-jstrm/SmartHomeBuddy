@@ -1,4 +1,4 @@
-import { ThemeOptions } from "@mui/material";
+import {ThemeOptions} from "@mui/material";
 
 export const darkTheme: ThemeOptions = {
   palette: {
@@ -15,7 +15,8 @@ export const darkTheme: ThemeOptions = {
       contrastText: "#000",
     },
     background: {
-      default: "#181818",
+      default: "#282828",
+      paper: "#242423",
     },
     mode: "dark",
   },

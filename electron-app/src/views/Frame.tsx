@@ -1,14 +1,14 @@
 import * as React from "react";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import {createTheme, ThemeProvider} from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Drawer } from "../components/drawer/Drawer";
-import { AppBar } from "../components/AppBar";
-import { Route, Routes, useLocation } from "react-router-dom";
+import {Drawer} from "../components/drawer/Drawer";
+import {AppBar} from "../components/AppBar";
+import {Route, Routes, useLocation} from "react-router-dom";
 import Home from "./Home";
 import Devices from "./Devices";
 import Data from "./Data";
@@ -16,22 +16,22 @@ import Alerts from "./Alerts";
 import Countermeasures from "./Countermeasures";
 import Insights from "./Insights";
 import Settings from "./Settings";
-import { route_titles } from "../components/Globals";
-import { SwitchModeButton } from "../components/common/SwitchModeButton";
-import { ColorContext } from "../themes/ColorContext";
-import { PaletteMode } from "@mui/material";
-import { lightTheme } from "../themes/light";
-import { darkTheme } from "../themes/dark";
+import {route_titles} from "../components/Globals";
+import {SwitchModeButton} from "../components/common/SwitchModeButton";
+import {ColorContext} from "../themes/ColorContext";
+import {PaletteMode} from "@mui/material";
+import {lightTheme} from "../themes/light";
+import {darkTheme} from "../themes/dark";
 
 function FrameContent() {
   const [mode, setMode] = React.useState<PaletteMode>("light");
 
   const colorMode = React.useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prevMode: PaletteMode) =>
-          prevMode === "light" ? "dark" : "light"
-        );
+      () => ({
+        toggleColorMode: () => {
+          setMode((prevMode: PaletteMode) =>
+              prevMode === "light" ? "dark" : "light"
+          );
       },
     }),
     []
@@ -61,6 +61,7 @@ function FrameContent() {
             <Toolbar
               sx={{
                 pr: "24px", // keep right padding when drawer closed
+                height: "64px",
               }}
             >
               <IconButton
