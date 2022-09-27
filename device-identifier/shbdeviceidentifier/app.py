@@ -118,6 +118,11 @@ def app(ctx, debug, silent, verbose, version_flag):
     commands.start_database(db)
     ctx.db = db
 
+    # Initialize the measurement from the database, otherwise use the default `main`
+    measurement = db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
+    if measurement:
+        ctx.measurement = measurement
+
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
@@ -154,9 +159,9 @@ def read(ctx, file_path: click.Path, file_type: str, measurement: str):
         logger.error("No capture file found.")
         sys.exit(1)
 
-    if measurement:
-        ctx.measurement = measurement
-    commands.read(ctx.db, file_path, file_type, ctx.measurement)
+    if not measurement:
+        measurement = ctx.measurement
+    commands.read(ctx.db, file_path, file_type, measurement)
 
 
 @app.command("read-labels")
@@ -168,9 +173,9 @@ def read(ctx, file_path: click.Path, file_type: str, measurement: str):
 @logger_wraps()
 def read_labels(ctx, file_path: click.Path, measurement: str):
     file_path = resolve_file_path(file_path)
-    if measurement:
-        ctx.measurement = measurement
-    commands.read_labels(ctx.db, file_path, ctx.measurement)
+    if not measurement:
+        measurement = ctx.measurement
+    commands.read_labels(ctx.db, file_path, measurement)
 
 
 @app.command("identify")
@@ -178,8 +183,7 @@ def read_labels(ctx, file_path: click.Path, measurement: str):
     "--measurement",
     "-m",
     help="Name of the measurement in the InfluxDB. Defaults to `main`.",
-    required=False,
-    default="main",
+    required=False
 )
 @click.option("-M", "--model", "model_selector", type=click.STRING, required=False, default="default")
 @pass_ctx
@@ -189,6 +193,8 @@ def identify(ctx, measurement, model_selector):
     Identifies devices in a dataset. Per default the main measurement with the default model is used.
     Before using identify you can use `read -m <MEASUREMENT>` to read in a capture file and label it as <MEASUREMENT>.
     """
+    if not measurement:
+        measurement = ctx.measurement
     res = commands.identify_devices(ctx.db, measurement, model_selector)
 
     if ctx.flags["verbose"] or ctx.flags["debug"]:
@@ -249,6 +255,13 @@ def train(ctx, model_name, measurement):
 @logger_wraps()
 def set_measurement(ctx, measurement):
     """
-    Sets the dataset to use for the current session.
+    Sets the default measurement name.
     """
     ctx.measurement = measurement
+    if ctx.measurement == ctx.db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]:
+        logger.success(f"Measurement set to '{ctx.measurement}'.")
+    elif ctx.measurement == measurement:
+        logger.warning(f"Measurement '{ctx.measurement}' was set for this session, but could not be persisted."
+                       "Check the database connection.")
+    else:
+        logger.error(f"Measurement could not be set to '{ctx.measurement}'.")

@@ -42,7 +42,7 @@ def run_rpc_server(db: Database):
 
 def read(db: Database, file_path: click.Path, file_type: str, measurement: str = "main"):
     """Reads all the data from a capture file."""
-    logger.info(f"Reading {file_path}.")
+    logger.info(f"Reading {file_path} for measurement '{measurement}'.")
     if file_type == "pcap" or file_type == "pcapng":
         packets = DataLoader.from_pcap(file_path)
         if isinstance(packets, pd.DataFrame) and not packets.empty:
@@ -70,6 +70,8 @@ def read(db: Database, file_path: click.Path, file_type: str, measurement: str =
 
 def read_labels(db: Database, file_path: Path, measurement: str = "main"):
     """Reads all the labels for device IPs from a capture file."""
+    logger.info(f"Reading labels from {file_path} for measurement '{measurement}'.")
+
     labels = DataLoader.labels_from_json(file_path)
     if isinstance(labels, pd.DataFrame) and not labels.empty:
         for ip_address, row in labels.iterrows():
@@ -141,7 +143,7 @@ def train(
         from_timestamp, to_timestamp, measurement, bucket, devices_to_train
     )
 
-    logger.info("Starting training. Depending on the model this might take a while.")
+    logger.info(f"Starting training on measurement '{measurement}'. Depending on the model this might take a while.")
     # Retrieve the machine learning model.
     spinner.start(text="Retrieving model...")
     model = get_model(model_name)
@@ -181,6 +183,8 @@ def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
     # Load model with internal save path
     # TODO: We should improve the way we handle the save path, maybe we can save the paths in the database?
     model.load()
+
+    logger.info(f"Identifying devices in measurement '{measurement}' using model {model.name}.")
 
     df, _ = DataLoader.from_database(
         from_timestamp=EARLIEST_TIMESTAMP,
