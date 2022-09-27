@@ -210,12 +210,8 @@ def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
         df[["src_ip", "prediction"]].groupby("src_ip").agg(lambda x: x.value_counts().iloc[0] / pd.Series.count(x))
     )
 
-    if not res.empty:
-        logger.success(f"Identified {len(res)} devices.")
-    else:
-        logger.info("No devices identified.")
-
     # Update devices table
+    num_named_devices = 0
     for index, row in res.iterrows():
         ip = index
         name = row["prediction"]
@@ -224,6 +220,7 @@ def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
         if name == "NoLabel":
             continue
 
+        num_named_devices += 1
         current_name = db.query_SQLiteDB(QUERIES["sqlite"]["get_device_name"], (ip, measurement))[0][0]
         if not current_name:
             if db.query_SQLiteDB(QUERIES["sqlite"]["update_devices"], (name, ip, measurement)):
@@ -234,5 +231,10 @@ def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
                 logger.debug(f"Could not update device {ip} to {name}.")
         else:
             logger.trace(f"Device {ip} already in devices database as {current_name}.")
+
+    if not res.empty:
+        logger.success(f"Identified {num_named_devices} of {len(res)} devices.")
+    else:
+        logger.info("No devices identified.")
 
     return res
