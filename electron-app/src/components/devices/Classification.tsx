@@ -1,9 +1,9 @@
-import { useState } from "react";
-import Paper from "@mui/material/Paper";
-import { Button } from "@mui/material";
 import * as React from "react";
-import { callClassifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
-import { styled } from "@mui/system";
+import {useState} from "react";
+import Paper from "@mui/material/Paper";
+import {Button} from "@mui/material";
+import {callClassifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
+import {styled} from "@mui/system";
 import Typography from "@mui/material/Typography";
 
 const StyledPaper = styled(Paper)(() => ({
@@ -37,10 +37,10 @@ export default function Classification() {
     <StyledPaper>
       <StyledDiv>
         <Button
-          variant="outlined"
-          size="medium"
-          color="primary"
-          onClick={classifyDevices}
+            variant="outlined"
+            size="medium"
+            color="secondary"
+            onClick={classifyDevices}
         >
           Classify Devices
         </Button>

@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
 import {queryAll} from "../../database/Database";
-import {Button} from "@mui/material";
+import {Button, Typography} from "@mui/material";
 import {DbDevice, DetectedDevice} from "../../types/DeviceTypes";
 import {placeholder_detected_device} from "../common/PlaceholderDevices";
 
@@ -35,6 +35,8 @@ export default function DetectedDevices(props: any) {
                         action: action,
                     };
                 });
+                // Get all unidentified devices.
+                devices.filter((device: DetectedDevice) => device.status == "Not Identified");
                 setDevices(devices);
             })
             .catch((err: Error) => {
@@ -64,7 +66,9 @@ export default function DetectedDevices(props: any) {
                     spacing={2}
                 >
                     <Grid item xs={12}>
-                        <Title {...props}>Devices</Title>
+                        <Title sx={{mb: 0}}>Unidentified Devices</Title>
+                        <Typography m={0} py={0} sx={{fontStyle: 'italic', fontSize: "0.8rem"}}>To see a full list of
+                            devices use the Devices tab.</Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <Button

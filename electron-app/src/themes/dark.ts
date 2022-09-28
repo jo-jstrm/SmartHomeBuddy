@@ -1,11 +1,11 @@
-import { ThemeOptions } from "@mui/material";
+import {ThemeOptions} from "@mui/material";
 
 export const darkTheme: ThemeOptions = {
   palette: {
     primary: {
-      light: "#333533",
-      main: "#242423",
-      dark: "#181818",
+      light: "#c1e3e6",
+      main: "#729EA1",
+      dark: "#476a6d",
       contrastText: "#fff",
     },
     secondary: {
