@@ -30,6 +30,7 @@ export default function DetectedDevices(props: any) {
                     return {
                         device_name: device.device_name,
                         mac_address: device.mac_address,
+                        ip_address: device.ip_address,
                         icon: <Smartphone fontSize="large"/>,
                         status: status,
                         action: action,
@@ -81,7 +82,7 @@ export default function DetectedDevices(props: any) {
                         </Button>
                     </Grid>
                     {devices.map((device, index) => {
-                        const {device_name, mac_address, icon, status, action} = device;
+                        const {device_name, mac_address, ip_address, icon, status, action} = device;
                         return (
                             <Device
                                 key={index}
@@ -89,6 +90,7 @@ export default function DetectedDevices(props: any) {
                                 icon={icon}
                                 status={status}
                                 mac_address={mac_address}
+                                ip_address={ip_address}
                                 action={action}
                             />
                         );

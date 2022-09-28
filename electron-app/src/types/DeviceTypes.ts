@@ -15,6 +15,7 @@ export interface DbDevice {
 export interface DetectedDevice {
   device_name: string;
   mac_address: string;
+  ip_address: string;
   icon: JSX.Element;
   status: string;
   action: JSX.Element;
