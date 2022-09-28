@@ -1,7 +1,8 @@
-import { config } from "../config";
+import {config} from "../config";
 
 const homedir = require("os").homedir();
 const path = require("path");
+const Database = require('better-sqlite3');
 
 /**
  * Query the SQLite DB.
@@ -20,16 +21,14 @@ export function queryAll(query: string, params: any[] = []): Promise<any> {
     dbPath = path.join(homedir, config.database.dir);
   }
   console.log("SQLite DB path: " + dbPath);
-  const db = require("better-sqlite3")(dbPath, { readonly: true });
+  const db = new Database(dbPath, {verbose: console.log});
   return new Promise((accept, reject) => {
-    db.all(query, params, (err: Error, rows: any[]) => {
-      if (err) {
-        console.log("Error running query: " + query);
-        console.log(err);
-        reject(err);
-      } else {
-        accept(rows);
-      }
-    });
+    try {
+      accept(db.prepare(query).all(params));
+    } catch (err) {
+      console.log("Error running query: " + query);
+      console.log(err);
+      reject(err);
+    }
   });
 }
