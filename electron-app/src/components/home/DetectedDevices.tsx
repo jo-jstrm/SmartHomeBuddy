@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Smartphone} from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
@@ -42,6 +42,9 @@ export default function DetectedDevices(props: any) {
                 setDevices(placeholder_detected_device);
             });
     };
+    useEffect(() => {
+        queryDevices();
+    }, [])
     return (
         <React.Fragment>
             <Paper
