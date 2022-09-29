@@ -8,9 +8,9 @@ import * as grpc from "@grpc/grpc-js";
 
 interface IDevicesDatabaseService
   extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
-  classifyDevices: grpc.MethodDefinition<
-    devices_database_pb.ClassifyRequest,
-    devices_database_pb.ClassifyResponse
+  identifyDevices: grpc.MethodDefinition<
+    devices_database_pb.IdentifyRequest,
+    devices_database_pb.IdentifyResponse
   >;
 }
 
@@ -18,9 +18,9 @@ export const DevicesDatabaseService: IDevicesDatabaseService;
 
 export interface IDevicesDatabaseServer
   extends grpc.UntypedServiceImplementation {
-  classifyDevices: grpc.handleUnaryCall<
-    devices_database_pb.ClassifyRequest,
-    devices_database_pb.ClassifyResponse
+  identifyDevices: grpc.handleUnaryCall<
+    devices_database_pb.IdentifyRequest,
+    devices_database_pb.IdentifyResponse
   >;
 }
 
@@ -30,19 +30,19 @@ export class DevicesDatabaseClient extends grpc.Client {
     credentials: grpc.ChannelCredentials,
     options?: object
   );
-  classifyDevices(
-    argument: devices_database_pb.ClassifyRequest,
-    callback: grpc.requestCallback<devices_database_pb.ClassifyResponse>
+  identifyDevices(
+    argument: devices_database_pb.IdentifyRequest,
+    callback: grpc.requestCallback<devices_database_pb.IdentifyResponse>
   ): grpc.ClientUnaryCall;
-  classifyDevices(
-    argument: devices_database_pb.ClassifyRequest,
+  identifyDevices(
+    argument: devices_database_pb.IdentifyRequest,
     metadataOrOptions: grpc.Metadata | grpc.CallOptions | null,
-    callback: grpc.requestCallback<devices_database_pb.ClassifyResponse>
+    callback: grpc.requestCallback<devices_database_pb.IdentifyResponse>
   ): grpc.ClientUnaryCall;
-  classifyDevices(
-    argument: devices_database_pb.ClassifyRequest,
+  identifyDevices(
+    argument: devices_database_pb.IdentifyRequest,
     metadata: grpc.Metadata | null,
     options: grpc.CallOptions | null,
-    callback: grpc.requestCallback<devices_database_pb.ClassifyResponse>
+    callback: grpc.requestCallback<devices_database_pb.IdentifyResponse>
   ): grpc.ClientUnaryCall;
 }

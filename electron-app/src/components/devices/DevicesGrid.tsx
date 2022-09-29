@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { queryAll } from "../../database/Database";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { queryAll, queryRun } from "../../database/Database";
 import { DbDevice } from "../../types/DeviceTypes";
 import Title from "../common/Title";
-import * as React from "react";
 import { placeholder_db_device } from "../common/PlaceholderDevices";
 import Paper from "@mui/material/Paper";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -24,7 +24,7 @@ function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
   );
   const query = "UPDATE devices SET device_name = ? WHERE id = ?";
   const query_params = [newRow.device_name, newRow.id];
-  queryAll(query, query_params)
+  queryRun(query, query_params)
     .then(() => {
       console.log("Successfully updated device name.");
     })
@@ -87,6 +87,9 @@ export default function DevicesGrid(): JSX.Element {
         setDevices(placeholder_db_device);
       });
   };
+  useEffect(() => {
+    queryDevices();
+  }, []);
   return (
     <React.Fragment>
       <StyledPaper>

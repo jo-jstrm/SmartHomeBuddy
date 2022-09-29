@@ -7,6 +7,7 @@ export default function Device(props: {
   icon: any;
   status: string;
   mac_address: string;
+  ip_address: string;
   action: any;
 }) {
   return (
@@ -30,14 +31,25 @@ export default function Device(props: {
           alignItems="center"
           spacing={1}
         >
-          <Grid item>
-            <Typography variant="subtitle1">{props.name}</Typography>
-          </Grid>
-          <Grid item>
-            <Typography variant="body2" color="text.secondary">
-              {props.mac_address}
-            </Typography>
-          </Grid>
+          {props.name && (
+            <Grid item>
+              <Typography variant="subtitle1">{props.name}</Typography>
+            </Grid>
+          )}
+          {props.mac_address && (
+            <Grid item>
+              <Typography variant="body2" color="text.secondary">
+                {props.mac_address}
+              </Typography>
+            </Grid>
+          )}
+          {props.ip_address && (
+            <Grid item>
+              <Typography variant="body2" color="text.secondary">
+                {props.ip_address}
+              </Typography>
+            </Grid>
+          )}
         </Grid>
         <Grid item xs container direction="row" spacing={1}>
           <Grid item xs>
