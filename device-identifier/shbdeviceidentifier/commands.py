@@ -142,6 +142,8 @@ def train(
     train_df, train_labels = DataLoader.from_database(
         from_timestamp, to_timestamp, measurement, bucket, devices_to_train
     )
+    if not isinstance(train_df, pd.DataFrame) and not train_df:
+        sys.exit(1)
 
     logger.info(f"Starting training on measurement '{measurement}'. Depending on the model this might take a while.")
     # Retrieve the machine learning model.
