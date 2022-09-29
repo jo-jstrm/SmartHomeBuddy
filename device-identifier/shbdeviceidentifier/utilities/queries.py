@@ -22,5 +22,7 @@ SQLITE_QUERIES = {
     "set_measurement": """UPDATE context SET measurement=? WHERE id=1;""",
     "set_context_defaults": """INSERT INTO context (id, latest_capture_file, measurement) VALUES (1, ?, ?);""",
     "get_device_labels": """SELECT device_name, ip_address FROM devices WHERE measurement==?;""",
+    "get_device_name": """SELECT device_name FROM devices WHERE ip_address=? AND measurement=?;""",
+    "update_devices": """UPDATE devices SET device_name=? WHERE ip_address=? AND measurement=?;""",
 }
 QUERIES = {"influx": INFLUX_QUERIES, "sqlite": SQLITE_QUERIES}

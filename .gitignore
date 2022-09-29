@@ -252,3 +252,6 @@ device-identifier/junit/
 
 # intellj run files
 device-identifier/.run/
+
+# Example RF model file
+!/device-identifier/shbdeviceidentifier/ml_models/RandomForest_v0.pkl
