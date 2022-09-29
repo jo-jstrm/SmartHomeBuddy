@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package SmartHomeBuddy;
 
-message ClassifyRequest {
+message IdentifyRequest {
   string classifier_model = 1;
   string measurement = 2;
 }
 
-message ClassifyResponse {}
+message IdentifyResponse {}
 
 service DevicesDatabase {
-  rpc ClassifyDevices(ClassifyRequest) returns (ClassifyResponse);
+  rpc IdentifyDevices(IdentifyRequest) returns (IdentifyResponse);
 }

@@ -3,7 +3,7 @@
 
 import * as jspb from "google-protobuf";
 
-export class ClassifyRequest extends jspb.Message {
+export class IdentifyRequest extends jspb.Message {
   getClassifierModel(): string;
   setClassifierModel(value: string): void;
 
@@ -11,34 +11,34 @@ export class ClassifyRequest extends jspb.Message {
   setMeasurement(value: string): void;
 
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ClassifyRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: ClassifyRequest): ClassifyRequest.AsObject;
+  toObject(includeInstance?: boolean): IdentifyRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: IdentifyRequest): IdentifyRequest.AsObject;
   static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
   static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-  static serializeBinaryToWriter(message: ClassifyRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ClassifyRequest;
-  static deserializeBinaryFromReader(message: ClassifyRequest, reader: jspb.BinaryReader): ClassifyRequest;
+  static serializeBinaryToWriter(message: IdentifyRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): IdentifyRequest;
+  static deserializeBinaryFromReader(message: IdentifyRequest, reader: jspb.BinaryReader): IdentifyRequest;
 }
 
-export namespace ClassifyRequest {
+export namespace IdentifyRequest {
   export type AsObject = {
     classifierModel: string,
     measurement: string,
   }
 }
 
-export class ClassifyResponse extends jspb.Message {
+export class IdentifyResponse extends jspb.Message {
   serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ClassifyResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: ClassifyResponse): ClassifyResponse.AsObject;
+  toObject(includeInstance?: boolean): IdentifyResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: IdentifyResponse): IdentifyResponse.AsObject;
   static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
   static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-  static serializeBinaryToWriter(message: ClassifyResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ClassifyResponse;
-  static deserializeBinaryFromReader(message: ClassifyResponse, reader: jspb.BinaryReader): ClassifyResponse;
+  static serializeBinaryToWriter(message: IdentifyResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): IdentifyResponse;
+  static deserializeBinaryFromReader(message: IdentifyResponse, reader: jspb.BinaryReader): IdentifyResponse;
 }
 
-export namespace ClassifyResponse {
+export namespace IdentifyResponse {
   export type AsObject = {
   }
 }

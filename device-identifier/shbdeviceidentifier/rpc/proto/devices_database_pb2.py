@@ -19,28 +19,28 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='SmartHomeBuddy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy\"@\n\x0f\x43lassifyRequest\x12\x18\n\x10\x63lassifier_model\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\"\x12\n\x10\x43lassifyResponse2g\n\x0f\x44\x65vicesDatabase\x12T\n\x0f\x43lassifyDevices\x12\x1f.SmartHomeBuddy.ClassifyRequest\x1a .SmartHomeBuddy.ClassifyResponseb\x06proto3')
+  serialized_pb=_b('\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy\"@\n\x0fIdentifyRequest\x12\x18\n\x10\x63lassifier_model\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\"\x12\n\x10IdentifyResponse2g\n\x0f\x44\x65vicesDatabase\x12T\n\x0fIdentifyDevices\x12\x1f.SmartHomeBuddy.IdentifyRequest\x1a .SmartHomeBuddy.IdentifyResponseb\x06proto3')
 )
 
 
 
 
-_CLASSIFYREQUEST = _descriptor.Descriptor(
-  name='ClassifyRequest',
-  full_name='SmartHomeBuddy.ClassifyRequest',
+_IDENTIFYREQUEST = _descriptor.Descriptor(
+  name='IdentifyRequest',
+  full_name='SmartHomeBuddy.IdentifyRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='classifier_model', full_name='SmartHomeBuddy.ClassifyRequest.classifier_model', index=0,
+      name='classifier_model', full_name='SmartHomeBuddy.IdentifyRequest.classifier_model', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='measurement', full_name='SmartHomeBuddy.ClassifyRequest.measurement', index=1,
+      name='measurement', full_name='SmartHomeBuddy.IdentifyRequest.measurement', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -63,9 +63,9 @@ _CLASSIFYREQUEST = _descriptor.Descriptor(
 )
 
 
-_CLASSIFYRESPONSE = _descriptor.Descriptor(
-  name='ClassifyResponse',
-  full_name='SmartHomeBuddy.ClassifyResponse',
+_IDENTIFYRESPONSE = _descriptor.Descriptor(
+  name='IdentifyResponse',
+  full_name='SmartHomeBuddy.IdentifyResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
@@ -86,23 +86,23 @@ _CLASSIFYRESPONSE = _descriptor.Descriptor(
   serialized_end=156,
 )
 
-DESCRIPTOR.message_types_by_name['ClassifyRequest'] = _CLASSIFYREQUEST
-DESCRIPTOR.message_types_by_name['ClassifyResponse'] = _CLASSIFYRESPONSE
+DESCRIPTOR.message_types_by_name['IdentifyRequest'] = _IDENTIFYREQUEST
+DESCRIPTOR.message_types_by_name['IdentifyResponse'] = _IDENTIFYRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-ClassifyRequest = _reflection.GeneratedProtocolMessageType('ClassifyRequest', (_message.Message,), dict(
-  DESCRIPTOR = _CLASSIFYREQUEST,
+IdentifyRequest = _reflection.GeneratedProtocolMessageType('IdentifyRequest', (_message.Message,), dict(
+  DESCRIPTOR = _IDENTIFYREQUEST,
   __module__ = 'shbdeviceidentifier.rpc.proto.devices_database_pb2'
-  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyRequest)
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.IdentifyRequest)
   ))
-_sym_db.RegisterMessage(ClassifyRequest)
+_sym_db.RegisterMessage(IdentifyRequest)
 
-ClassifyResponse = _reflection.GeneratedProtocolMessageType('ClassifyResponse', (_message.Message,), dict(
-  DESCRIPTOR = _CLASSIFYRESPONSE,
+IdentifyResponse = _reflection.GeneratedProtocolMessageType('IdentifyResponse', (_message.Message,), dict(
+  DESCRIPTOR = _IDENTIFYRESPONSE,
   __module__ = 'shbdeviceidentifier.rpc.proto.devices_database_pb2'
-  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.ClassifyResponse)
+  # @@protoc_insertion_point(class_scope:SmartHomeBuddy.IdentifyResponse)
   ))
-_sym_db.RegisterMessage(ClassifyResponse)
+_sym_db.RegisterMessage(IdentifyResponse)
 
 
 
@@ -116,12 +116,12 @@ _DEVICESDATABASE = _descriptor.ServiceDescriptor(
   serialized_end=261,
   methods=[
   _descriptor.MethodDescriptor(
-    name='ClassifyDevices',
-    full_name='SmartHomeBuddy.DevicesDatabase.ClassifyDevices',
+    name='IdentifyDevices',
+    full_name='SmartHomeBuddy.DevicesDatabase.IdentifyDevices',
     index=0,
     containing_service=None,
-    input_type=_CLASSIFYREQUEST,
-    output_type=_CLASSIFYRESPONSE,
+    input_type=_IDENTIFYREQUEST,
+    output_type=_IDENTIFYRESPONSE,
     serialized_options=None,
   ),
 ])

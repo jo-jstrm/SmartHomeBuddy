@@ -5,7 +5,7 @@ import Paper from "@mui/material/Paper";
 import Select, {SelectChangeEvent} from '@mui/material/Select';
 import Typography from "@mui/material/Typography";
 import {styled} from "@mui/system";
-import {callClassifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
+import {callIdentifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
 import {queryAll} from "../../database/Database";
 import {DbMeasurement} from "../../types/DeviceTypes";
 import {FileContext} from "../common/FileContext";
@@ -32,21 +32,21 @@ export default function Classification() {
   // Backdrop state
   const {devicesBackdrop, setDevicesBackdrop} = useContext(FileContext)
 
-  const classifyDevices = () => {
+  const identifyDevices = () => {
     // Set backdrop and spinner to loading
     setDevicesBackdrop(true);
 
     // Classify devices
     setClassifierStatus("Classifying. This might take a moment...");
-    const classifierModel = "random_forest"
-    callClassifyDevices(classifierModel, selectedMeasurement)
+    const classifierModel = "default";
+    callIdentifyDevices(classifierModel, selectedMeasurement)
         .then(() => {
           setClassifierStatus("Classified!");
           setDevicesBackdrop(false);
         })
         .catch((err: Error) => {
-          console.error("Catch: " + err.toString());
-          setClassifierStatus("No response from Device Identifier.");
+          console.error("Catch (callIdentifyDevices): " + err.toString());
+          setClassifierStatus("callIdentifyDevices: No response from Device Identifier.");
           setDevicesBackdrop(false);
       });
   };
@@ -77,7 +77,7 @@ export default function Classification() {
             variant="outlined"
             size="medium"
             color="secondary"
-            onClick={classifyDevices}
+            onClick={identifyDevices}
         >
           Classify Devices
         </Button>
