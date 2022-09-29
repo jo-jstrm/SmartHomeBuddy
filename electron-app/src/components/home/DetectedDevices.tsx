@@ -1,34 +1,34 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {Smartphone} from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { Smartphone } from "@mui/icons-material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
-import {queryAll} from "../../database/Database";
-import {Button, Typography} from "@mui/material";
-import {DbDevice, DetectedDevice} from "../../types/DeviceTypes";
-import {placeholder_detected_device} from "../common/PlaceholderDevices";
+import { queryAll } from "../../database/Database";
+import { Button, Typography } from "@mui/material";
+import { DbDevice, DetectedDevice } from "../../types/DeviceTypes";
+import { placeholder_detected_device } from "../common/PlaceholderDevices";
 
 export default function DetectedDevices(props: any) {
-    const [devices, setDevices] = useState(placeholder_detected_device);
-    const sql = "SELECT * FROM devices LIMIT 5";
-    const queryDevices = (): void => {
-        queryAll(sql)
-            .then((rows) => {
-                console.log("Received devices: " + rows.toString());
-                let devices = rows.map((device: DbDevice): DetectedDevice => {
-                    console.log(device);
-                    // TODO improve handling of Icon, status, and action.
-                    let status = "Identified";
-                    let action = <></>;
-                    if (device.device_name == null || device.device_name == "") {
-                        status = "Not Identified";
-                        action = <WarningAmberIcon color="action" fontSize="large"/>;
-                    }
-                    return {
-                        device_name: device.device_name,
+  const [devices, setDevices] = useState(placeholder_detected_device);
+  const sql = "SELECT * FROM devices LIMIT 5";
+  const queryDevices = (): void => {
+    queryAll(sql)
+      .then((rows) => {
+        console.log("Received devices: " + rows.toString());
+        let devices = rows.map((device: DbDevice): DetectedDevice => {
+          console.log(device);
+          // TODO improve handling of Icon, status, and action.
+          let status = "Identified";
+          let action = <></>;
+          if (device.device_name == null || device.device_name == "") {
+            status = "Not Identified";
+            action = <WarningAmberIcon color="action" fontSize="large" />;
+          }
+          return {
+            device_name: device.device_name,
             mac_address: device.mac_address,
             ip_address: device.ip_address,
             icon: <Smartphone fontSize="large" />,
@@ -37,9 +37,9 @@ export default function DetectedDevices(props: any) {
           };
         });
         // Get all unidentified devices.
-                devices = devices.filter(
-                    (device: DetectedDevice) => device.status == "Not Identified"
-                );
+        devices = devices.filter(
+          (device: DetectedDevice) => device.status == "Not Identified"
+        );
         setDevices(devices);
       })
       .catch((err: Error) => {
