@@ -1,17 +1,17 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {queryAll, queryRun} from "../../database/Database";
-import {DbDevice} from "../../types/DeviceTypes";
+import { useEffect, useState } from "react";
+import { queryAll, queryRun } from "../../database/Database";
+import { DbDevice } from "../../types/DeviceTypes";
 import Title from "../common/Title";
-import {placeholder_db_device} from "../common/PlaceholderDevices";
+import { placeholder_db_device } from "../common/PlaceholderDevices";
 import Paper from "@mui/material/Paper";
-import {DataGrid, GridColDef} from "@mui/x-data-grid";
-import {Button} from "@mui/material";
-import {styled} from "@mui/system";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Button } from "@mui/material";
+import { styled } from "@mui/system";
 
 function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
   console.log(
-      "User updated device " +
+    "User updated device " +
       newRow.id +
       "'s name from '" +
       oldRow.device_name +
@@ -19,15 +19,16 @@ function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
       newRow.device_name +
       "'."
   );
-  const query = "UPDATE devices SET device_name = ?, measurement = ? WHERE id = ?";
+  const query =
+    "UPDATE devices SET device_name = ?, measurement = ? WHERE id = ?";
   const query_params = [newRow.device_name, newRow.measurement, newRow.id];
   queryRun(query, query_params)
-      .then(() => {
-        console.log("Successfully updated row.");
-      })
-      .catch((err) => {
-        console.log("Error updating row: " + err);
-      });
+    .then(() => {
+      console.log("Successfully updated row.");
+    })
+    .catch((err) => {
+      console.log("Error updating row: " + err);
+    });
   return newRow;
 }
 
