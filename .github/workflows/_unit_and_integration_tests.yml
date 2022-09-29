@@ -46,7 +46,6 @@ jobs:
 
       - name: Test with pytest and debug output
         run: |
-          cd device-identifier
           pipenv run pytest -v --show-capture=stdout --log-level=DEBUG .\device-identifier
 
       - name: Test with pytest and create reports
