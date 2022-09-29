@@ -9,17 +9,18 @@ from .proto import devices_database_pb2_grpc, devices_database_pb2
 from .proto import heartbeat_pb2_grpc, heartbeat_pb2
 from .proto import read_pb2_grpc, read_pb2
 from ..db import Database
-from ..utilities.ml_utilities import classify_devices
 
 
 class DeviceDatabaseService(devices_database_pb2_grpc.DevicesDatabaseServicer):
-    def ClassifyDevices(
-        self, request: devices_database_pb2.ClassifyRequest, context
-    ) -> devices_database_pb2.ClassifyResponse:
-        logger.debug("GRPC Server received a ClassifyDevices request.")
-        classify_devices(Database())
-        logger.debug("Processed ClassifyDevices request.")
-        return devices_database_pb2.ClassifyResponse()
+    def IdentifyDevices(
+        self, request: devices_database_pb2.IdentifyRequest, context
+    ) -> devices_database_pb2.IdentifyResponse:
+        logger.debug(
+            f"GRPC Server received a IdentifyDevices request: measurement = {request.measurement}, model = {request.classifier_model}"
+        )
+        res = commands.identify_devices(Database(), request.measurement, request.classifier_model)
+        logger.debug("Processed IdentifyDevices request.")
+        return devices_database_pb2.IdentifyResponse()
 
 
 class HeartbeatService(heartbeat_pb2_grpc.HeartbeatServicer):

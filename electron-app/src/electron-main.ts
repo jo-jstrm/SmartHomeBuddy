@@ -39,9 +39,6 @@ const createWindow = (): void => {
     mainWindow.setMinimumSize(500, 500);
     mainWindow.show();
   });
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished

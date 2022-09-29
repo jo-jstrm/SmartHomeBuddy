@@ -14,10 +14,10 @@ class DevicesDatabaseStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.ClassifyDevices = channel.unary_unary(
-        '/SmartHomeBuddy.DevicesDatabase/ClassifyDevices',
-        request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.ClassifyRequest.SerializeToString,
-        response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.ClassifyResponse.FromString,
+    self.IdentifyDevices = channel.unary_unary(
+        '/SmartHomeBuddy.DevicesDatabase/IdentifyDevices',
+        request_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.IdentifyRequest.SerializeToString,
+        response_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.IdentifyResponse.FromString,
         )
 
 
@@ -25,7 +25,7 @@ class DevicesDatabaseServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def ClassifyDevices(self, request, context):
+  def IdentifyDevices(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -35,10 +35,10 @@ class DevicesDatabaseServicer(object):
 
 def add_DevicesDatabaseServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'ClassifyDevices': grpc.unary_unary_rpc_method_handler(
-          servicer.ClassifyDevices,
-          request_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.ClassifyRequest.FromString,
-          response_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.ClassifyResponse.SerializeToString,
+      'IdentifyDevices': grpc.unary_unary_rpc_method_handler(
+          servicer.IdentifyDevices,
+          request_deserializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.IdentifyRequest.FromString,
+          response_serializer=shbdeviceidentifier_dot_rpc_dot_proto_dot_devices__database__pb2.IdentifyResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
