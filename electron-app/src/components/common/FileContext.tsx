@@ -1,7 +1,6 @@
-import {createContext} from 'react'
+import { createContext } from "react";
 
 export const FileContext = createContext({
-    devicesBackdrop: false,
-    setDevicesBackdrop: (bool: boolean) => {
-    }
+  devicesBackdrop: false,
+  setDevicesBackdrop: (bool: boolean) => {},
 });

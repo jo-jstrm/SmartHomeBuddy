@@ -1,20 +1,20 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {queryAll, queryRun} from "../../database/Database";
-import {DbDevice} from "../../types/DeviceTypes";
+import { useEffect, useState } from "react";
+import { queryAll, queryRun } from "../../database/Database";
+import { DbDevice } from "../../types/DeviceTypes";
 import Title from "../common/Title";
-import {placeholder_db_device} from "../common/PlaceholderDevices";
+import { placeholder_db_device } from "../common/PlaceholderDevices";
 import Paper from "@mui/material/Paper";
-import {DataGrid, GridColDef} from "@mui/x-data-grid";
-import {Button} from "@mui/material";
-import {styled} from "@mui/system";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Button } from "@mui/material";
+import { styled } from "@mui/system";
 
 function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
   if (newRow.device_name == oldRow.device_name) {
     return oldRow;
   }
   console.log(
-      "User updated device " +
+    "User updated device " +
       newRow.id +
       "'s name from '" +
       oldRow.device_name +
@@ -78,28 +78,28 @@ export default function DevicesGrid(): JSX.Element {
   const queryDevices = () => {
     const query = "SELECT * FROM devices";
     queryAll(query)
-        .then((rows: DbDevice[]) => {
-          console.log("Received devices.");
-          setDevices(rows);
-        })
-        .catch((err: Error) => {
-          console.log("Catch: " + err.toString());
-          setDevices(placeholder_db_device);
-        });
+      .then((rows: DbDevice[]) => {
+        console.log("Received devices.");
+        setDevices(rows);
+      })
+      .catch((err: Error) => {
+        console.log("Catch: " + err.toString());
+        setDevices(placeholder_db_device);
+      });
   };
   useEffect(() => {
     queryDevices();
-  }, [])
+  }, []);
   return (
-      <React.Fragment>
-        <StyledPaper>
-          <StyledDiv>
-            <Title> Devices </Title>
-            <Button
-                variant="outlined"
-                size="small"
-                color="primary"
-                onClick={queryDevices}
+    <React.Fragment>
+      <StyledPaper>
+        <StyledDiv>
+          <Title> Devices </Title>
+          <Button
+            variant="outlined"
+            size="small"
+            color="primary"
+            onClick={queryDevices}
           >
             Load Devices from Database
           </Button>
