@@ -18,7 +18,7 @@ export default function DetectedDevices(props: any) {
         queryAll(sql)
             .then((rows) => {
                 console.log("Received devices: " + rows.toString());
-                const devices = rows.map((device: DbDevice): DetectedDevice => {
+                let devices = rows.map((device: DbDevice): DetectedDevice => {
                     console.log(device);
                     // TODO improve handling of Icon, status, and action.
                     let status = "Identified"
@@ -37,7 +37,7 @@ export default function DetectedDevices(props: any) {
                     };
                 });
                 // Get all unidentified devices.
-                devices.filter((device: DetectedDevice) => device.status == "Not Identified");
+                devices = devices.filter((device: DetectedDevice) => device.status == "Not Identified");
                 setDevices(devices);
             })
             .catch((err: Error) => {
