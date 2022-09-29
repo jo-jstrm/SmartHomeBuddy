@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='SmartHomeBuddy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy\"@\n\x0f\x43lassifyRequest\x12\x18\n\x10\x63lassifier_model\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\"#\n\x10\x43lassifyResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32g\n\x0f\x44\x65vicesDatabase\x12T\n\x0f\x43lassifyDevices\x12\x1f.SmartHomeBuddy.ClassifyRequest\x1a .SmartHomeBuddy.ClassifyResponseb\x06proto3')
+  serialized_pb=_b('\n4shbdeviceidentifier/rpc/proto/devices_database.proto\x12\x0eSmartHomeBuddy\"@\n\x0f\x43lassifyRequest\x12\x18\n\x10\x63lassifier_model\x18\x01 \x01(\t\x12\x13\n\x0bmeasurement\x18\x02 \x01(\t\"\x12\n\x10\x43lassifyResponse2g\n\x0f\x44\x65vicesDatabase\x12T\n\x0f\x43lassifyDevices\x12\x1f.SmartHomeBuddy.ClassifyRequest\x1a .SmartHomeBuddy.ClassifyResponseb\x06proto3')
 )
 
 
@@ -70,13 +70,6 @@ _CLASSIFYRESPONSE = _descriptor.Descriptor(
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
-    _descriptor.FieldDescriptor(
-      name='success', full_name='SmartHomeBuddy.ClassifyResponse.success', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -90,7 +83,7 @@ _CLASSIFYRESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=138,
-  serialized_end=173,
+  serialized_end=156,
 )
 
 DESCRIPTOR.message_types_by_name['ClassifyRequest'] = _CLASSIFYREQUEST
@@ -119,8 +112,8 @@ _DEVICESDATABASE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=175,
-  serialized_end=278,
+  serialized_start=158,
+  serialized_end=261,
   methods=[
   _descriptor.MethodDescriptor(
     name='ClassifyDevices',
