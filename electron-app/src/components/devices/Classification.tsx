@@ -1,21 +1,14 @@
 import * as React from "react";
-import { useContext, useEffect, useState } from "react";
-import {
-  Backdrop,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-} from "@mui/material";
+import {useContext, useEffect, useState} from "react";
+import {Backdrop, Button, CircularProgress, FormControl, InputLabel, MenuItem,} from "@mui/material";
 import Paper from "@mui/material/Paper";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Select, {SelectChangeEvent} from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
-import { styled } from "@mui/system";
-import { callIdentifyDevices } from "../../rpc/clients/DeviceDatabaseClient";
-import { queryAll } from "../../database/Database";
-import { DbMeasurement } from "../../types/DeviceTypes";
-import { FileContext } from "../common/FileContext";
+import {styled} from "@mui/system";
+import {callIdentifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
+import {queryAll} from "../../database/Database";
+import {DbMeasurement} from "../../types/DeviceTypes";
+import {FileContext} from "../common/FileContext";
 
 const StyledPaper = styled(Paper)(() => ({
   margin: 10,
@@ -48,7 +41,7 @@ export default function Classification() {
     const classifierModel = "default";
     callIdentifyDevices(classifierModel, selectedMeasurement)
       .then(() => {
-        setClassifierStatus("Classified!");
+        setClassifierStatus("Classified! Please refresh the table.");
         setDevicesBackdrop(false);
       })
       .catch((err: Error) => {
