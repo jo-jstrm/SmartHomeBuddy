@@ -29,11 +29,8 @@ class RandomForest(MLModel):
         self.description = "Random Forest Classifier"
         self.progress_range = range(0, 2, 1)
 
-        # Get the save path, if it exists
-        if tmp_path := resolve_file_path(DATA_DIR / Path(f"ml_models/{self.alias}_{self.version}.pkl")):
-            self.save_path = tmp_path
-        else:
-            self.save_path = None
+        # Get the save path (None if it does not exist)
+        self.save_path = resolve_file_path(DATA_DIR / Path(f"ml_models/{self.alias}_{self.version}.pkl"))
 
         self.model_kwargs = dict(n_estimators=100, random_state=0)
         self.model_kwargs.update(kwargs)
