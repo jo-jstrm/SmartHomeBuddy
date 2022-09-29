@@ -1,5 +1,4 @@
-get_data_flux = \
-    """
+get_data_flux = """
         from(bucket: _bucket)
         |> range(start: _start, stop: _stop)
         |> filter(fn: (r) => r["_measurement"] == _measurement_name)

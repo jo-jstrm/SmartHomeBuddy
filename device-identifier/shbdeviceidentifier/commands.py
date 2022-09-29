@@ -13,9 +13,9 @@ from .dataloader import DataLoader
 from .db import Database, extract_devices
 from .rpc.server import start_rpc_server
 from .utilities.app_utilities import SHB_HOME, DATA_DIR
-from .utilities.logging_utilities import spinner
+from .utilities.logging_utilities import spinner, PROGRESS_BAR_FORMAT
 from .utilities.ml_utilities import get_model
-from .utilities.queries import EARLIEST_TIMESTAMP
+from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
 
 
 def start_database(db: Database):
@@ -42,7 +42,7 @@ def run_rpc_server(db: Database):
 
 def read(db: Database, file_path: click.Path, file_type: str, measurement: str = "main"):
     """Reads all the data from a capture file."""
-    logger.info(f"Reading {file_path}.")
+    logger.info(f"Reading {file_path} for measurement '{measurement}'.")
     if file_type == "pcap" or file_type == "pcapng":
         packets = DataLoader.from_pcap(file_path)
         if isinstance(packets, pd.DataFrame) and not packets.empty:
@@ -70,6 +70,8 @@ def read(db: Database, file_path: click.Path, file_type: str, measurement: str =
 
 def read_labels(db: Database, file_path: Path, measurement: str = "main"):
     """Reads all the labels for device IPs from a capture file."""
+    logger.info(f"Reading labels from {file_path} for measurement '{measurement}'.")
+
     labels = DataLoader.labels_from_json(file_path)
     if isinstance(labels, pd.DataFrame) and not labels.empty:
         for ip_address, row in labels.iterrows():
@@ -140,21 +142,27 @@ def train(
     train_df, train_labels = DataLoader.from_database(
         from_timestamp, to_timestamp, measurement, bucket, devices_to_train
     )
+    if not isinstance(train_df, pd.DataFrame) and not train_df:
+        sys.exit(1)
 
-    logger.info("Starting training. Depending on the model this might take a while.")
+    logger.info(f"Starting training on measurement '{measurement}'. Depending on the model this might take a while.")
     # Retrieve the machine learning model.
     spinner.start(text="Retrieving model...")
     model = get_model(model_name)
-    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Model retrieved.")
+    spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Model retrieved.")
 
     # Model specific data preprocessing.
     spinner.start(text=f"Preparing training data for {model_name}...")
     train_df = model.prepare_train_data(train_df)
-    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished preparing data.")
+    spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Finished preparing data.")
 
     # Train the model.
-    with ProgressBar(update_interval=1, total=len(model.progress_range) - 1,
-                     desc=f"Training {model_name}.") as progress:
+    with ProgressBar(
+            update_interval=1,
+            total=len(model.progress_range) - 1,
+            desc=f"   Training {model_name}",
+            bar_format=PROGRESS_BAR_FORMAT,
+    ) as progress:
         success = model.train(train_df[["data_len", "stream_id"]], train_labels, progress_callback=progress.update)
         # TODO: If progress_callback is not used we might have to call finish() manually.
         # if not progress.finished:
@@ -166,6 +174,68 @@ def train(
         return
 
     # Save model.
-    save_path = DATA_DIR / Path(f"ml_models/{model_name}_{model.version}.pkl")
-    if model.save(save_path):
-        logger.success(f"Model {model_name} saved successfully to {save_path}.")
+    if model.save():
+        logger.success(f"Model {model_name} saved successfully to {model.save_path}.")
+
+
+def identify_devices(db, measurement, model_selector) -> pd.DataFrame:
+    model = get_model(model_selector)
+
+    # Load model with internal save path
+    # TODO: We should improve the way we handle the save path, maybe we can save the paths in the database?
+    model.load()
+
+    logger.info(f"Identifying devices in measurement '{measurement}' using model {model.name}.")
+
+    df, _ = DataLoader.from_database(
+        from_timestamp=EARLIEST_TIMESTAMP,
+        to_timestamp=datetime.now(),
+        measurement=measurement,
+        bucket="network-traffic",
+        devices_to_train=[],
+    )
+    if not isinstance(df, pd.DataFrame):
+        logger.error("No data found. Exiting.")
+        sys.exit(1)
+    else:
+        # Type hint for linting (Should be obsolete if from_database returns a DataFrame)
+        df: pd.DataFrame
+
+    # Get predictions for every row
+    res = model.predict(df[["data_len", "stream_id"]])
+
+    # Get majority voting on prediction label for every IP address
+    df["prediction"] = res["prediction"]
+    res = df[["src_ip", "prediction"]].groupby("src_ip").agg(lambda x: pd.Series.mode(x)[0])
+    res["confidence"] = (
+        df[["src_ip", "prediction"]].groupby("src_ip").agg(lambda x: x.value_counts().iloc[0] / pd.Series.count(x))
+    )
+
+    # Update devices table
+    num_named_devices = 0
+    for index, row in res.iterrows():
+        ip = index
+        name = row["prediction"]
+
+        # Skip if it's an unidentified device
+        if name == "NoLabel":
+            continue
+
+        num_named_devices += 1
+        current_name = db.query_SQLiteDB(QUERIES["sqlite"]["get_device_name"], (ip, measurement))[0][0]
+        if not current_name:
+            if db.query_SQLiteDB(QUERIES["sqlite"]["update_devices"], (name, ip, measurement)):
+                logger.trace(f"Updated device {ip} to {name}.")
+            else:
+                # TODO: Check if this is intended
+                #  This happens e.g. if the device is not yet in the devices table.
+                logger.debug(f"Could not update device {ip} to {name}.")
+        else:
+            logger.trace(f"Device {ip} already in devices database as {current_name}.")
+
+    if not res.empty:
+        logger.success(f"Identified {num_named_devices} of {len(res)} devices.")
+    else:
+        logger.info("No devices identified.")
+
+    return res
