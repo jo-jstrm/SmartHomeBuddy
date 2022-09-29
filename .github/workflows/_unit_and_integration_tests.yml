@@ -1,4 +1,4 @@
-name: '🧪 Unit Tests'
+name: '🧪 Unit & Integration Tests'
 
 on:
   workflow_call:
