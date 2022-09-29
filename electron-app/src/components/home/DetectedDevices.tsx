@@ -56,7 +56,7 @@ export default function DetectedDevices(props: any) {
                     margin: 2,
                     flexGrow: 1,
                     backgroundColor: (theme) =>
-                        theme.palette.mode === "dark" ? "#1A2027" : "#fff",
+                        theme.palette.background.paper,
                 }}
             >
                 <Grid
