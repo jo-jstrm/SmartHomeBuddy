@@ -2,6 +2,7 @@ import time
 from multiprocessing import Process
 
 import pytest
+import pytest_check as check
 from _pytest.logging import LogCaptureFixture
 from loguru import logger
 
@@ -22,7 +23,7 @@ class TestCommands:
 
     def test_start_database(self, db):
         start_database(db)
-        assert db.is_connected()
+        check.is_true(db.is_connected())
         db.stop()
 
     def test_run_rpc_server(self):
@@ -40,12 +41,12 @@ class TestCommands:
             rpc_server_process.kill()
             time.sleep(1)
             # Check if the process and the database are still running
-            assert not rpc_server_process.is_alive()
-            assert not db.is_connected()
+            check.is_true(not rpc_server_process.is_alive())
+            check.is_true(not db.is_connected())
 
     def test_read(self, db, dummy_pcap, caplog):
         db.start()
         read(db, dummy_pcap, "pcap")
-        assert "Wrote" in caplog.text
-        assert "Failed to write" not in caplog.text
+        check.is_true("Wrote" in caplog.text)
+        check.is_true("Failed to write" not in caplog.text)
         db.stop()
