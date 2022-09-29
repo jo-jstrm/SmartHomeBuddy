@@ -60,13 +60,13 @@ def convert_Capture_to_DataFrame(cap) -> pd.DataFrame:
     num_of_packets = len(cap)
     # FIXME: if this function is called from any function other than DataLoader.from_pcap()
     #  this will fail or display the wrong message
-    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished reading file into memory.")
+    spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Finished reading file into memory.")
     start_time = time.perf_counter()
     with ProgressBar(
             update_interval=1,
             total=num_of_packets,
             desc="   Converting file to pandas DataFrame",
-            bar_format=PROGRESS_BAR_FORMAT
+            bar_format=PROGRESS_BAR_FORMAT,
     ) as progress:
         df = _convert_Capture_to_DataFrame_JIT(cap, num_of_packets, progress)
         # Filter out packets that do not have a transport layer protocol

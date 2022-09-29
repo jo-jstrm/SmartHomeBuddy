@@ -18,18 +18,12 @@ class RandomForest(MLModel):
         super().__init__()
         self.name = "Random Forest Classifier"
         self.alias = "RandomForest"
-        self.ext_aliases = [
-            "random_forest",
-            "rf",
-            "randomforest",
-            "randomforestclassifier",
-            "random_forest_classifier"
-        ]
+        self.ext_aliases = ["random_forest", "rf", "randomforest", "randomforestclassifier", "random_forest_classifier"]
         self.version = "v0"
         self.description = "Random Forest Classifier"
         self.progress_range = range(0, 2, 1)
 
-        # Get the save path (None if it does not exist)
+        # Get the save path (None if it does not exist / the model has not been saved yet)
         self.save_path = resolve_file_path(DATA_DIR / Path(f"ml_models/{self.alias}_{self.version}.pkl"))
 
         self.model_kwargs = dict(n_estimators=100, random_state=0)

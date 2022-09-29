@@ -39,8 +39,10 @@ class DataLoader:
                 |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
             """
         with Database().get_influxdb_client() as client:
-            logger.info(f"Loading data from measurement '{params.get('_measurement_name')}'."
-                        f" Depending on the size of the data this might take a while.")
+            logger.info(
+                f"Loading data from measurement '{params.get('_measurement_name')}'."
+                f" Depending on the size of the data this might take a while."
+            )
             spinner.start(text="Loading data from InfluxDB...")
             df = client.query_api().query_data_frame(query=query, params=params)
 

@@ -149,19 +149,20 @@ def train(
     # Retrieve the machine learning model.
     spinner.start(text="Retrieving model...")
     model = get_model(model_name)
-    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Model retrieved.")
+    spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Model retrieved.")
 
     # Model specific data preprocessing.
     spinner.start(text=f"Preparing training data for {model_name}...")
     train_df = model.prepare_train_data(train_df)
-    spinner.stop_and_persist(symbol='✅ '.encode('utf-8'), text="Finished preparing data.")
+    spinner.stop_and_persist(symbol="✅ ".encode("utf-8"), text="Finished preparing data.")
 
     # Train the model.
-    with ProgressBar(update_interval=1,
-                     total=len(model.progress_range) - 1,
-                     desc=f"   Training {model_name}",
-                     bar_format=PROGRESS_BAR_FORMAT
-                     ) as progress:
+    with ProgressBar(
+            update_interval=1,
+            total=len(model.progress_range) - 1,
+            desc=f"   Training {model_name}",
+            bar_format=PROGRESS_BAR_FORMAT,
+    ) as progress:
         success = model.train(train_df[["data_len", "stream_id"]], train_labels, progress_callback=progress.update)
         # TODO: If progress_callback is not used we might have to call finish() manually.
         # if not progress.finished:

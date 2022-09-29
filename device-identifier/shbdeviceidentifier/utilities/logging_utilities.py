@@ -16,9 +16,7 @@ spinner = Halo(text="Loading.", spinner="dots")
 # logging levels for loguru
 LOG_LEVELS = ["TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"]
 # Format for the tqdm progress bar (numba-progress)
-PROGRESS_BAR_FORMAT = (
-    "{l_bar}{bar:100}| {n:.0f}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt} {postfix}]{bar:-100b}"
-)
+PROGRESS_BAR_FORMAT = "{l_bar}{bar:100}| {n:.0f}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt} {postfix}]{bar:-100b}"
 
 
 class Formatter:
@@ -38,14 +36,9 @@ class Formatter:
                 "<level>{message}\n{exception}</>"
             )
         elif level == 2:
-            self.fmt = (
-                "[<level>{level: ^9}</>] "
-                "<level>{message}\n{exception}</>"
-            )
+            self.fmt = "[<level>{level: ^9}</>] " "<level>{message}\n{exception}</>"
         else:
-            self.fmt = (
-                "{level.icon: <2} <level>{message}\n{exception}</>"
-            )
+            self.fmt = "{level.icon: <2} <level>{message}\n{exception}</>"
 
     def format(self, record):
         length = len("{function}:{line}".format(**record))

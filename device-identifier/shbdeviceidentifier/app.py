@@ -180,10 +180,7 @@ def read_labels(ctx, file_path: click.Path, measurement: str):
 
 @app.command("identify")
 @click.option(
-    "--measurement",
-    "-m",
-    help="Name of the measurement in the InfluxDB. Defaults to `main`.",
-    required=False
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
 )
 @click.option("-M", "--model", "model_selector", type=click.STRING, required=False, default="default")
 @pass_ctx
@@ -261,7 +258,9 @@ def set_measurement(ctx, measurement):
     if ctx.measurement == ctx.db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]:
         logger.success(f"Measurement set to '{ctx.measurement}'.")
     elif ctx.measurement == measurement:
-        logger.warning(f"Measurement '{ctx.measurement}' was set for this session, but could not be persisted."
-                       "Check the database connection.")
+        logger.warning(
+            f"Measurement '{ctx.measurement}' was set for this session, but could not be persisted."
+            "Check the database connection."
+        )
     else:
         logger.error(f"Measurement could not be set to '{ctx.measurement}'.")
