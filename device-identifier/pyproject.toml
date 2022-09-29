@@ -1,6 +1,6 @@
 [project]
 name = "shbdeviceidentifier"
-version = "0.1.0"
+version = "1.0.0"
 authors = [
     { name = "Tobias Becher", email = "TPB.DevAcc@gmail.com" },
     { name = "Johannes Jestram", email = "jambalaya_jo@posteo.ch" }
