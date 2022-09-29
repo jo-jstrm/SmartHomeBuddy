@@ -55,11 +55,17 @@ class RandomForest(MLModel):
         return X.assign(prediction=self.model.predict(X))
 
     def save(self, path: str = None) -> None:
-        if not path:
+        if path:
+            # Update save_path if a path is provided
+            self.save_path = Path(path)
+        else:
+            # If neither path nor self.save_path are provided, save to default path
             if not self.save_path:
-                logger.error("No save path specified. Aborting save.")
-                return
-            path = self.save_path
+                self.save_path = DATA_DIR / Path(f"ml_models/{self.alias}_{self.version}.pkl")
+                logger.debug(f"No save path specified. Saving at default {self.save_path}.")
+
+        # Set path to either the provided path, the (prior to save existing) save_path, or the default path
+        path = self.save_path
 
         # Pickle model
         with open(path, "wb") as f:

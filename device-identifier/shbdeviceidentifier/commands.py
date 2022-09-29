@@ -173,9 +173,7 @@ def train(
         return
 
     # Save model.
-    if not model.save_path:
-        model.save_path = DATA_DIR / Path(f"ml_models/{model.alias}_{model.version}.pkl")
-    if model.save(model.save_path):
+    if model.save():
         logger.success(f"Model {model_name} saved successfully to {model.save_path}.")
 
 
