@@ -32,6 +32,8 @@ class RandomForest(MLModel):
         # Get the save path, if it exists
         if tmp_path := resolve_file_path(DATA_DIR / Path(f"ml_models/{self.alias}_{self.version}.pkl")):
             self.save_path = tmp_path
+        else:
+            self.save_path = None
 
         self.model_kwargs = dict(n_estimators=100, random_state=0)
         self.model_kwargs.update(kwargs)

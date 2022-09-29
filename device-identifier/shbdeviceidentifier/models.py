@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ class MLModel(ABC):
     version: str
     description: str
     progress_range: range
-    save_path: Path
+    save_path: Optional[Path]
 
     def __init__(self):
         ...
