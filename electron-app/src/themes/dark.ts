@@ -16,7 +16,7 @@ export const darkTheme: ThemeOptions = {
     },
     background: {
       default: "#282828",
-      paper: "#242423",
+      paper: "#323232",
     },
     mode: "dark",
   },
