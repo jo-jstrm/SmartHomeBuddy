@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from sqlite3 import Error
 from subprocess import Popen
+from time import sleep
 from typing import Union, Iterable, List, Optional
 
 import influxdb
@@ -425,6 +426,7 @@ class Database:
             else:
                 self.influx_process.terminate()
 
+            sleep(0.5)
             # Check if termination code is None, which means the process is still running.
             if self.influx_process.poll() is None:
                 logger.debug("InfluxDB could not be stopped.")
