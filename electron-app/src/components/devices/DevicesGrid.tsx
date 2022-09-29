@@ -1,6 +1,6 @@
 import * as React from "react";
 import {useEffect, useState} from "react";
-import {queryAll} from "../../database/Database";
+import {queryAll, queryRun} from "../../database/Database";
 import {DbDevice} from "../../types/DeviceTypes";
 import Title from "../common/Title";
 import {placeholder_db_device} from "../common/PlaceholderDevices";
@@ -24,7 +24,7 @@ function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
   );
   const query = "UPDATE devices SET device_name = ? WHERE id = ?";
   const query_params = [newRow.device_name, newRow.id];
-  queryAll(query, query_params)
+  queryRun(query, query_params)
     .then(() => {
       console.log("Successfully updated device name.");
     })

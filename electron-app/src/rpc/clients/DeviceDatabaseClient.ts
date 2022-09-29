@@ -6,12 +6,14 @@ import {
 import { config } from "../../config";
 import { DevicesDatabaseClient } from "../proto/devices_database_grpc_pb";
 
-export function callClassifyDevices(): Promise<boolean> {
+export function callClassifyDevices(classifierModel: string, measurement: string): Promise<boolean> {
   const client = new DevicesDatabaseClient(
     config.grpc.server_url,
     ChannelCredentials.createInsecure()
   );
   const classifyRequest = new ClassifyRequest();
+  classifyRequest.setClassifierModel(classifierModel);
+  classifyRequest.setMeasurement(measurement);
   return new Promise<boolean>((accept, reject) => {
     client.classifyDevices(
       classifyRequest,

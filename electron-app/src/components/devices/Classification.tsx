@@ -1,10 +1,13 @@
 import * as React from "react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {Button, FormControl, InputLabel, MenuItem} from "@mui/material";
 import Paper from "@mui/material/Paper";
-import {Button} from "@mui/material";
-import {callClassifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
-import {styled} from "@mui/system";
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Typography from "@mui/material/Typography";
+import {styled} from "@mui/system";
+import {callClassifyDevices} from "../../rpc/clients/DeviceDatabaseClient";
+import {queryAll} from "../../database/Database";
+import {DbMeasurement} from "../../types/DeviceTypes";
 
 const StyledPaper = styled(Paper)(() => ({
   margin: 10,
@@ -22,9 +25,12 @@ export default function Classification() {
   const [classifierStatus, setClassifierStatus] = useState(
     "Classify IoT devices based on the network data in your database."
   );
+  const [selectedMeasurement, setSelectedMeasurement] = useState("");
+  const [uniqueMeasurements, setUniqueMeasurements] = useState([""]);
   const classifyDevices = () => {
     setClassifierStatus("Classifying. This might take a moment...");
-    callClassifyDevices()
+    const classifierModel = "random_forest"
+    callClassifyDevices(classifierModel, selectedMeasurement)
       .then(() => {
         setClassifierStatus("Classified!");
       })
@@ -33,6 +39,26 @@ export default function Classification() {
         setClassifierStatus("No response from Device Identifier.");
       });
   };
+  const queryMeasurements = (): void => {
+    const query = "SELECT DISTINCT measurement from devices";
+    queryAll(query)
+      .then((rows: DbMeasurement[]): void => {
+        const measurements = rows.map((measurement: DbMeasurement): string => {
+          return measurement.measurement;
+        });
+        console.log("Measurements: " + measurements);
+        setUniqueMeasurements(measurements);
+      })
+      .catch((err: Error) => {
+        console.error("Catch: " + err.toString());
+      });
+  };
+  const handleMeasurement = (event: SelectChangeEvent) => {
+    setSelectedMeasurement(event.target.value as string);
+  };
+  useEffect(() => {
+    queryMeasurements();
+  }, []);
   return (
     <StyledPaper>
       <StyledDiv>
@@ -44,6 +70,20 @@ export default function Classification() {
         >
           Classify Devices
         </Button>
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel id="measurement-select-label">Measurement</InputLabel>
+          <Select
+            labelId="measurement-select-label"
+            id="measurement-select"
+            value={selectedMeasurement}
+            label="Measurement"
+            onChange={handleMeasurement}
+          >
+            {uniqueMeasurements.map((measurement, index) => {
+              return (<MenuItem key={index} value={measurement}>{measurement}</MenuItem>);
+            })}
+          </Select>
+        </FormControl>
         <Typography>{classifierStatus}</Typography>
       </StyledDiv>
     </StyledPaper>

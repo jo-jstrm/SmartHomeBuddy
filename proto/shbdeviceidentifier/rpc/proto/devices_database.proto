@@ -3,11 +3,12 @@ syntax = "proto3";
 package SmartHomeBuddy;
 
 message ClassifyRequest {
-  string param = 1;
+  string classifier_model = 1;
+  string measurement = 2;
 }
 
 message ClassifyResponse {
-  bool is_done = 1;
+  bool success = 1;
 }
 
 service DevicesDatabase {

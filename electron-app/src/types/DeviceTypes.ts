@@ -7,6 +7,12 @@ export interface DbDevice {
   device_name: string;
   mac_address: string;
   ip_address: string;
+  measurement: string;
+}
+
+export interface DbMeasurement {
+  id: number;
+  measurement: string;
 }
 
 /**
