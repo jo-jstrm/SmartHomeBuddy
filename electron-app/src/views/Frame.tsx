@@ -22,6 +22,7 @@ import { ColorContext } from "../themes/ColorContext";
 import { PaletteMode } from "@mui/material";
 import { lightTheme } from "../themes/light";
 import { darkTheme } from "../themes/dark";
+import { FileContext } from "../components/common/FileContext";
 
 function FrameContent() {
   const [mode, setMode] = React.useState<PaletteMode>("light");
@@ -61,6 +62,7 @@ function FrameContent() {
             <Toolbar
               sx={{
                 pr: "24px", // keep right padding when drawer closed
+                height: "64px",
               }}
             >
               <IconButton
@@ -116,5 +118,10 @@ function FrameContent() {
 }
 
 export default function Frame() {
-  return <FrameContent />;
+  const [devicesBackdrop, setDevicesBackdrop] = React.useState(false);
+  return (
+    <FileContext.Provider value={{ devicesBackdrop, setDevicesBackdrop }}>
+      <FrameContent />;
+    </FileContext.Provider>
+  );
 }

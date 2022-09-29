@@ -8,6 +8,8 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import { MainNavBarItems } from "./DrawerItems";
+import shbIcon from "/src/static/assets/shb_icon.png";
+import { Box } from "@mui/material";
 
 export const StyledDrawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
@@ -42,10 +44,23 @@ export function Drawer(props: { open: boolean; toggleDrawer: () => void }) {
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
           px: [1],
+          height: "64px",
         }}
       >
+        <Box
+          sx={{
+            mx: 1,
+            flexGrow: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            height: "100%",
+          }}
+        >
+          <img src={shbIcon} alt="SHB" height="80%" />
+        </Box>
         <IconButton onClick={props.toggleDrawer}>
           <ChevronLeftIcon />
         </IconButton>

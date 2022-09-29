@@ -233,6 +233,7 @@ dmypy.json
 /device-identifier/shbdeviceidentifier/pcaps/*
 !/device-identifier/shbdeviceidentifier/pcaps/dummy.pcap
 !/device-identifier/shbdeviceidentifier/pcaps/dummy_labels.json
+!/device-identifier/shbdeviceidentifier/pcaps/dummy.csv
 
 # Python unit tests
 /device-identifier/shbdeviceidentifier/tests/
@@ -251,3 +252,6 @@ device-identifier/junit/
 
 # intellj run files
 device-identifier/.run/
+
+# Example RF model file
+!/device-identifier/shbdeviceidentifier/ml_models/RandomForest_v0.pkl
