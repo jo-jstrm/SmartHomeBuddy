@@ -41,7 +41,7 @@ export default function Classification() {
     const classifierModel = "default";
     callIdentifyDevices(classifierModel, selectedMeasurement)
         .then(() => {
-          setClassifierStatus("Classified!");
+          setClassifierStatus("Classified! Please refresh the table.");
           setDevicesBackdrop(false);
         })
         .catch((err: Error) => {
