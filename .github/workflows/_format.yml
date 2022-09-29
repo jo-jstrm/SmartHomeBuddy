@@ -16,7 +16,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.target_ref }}
-      - uses: psf/black@stable
+      - name: Format device identifier with black
+        continue-on-error: true
+        uses: psf/black@stable
         with:
           options: "--verbose --color"
           src: "./device-identifier"
@@ -29,6 +31,7 @@ jobs:
         with:
           ref: ${{ inputs.target_ref }}
       - name: Prettify electron app code
+        continue-on-error: true
         uses: creyD/prettier_action@v4.2
         with:
           # This part is also where you can pass other options, for example:
