@@ -28,9 +28,6 @@ export namespace ClassifyRequest {
 }
 
 export class ClassifyResponse extends jspb.Message {
-  getSuccess(): boolean;
-  setSuccess(value: boolean): void;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ClassifyResponse.AsObject;
   static toObject(includeInstance: boolean, msg: ClassifyResponse): ClassifyResponse.AsObject;
@@ -43,7 +40,6 @@ export class ClassifyResponse extends jspb.Message {
 
 export namespace ClassifyResponse {
   export type AsObject = {
-    success: boolean,
   }
 }
 
