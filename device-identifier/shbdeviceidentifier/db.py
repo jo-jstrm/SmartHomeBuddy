@@ -315,6 +315,12 @@ class Database:
             logger.warning("InfluxDB process is not registered in this Database instance.")
             return False
 
+        # Check if termination code is None, which means the process is still running.
+        if self.influx_process.poll() is not None:
+            logger.warning("InfluxDB process is not running.")
+            logger.debug(f"Return code for InfluxDB process is {self.influx_process.poll()}.")
+            return False
+
         influx_con = self._get_InfluxDB_connection()
         sqlite_con = self._get_SQLite_connection()
         if influx_con and sqlite_con:
@@ -401,7 +407,11 @@ class Database:
                 influx_process = subprocess.Popen(
                     self.influxdb_binary_path, stdout=influx_log, stderr=subprocess.STDOUT
                 )
-                logger.debug("InfluxDB started successfully.")
+                # Check if termination code is None, which means the process is still running.
+                if influx_process.poll() is None:
+                    logger.debug("InfluxDB started successfully.")
+                else:
+                    logger.debug("InfluxDB failed to start for unknown reasons.")
         except Exception as e:
             logger.debug(e)
             logger.error("Failed to start InfluxDB.")
@@ -414,11 +424,16 @@ class Database:
                 self.influx_process.kill()
             else:
                 self.influx_process.terminate()
-            logger.debug("InfluxDB stopped successfully.")
-            return True
+
+            # Check if termination code is None, which means the process is still running.
+            if self.influx_process.poll() is None:
+                logger.debug("InfluxDB could not be stopped.")
+            else:
+                logger.debug("InfluxDB stopped successfully.")
+                return True
         else:
             logger.debug("No InfluxDB process found.")
-            return False
+        return False
 
     def stop(self, connections: List = None) -> bool:
         """
