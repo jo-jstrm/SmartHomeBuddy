@@ -1,20 +1,17 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { queryAll, queryRun } from "../../database/Database";
-import { DbDevice } from "../../types/DeviceTypes";
+import {useEffect, useState} from "react";
+import {queryAll, queryRun} from "../../database/Database";
+import {DbDevice} from "../../types/DeviceTypes";
 import Title from "../common/Title";
-import { placeholder_db_device } from "../common/PlaceholderDevices";
+import {placeholder_db_device} from "../common/PlaceholderDevices";
 import Paper from "@mui/material/Paper";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Button } from "@mui/material";
-import { styled } from "@mui/system";
+import {DataGrid, GridColDef} from "@mui/x-data-grid";
+import {Button} from "@mui/material";
+import {styled} from "@mui/system";
 
 function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
-  if (newRow.device_name == oldRow.device_name) {
-    return oldRow;
-  }
   console.log(
-    "User updated device " +
+      "User updated device " +
       newRow.id +
       "'s name from '" +
       oldRow.device_name +
@@ -22,15 +19,15 @@ function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
       newRow.device_name +
       "'."
   );
-  const query = "UPDATE devices SET device_name = ? WHERE id = ?";
-  const query_params = [newRow.device_name, newRow.id];
+  const query = "UPDATE devices SET device_name = ?, measurement = ? WHERE id = ?";
+  const query_params = [newRow.device_name, newRow.measurement, newRow.id];
   queryRun(query, query_params)
-    .then(() => {
-      console.log("Successfully updated device name.");
-    })
-    .catch((err) => {
-      console.log("Error updating device name: " + err);
-    });
+      .then(() => {
+        console.log("Successfully updated row.");
+      })
+      .catch((err) => {
+        console.log("Error updating row: " + err);
+      });
   return newRow;
 }
 
@@ -59,6 +56,13 @@ const columns: GridColDef[] = [
     headerName: "IP Address",
     type: "string",
     width: 150,
+  },
+  {
+    field: "measurement",
+    headerName: "Measurement",
+    type: "string",
+    width: 150,
+    editable: true,
   },
 ];
 
