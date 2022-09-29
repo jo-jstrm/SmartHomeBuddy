@@ -1,4 +1,4 @@
-name: '🧪 Test'
+name: '🧪 Test Dispatch'
 
 on:
   workflow_dispatch:
@@ -14,4 +14,3 @@ jobs:
     uses: ./.github/workflows/_unit_tests.yml
     with:
       target_ref: ${{ inputs.target_ref }}
-

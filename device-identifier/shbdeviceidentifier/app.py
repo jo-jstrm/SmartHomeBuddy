@@ -1,7 +1,6 @@
 import os
 import sys
 from dataclasses import dataclass
-from functools import partial
 from importlib import metadata
 from pathlib import Path
 from pprint import pprint
@@ -12,54 +11,85 @@ from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
-from .db import Database, DataLoader
-from .utilities import get_capture_file_path, Formatter, logger_wraps
-from .utilities.app_utilities import get_file_type, DATA_DIR
-from .utilities.ml_utilities import get_model
+from .db import Database
+from .utilities import get_capture_file_path, logger_wraps
+from .utilities.app_utilities import DATA_DIR, resolve_file_path
+from .utilities.logging_utilities import configure_logging
 from .utilities.queries import QUERIES
-
 
 # ---------------------------------------------------------------------------- #
 #                                   Logging                                    #
 # ---------------------------------------------------------------------------- #
 
-logger.remove()
-formatter = Formatter()
-logger_config = {"handlers": [{"sink": sys.stdout, "format": formatter.format, "level": "SUCCESS"}]}
-logger.configure(**logger_config)
-logger.opt = partial(logger.opt, colors=True)
-logger.level("DEBUG", color="<light-black>")
+configure_logging(level="SUCCESS")
 
 # ---------------------------------------------------------------------------- #
 #                                    App                                       #
 # ---------------------------------------------------------------------------- #
-CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB")
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"], auto_envvar_prefix="SHB", max_content_width=800)
 
 
-@dataclass()
+@dataclass
 class Context:
     flags: dict
     cwd: str
     version: str
-    latest_capture_file: Union[Path, None]
-    db: Database
+    _latest_capture_file: Union[Path, None]
+    _db: Database
+    _measurement: str
 
     def __init__(self):
         self.flags = {}
         self.cwd = os.getcwd()
         self.version = metadata.version("shbdeviceidentifier")
-        self.latest_capture_file = None
+        self._latest_capture_file = None
+        self._measurement = "main"
+
+    @property
+    def latest_capture_file(self):
+        return self._latest_capture_file
+
+    @latest_capture_file.setter
+    def latest_capture_file(self, value):
+        self._latest_capture_file = value
+        params = (value,)
+        if isinstance(value, Path):
+            params = (value.as_posix(),)
+        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_latest_capture_file"], params)
+
+    @property
+    def db(self):
+        return self._db
+
+    @db.setter
+    def db(self, value):
+        self._db = value
+        if not self._latest_capture_file:
+            latest_capture_res = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_latest_capture_file"])
+            if latest_capture_res and latest_capture_res[0][0]:
+                self._latest_capture_file = Path(latest_capture_res[0][0])
+        if not self.measurement:
+            self.measurement = self._db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
+
+    @property
+    def measurement(self):
+        return self._measurement
+
+    @measurement.setter
+    def measurement(self, value):
+        self._measurement = value
+        self._db.query_SQLiteDB(QUERIES["sqlite"]["set_measurement"], (value,))
 
 
 pass_ctx = click.make_pass_decorator(Context, ensure=True)
-flag_default_options = dict(is_flag=True, default=False, show_default=True)
+FLAG_DEFAULT_OPTIONS = dict(is_flag=True, default=False, show_default=True)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=False, chain=True)
-@click.option("--debug", "-d", help="Enable debug output.", **flag_default_options)
-@click.option("--silent", "-s", help="Disable logging.", **flag_default_options)
-@click.option("--verbose", "-v", help="Enable verbose output.", **flag_default_options)
-@click.option("--version", "version_flag", help="Show current app version.", **flag_default_options)
+@click.option("--debug", "-d", help="Enable debug output.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--silent", "-s", help="Disable logging.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--verbose", "-v", help="Enable verbose output.", **FLAG_DEFAULT_OPTIONS)
+@click.option("--version", "version_flag", help="Show current app version.", **FLAG_DEFAULT_OPTIONS)
 @pass_ctx
 def app(ctx, debug, silent, verbose, version_flag):
     """
@@ -78,25 +108,28 @@ def app(ctx, debug, silent, verbose, version_flag):
         click.echo(figlet.renderText("SmartHomeBuddy"))
 
     if verbose:
-        ctx.verbose = True
-        logger_config["handlers"][0]["level"] = "INFO"
-        logger.configure(**logger_config)
+        configure_logging(level="INFO")
 
     if debug:
-        logger_config["handlers"][0]["level"] = "DEBUG"
-        logger.configure(**logger_config)
+        configure_logging(level="DEBUG")
 
     # Database connections checks
-    ctx.db = Database()
-    commands.start_database(ctx.db)
+    db = Database()
+    commands.start_database(db)
+    ctx.db = db
+
+    # Initialize the measurement from the database, otherwise use the default `main`
+    measurement = db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]
+    if measurement:
+        ctx.measurement = measurement
 
 
 # ---------------------------------------------------------------------------- #
 #                                 Commands                                     #
 # ---------------------------------------------------------------------------- #
 @app.command("start")
-@logger_wraps()
 @pass_ctx
+@logger_wraps()
 def start(ctx):
     """
     Starts the RPC and database servers.
@@ -114,55 +147,55 @@ def start(ctx):
     type=click.Choice(["pcap", "pcapng"], case_sensitive=False),
     default="pcap",
 )
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @pass_ctx
 @logger_wraps()
-def read(ctx, file_path: click.Path, file_type: str):
+def read(ctx, file_path: click.Path, file_type: str, measurement: str):
     """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
-    commands.read(ctx.db, file_path, file_type)
+    if not file_path:
+        logger.error("No capture file found.")
+        sys.exit(1)
+
+    if not measurement:
+        measurement = ctx.measurement
+    commands.read(ctx.db, file_path, file_type, measurement)
+
+
+@app.command("read-labels")
+@click.argument("file_path", type=click.Path(), required=False, default=DATA_DIR / "pcaps" / "dummy_labels.json")
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
+@pass_ctx
+@logger_wraps()
+def read_labels(ctx, file_path: click.Path, measurement: str):
+    file_path = resolve_file_path(file_path)
+    if not measurement:
+        measurement = ctx.measurement
+    commands.read_labels(ctx.db, file_path, measurement)
 
 
 @app.command("identify")
-@click.option("-f", "--file_path", type=click.Path(), required=False, default="")
-@click.argument("model-path", type=click.Path())
-@click.option("-o", "--out", type=click.STRING, required=False, default="stdout")  # TODO: refactor
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @click.option("-M", "--model", "model_selector", type=click.STRING, required=False, default="default")
 @pass_ctx
 @logger_wraps()
-def identify(ctx, file_path, model_path, out, model_selector):
+def identify(ctx, measurement, model_selector):
     """
-    Identifies a device.
+    Identifies devices in a dataset. Per default the main measurement with the default model is used.
+    Before using identify you can use `read -m <MEASUREMENT>` to read in a capture file and label it as <MEASUREMENT>.
     """
-    file_path = get_capture_file_path(ctx, file_path)
-    df = DataLoader.from_pcap(file_path)
+    if not measurement:
+        measurement = ctx.measurement
+    res = commands.identify_devices(ctx.db, measurement, model_selector)
 
-    if not model_selector:
-        model_selector = "default"
-    model = get_model(model_selector)
-    model.load(model_path)
-
-    res = model.predict(df[["data_len", "stream_id"]])
-    del df
-
-    if not res.empty:
-        logger.success(f"Identified {len(res)} devices.")
-
-    if out == "stdout":
+    if ctx.flags["verbose"] or ctx.flags["debug"]:
         pprint(res)
-    elif out == "sqlite":
-        # TODO: write res to sqlite db
-        ...
-    elif out == "influx" or out == "influxdb":
-        # TODO: write res to influxdb
-        ...
-    elif out == "json":
-        # TODO: write res to json file in ctx.home_dir
-        ...
-    elif out == "csv":
-        # TODO: write res to csv file in ctx.home_dir
-        ...
-    else:
-        logger.debug(f"Unknown output format: {out}")
 
 
 @app.command("query")
@@ -197,55 +230,37 @@ def query(ctx, data_base, statement_name):
 
 
 @app.command("train")
-@click.argument("model-selector", nargs=1, type=click.STRING)
-@click.argument("training-data-path", nargs=1, type=click.STRING)
-@click.argument("training-labels-path", nargs=1, type=click.STRING)
+@click.argument("model-name", nargs=1, type=click.STRING)
+@click.option(
+    "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
+)
 @pass_ctx
 @logger_wraps()
-def train(ctx, model_selector, training_data_path, training_labels_path):
+def train(ctx, model_name, measurement):
     """
     Trains a model.
     """
-    # HACK: refactor all of this
+    if not measurement:
+        measurement = ctx.measurement
+    # Setting timestamps via the CLI is not supported yet.
+    commands.train(model_name=model_name, measurement=measurement)
 
-    model = get_model(model_selector)
 
-    load_train_df = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_data_path}."),
-        "pcap": DataLoader.from_pcap,
-        "pcapng": DataLoader.from_pcap,
-        "csv": DataLoader.from_csv,
-    }[get_file_type(training_data_path)]
-    train_df = load_train_df(training_data_path)
-
-    load_label_lookup = {
-        "UNKNOWN": lambda x: logger.error(f"Unsupported file extension for: {training_labels_path}."),
-        "json": DataLoader.labels_from_json,
-    }[get_file_type(training_labels_path)]
-    label_lookup = load_label_lookup(training_labels_path)
-
-    target_labels = ["Google-Nest-Mini", "ESP-1DC41C"]
-
-    # TODO: consider dst too
-    def get_label(row):
-        # Split IP address and port
-        key = row.rsplit(":", 1)[0]
-
-        # Check if label is available
-        try:
-            label = label_lookup.loc[key, "name"]
-            # Check if label is a desired target label, aka. a device that is supposed to be identified
-            if label not in target_labels:
-                label = "NoLabel"
-        except KeyError:
-            label = "NoLabel"
-
-        return label
-
-    train_labels = train_df["src"].apply(get_label)
-
-    model.train(train_df[["data_len", "stream_id"]], train_labels)
-
-    save_path = DATA_DIR / Path("ml_models/" + model_selector + ".pkl")
-    if model.save(save_path):
-        logger.success(f"Model {model_selector} saved successfully to {save_path}.")
+@app.command("set-measurement")
+@click.argument("measurement", nargs=1, type=click.STRING)
+@pass_ctx
+@logger_wraps()
+def set_measurement(ctx, measurement):
+    """
+    Sets the default measurement name.
+    """
+    ctx.measurement = measurement
+    if ctx.measurement == ctx.db.query_SQLiteDB(QUERIES["sqlite"]["get_measurement"])[0][0]:
+        logger.success(f"Measurement set to '{ctx.measurement}'.")
+    elif ctx.measurement == measurement:
+        logger.warning(
+            f"Measurement '{ctx.measurement}' was set for this session, but could not be persisted."
+            "Check the database connection."
+        )
+    else:
+        logger.error(f"Measurement could not be set to '{ctx.measurement}'.")

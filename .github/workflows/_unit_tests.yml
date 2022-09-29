@@ -1,6 +1,11 @@
 name: '🧪 Unit Tests'
 
-on: workflow_call
+on:
+  workflow_call:
+    secrets:
+      CODACY_PROJECT_TOKEN:
+        description: 'An authentication token for the Codacy API.'
+        required: true
 
 jobs:
   test:
@@ -59,3 +64,9 @@ jobs:
           files: ./device-identifier/coverage.xml
           flags: unittests
           verbose: true
+
+      - name: Upload coverage to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./device-identifier/coverage.xml

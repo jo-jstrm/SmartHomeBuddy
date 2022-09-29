@@ -17,6 +17,8 @@ jobs:
   test:
     needs: [ prepare ]
     uses: ./.github/workflows/_unit_tests.yml
+    secrets:
+      CODACY_PROJECT_TOKEN: "${{ secrets.CODACY_PROJECT_TOKEN }}"
 
   format:
     uses: ./.github/workflows/_format.yml
