@@ -44,10 +44,14 @@ jobs:
           path: InfluxData/
           key: ${{ matrix.os_family }}-InfluxDB
 
-      - name: Test with pytest
+      - name: Test with pytest and debug output
         run: |
           cd device-identifier
-          pipenv run pytest -v --show-capture=stdout --log-level=DEBUG .\
+          pipenv run pytest -v --show-capture=stdout --log-level=DEBUG .\device-identifier
+
+      - name: Test with pytest and create reports
+        run: |
+          cd device-identifier
           pipenv run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
 
       - name: Upload pytest test results
