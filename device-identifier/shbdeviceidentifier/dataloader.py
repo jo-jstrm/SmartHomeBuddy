@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Union, Generator, Tuple, Dict
+from typing import Optional, List, Union, Generator, Tuple, Dict, Callable
 
 import pandas as pd
 from loguru import logger
@@ -66,7 +66,7 @@ class DataLoader:
             return pd.read_csv(file_path, **kwargs)
 
     @staticmethod
-    def from_pcap(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
+    def from_pcap(file_path: Union[Path, str], countermeasure: Callable = None) -> Optional[pd.DataFrame]:
         """
         Loads data from a pcap file.
         """
@@ -80,7 +80,14 @@ class DataLoader:
         if file_path:
             # Read pcap
             cap = rdpcap(file_path.as_posix())
+
+            # Convert to DataFrame
             df = convert_Capture_to_DataFrame(cap)
+
+            # Apply countermeasure
+            if countermeasure:
+                df = countermeasure(df)
+
             if not df.empty:
                 return df
 
