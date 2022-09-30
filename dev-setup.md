@@ -31,9 +31,6 @@ All OSs
   - protoc: if you want to compile the proto files, e.g., after you made changes or added grpc services
     - Download from Github for newest version
 
-Windows
-- pypiwin32 for pyinstaller: `pip install pypiwin32`
-
 ## Build from source
 Having done the steps under [electron-app](#electron-app) and [device-identifier](#device-identifier), you can build the application from source.
 ```bash
