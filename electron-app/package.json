@@ -24,16 +24,15 @@
         "appCopyright": "GPLv3",
         "extraResource": [
           "../device-identifier/dist/device_identifier_server",
-          "../InfluxData/influxdb",
-          "../InfluxData/influxdb-client"
-        ]
+          "../InfluxData/influxdb"
+        ],
+        "icon": "media/app-icons/shb_icon.png"
       },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "description": "Identify vulnerabilities in your network from IoT devices.",
-            "iconURL": "media/app-icons/icon.ico"
+            "description": "Identify vulnerabilities in your network from IoT devices."
           }
         },
         {
