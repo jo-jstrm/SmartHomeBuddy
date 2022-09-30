@@ -25,6 +25,7 @@ import { darkTheme } from "../themes/dark";
 import { FileContext } from "../components/common/FileContext";
 
 function FrameContent() {
+  const [devicesBackdrop, setDevicesBackdrop] = React.useState(false);
   const [mode, setMode] = React.useState<PaletteMode>("light");
 
   const colorMode = React.useMemo(
@@ -49,79 +50,76 @@ function FrameContent() {
   };
 
   return (
-    <ColorContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline enableColorScheme />
-        <Box sx={{ display: "flex" }}>
-          <AppBar
-            position="absolute"
-            open={open}
-            color="primary"
-            enableColorOnDark
-          >
-            <Toolbar
-              sx={{
-                pr: "24px", // keep right padding when drawer closed
-                height: "64px",
-              }}
+    <FileContext.Provider value={{ devicesBackdrop, setDevicesBackdrop }}>
+      <ColorContext.Provider value={colorMode}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline enableColorScheme />
+          <Box sx={{ display: "flex" }}>
+            <AppBar
+              position="absolute"
+              open={open}
+              color="primary"
+              enableColorOnDark
             >
-              <IconButton
-                edge="start"
-                color="inherit"
-                aria-label="open drawer"
-                onClick={toggleDrawer}
+              <Toolbar
                 sx={{
-                  marginRight: "36px",
-                  ...(open && { display: "none" }),
+                  pr: "24px", // keep right padding when drawer closed
+                  height: "64px",
                 }}
               >
-                <MenuIcon />
-              </IconButton>
-              <Typography
-                component="h1"
-                variant="h6"
-                color="inherit"
-                noWrap
-                sx={{ flexGrow: 1 }}
-              >
-                {route_titles[useLocation().pathname]}
-              </Typography>
-              <SwitchModeButton />
-            </Toolbar>
-          </AppBar>
-          <Drawer open={open} toggleDrawer={toggleDrawer} />
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              height: "100vh",
-              overflow: "auto",
-            }}
-          >
-            <Toolbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/main_window" element={<Home />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/devices" element={<Devices />} />
-              <Route path="/data" element={<Data />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/countermeasures" element={<Countermeasures />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
+                <IconButton
+                  edge="start"
+                  color="inherit"
+                  aria-label="open drawer"
+                  onClick={toggleDrawer}
+                  sx={{
+                    marginRight: "36px",
+                    ...(open && { display: "none" }),
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Typography
+                  component="h1"
+                  variant="h6"
+                  color="inherit"
+                  noWrap
+                  sx={{ flexGrow: 1 }}
+                >
+                  {route_titles[useLocation().pathname]}
+                </Typography>
+                <SwitchModeButton />
+              </Toolbar>
+            </AppBar>
+            <Drawer open={open} toggleDrawer={toggleDrawer} />
+            <Box
+              component="main"
+              sx={{
+                flexGrow: 1,
+                height: "100vh",
+                overflow: "auto",
+              }}
+            >
+              <Toolbar />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/main_window" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/devices" element={<Devices />} />
+                <Route path="/data" element={<Data />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/countermeasures" element={<Countermeasures />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </Box>
           </Box>
-        </Box>
-      </ThemeProvider>
-    </ColorContext.Provider>
+        </ThemeProvider>
+      </ColorContext.Provider>
+    </FileContext.Provider>
   );
 }
 
 export default function Frame() {
-  const [devicesBackdrop, setDevicesBackdrop] = React.useState(false);
-  return (
-    <FileContext.Provider value={{ devicesBackdrop, setDevicesBackdrop }}>
-      <FrameContent />;
-    </FileContext.Provider>
-  );
+  return <FrameContent />;
 }

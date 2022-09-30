@@ -10,9 +10,6 @@ import { Button } from "@mui/material";
 import { styled } from "@mui/system";
 
 function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
-  if (newRow.device_name == oldRow.device_name) {
-    return oldRow;
-  }
   console.log(
     "User updated device " +
       newRow.id +
@@ -22,14 +19,15 @@ function saveToDatabase(newRow: DbDevice, oldRow: DbDevice): DbDevice {
       newRow.device_name +
       "'."
   );
-  const query = "UPDATE devices SET device_name = ? WHERE id = ?";
-  const query_params = [newRow.device_name, newRow.id];
+  const query =
+    "UPDATE devices SET device_name = ?, measurement = ? WHERE id = ?";
+  const query_params = [newRow.device_name, newRow.measurement, newRow.id];
   queryRun(query, query_params)
     .then(() => {
-      console.log("Successfully updated device name.");
+      console.log("Successfully updated row.");
     })
     .catch((err) => {
-      console.log("Error updating device name: " + err);
+      console.log("Error updating row: " + err);
     });
   return newRow;
 }
@@ -59,6 +57,13 @@ const columns: GridColDef[] = [
     headerName: "IP Address",
     type: "string",
     width: 150,
+  },
+  {
+    field: "measurement",
+    headerName: "Measurement",
+    type: "string",
+    width: 150,
+    editable: true,
   },
 ];
 
