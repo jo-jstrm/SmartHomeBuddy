@@ -13,7 +13,7 @@ import { placeholder_detected_device } from "../common/PlaceholderDevices";
 
 export default function DetectedDevices(props: any) {
   const [devices, setDevices] = useState(placeholder_detected_device);
-  const sql = "SELECT * FROM devices LIMIT 5";
+  const sql = "SELECT * FROM devices";
   const queryDevices = (): void => {
     queryAll(sql)
       .then((rows) => {
@@ -37,9 +37,9 @@ export default function DetectedDevices(props: any) {
           };
         });
         // Get all unidentified devices.
-        devices = devices.filter(
-          (device: DetectedDevice) => device.status == "Not Identified"
-        );
+        devices = devices
+          .filter((device: DetectedDevice) => device.status == "Not Identified")
+          .slice(0, 5);
         setDevices(devices);
       })
       .catch((err: Error) => {
