@@ -1,0 +1,72 @@
+name: '🧪 Unit & Integration Tests'
+
+on:
+  workflow_call:
+    secrets:
+      CODACY_PROJECT_TOKEN:
+        description: 'An authentication token for the Codacy API.'
+        required: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, windows-latest ]
+        node: [ 16 ]
+        include:
+          - os: ubuntu-22.04
+            os_family: Linux
+          - os: windows-latest
+            os_family: Windows
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      # Caches need to be populated first (usually in the _prepare workflow)
+      - name: Retrieve python cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          cache: 'pipenv'
+          cache-dependency-path: |
+            device-identifier/Pipfile.lock
+
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+
+      - name: Retrieve InfluxDB cache
+        id: cache-influxdb
+        uses: actions/cache@v3
+        with:
+          path: InfluxData/
+          key: ${{ matrix.os_family }}-InfluxDB
+
+      - name: Test with pytest
+        run: |
+          cd device-identifier
+          pipenv run pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=shbdeviceidentifier --cov-report=xml --cov-report=html
+
+      - name: Upload pytest test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-results
+          path: device-identifier/junit/test-results.xml
+        # Always run this step even when test fails
+        if: ${{ always() }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          env_vars: OS,PYTHON
+          files: ./device-identifier/coverage.xml
+          flags: unittests
+          verbose: true
+
+      - name: Upload coverage to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./device-identifier/coverage.xml

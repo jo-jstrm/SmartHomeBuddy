@@ -5,28 +5,33 @@ from __future__ import annotations
 import logging
 import os
 import platform
-import traceback
-
+import sqlite3
 import subprocess
+import traceback
+import warnings
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from sqlite3 import Error
 from subprocess import Popen
-from typing import Union, Iterable, Generator, List, Optional
+from time import sleep
+from typing import Union, Iterable, List, Optional
 
 import influxdb
 import influxdb_client
 import pandas as pd
 import requests
-import sqlite3
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.flux_table import TableList
+from influxdb_client.client.warnings import MissingPivotFunction
 from influxdb_client.client.write_api import SYNCHRONOUS
 from loguru import logger
 from requests.adapters import HTTPAdapter, Retry
-from scapy.all import rdpcap
-from sqlite3 import Error
 
-from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR
-from .utilities.capture_utilities import convert_Capture_to_DataFrame
-from .utilities.logging_utilities import spinner
+from .utilities.app_utilities import resolve_file_path, INFLUXDB_DIR, SQLITE_DIR, LOG_DIR, DATA_DIR
+from .utilities.queries import EARLIEST_TIMESTAMP, QUERIES
+
+warnings.simplefilter("ignore", MissingPivotFunction)
 
 
 @dataclass
@@ -180,6 +185,10 @@ class Database:
         return True if influxdb_user_id else False
 
     def _do_initial_db_setup(self):
+        params = ((DATA_DIR / "pcaps" / "dummy.pcap").as_posix(), "main")
+        self.query_SQLiteDB(QUERIES["sqlite"]["set_context_defaults"], params)
+        logger.debug(f"Set default context values in SQLite DB as {params}.")
+
         influxdb_admin = self._run_influxdb_setup()
         if influxdb_admin == None:
             raise ValueError("InfluxDB setup failed for unknown reasons")
@@ -199,25 +208,33 @@ class Database:
         # engine = create_engine("sqlite+pysqlite://"+db_file, echo=False, future=True)
 
         sql_create_users_table = """CREATE TABLE IF NOT EXISTS users (
-                                               id integer PRIMARY KEY,
-                                               username VARCHAR NOT NULL UNIQUE
-                                           );"""
+                                       id       INTEGER PRIMARY KEY,
+                                       username VARCHAR NOT NULL UNIQUE
+                                );"""
         sql_create_influxdb_table = """CREATE TABLE IF NOT EXISTS influxdb (
-                                           id integer PRIMARY KEY,
-                                           user_id integer NOT NULL UNIQUE,
-                                           token VARCHAR,
-                                           bucket VARCHAR,
-                                           url VARCHAR,
-                                           org VARCHAR,
+                                           id       INTEGER PRIMARY KEY,
+                                           user_id  INTEGER NOT NULL UNIQUE,
+                                           token    VARCHAR,
+                                           bucket   VARCHAR,
+                                           url      VARCHAR,
+                                           org      VARCHAR,
                                            CONSTRAINT fk_users_id
                                                FOREIGN KEY (user_id) 
                                                REFERENCES users (id)
-                                       );"""
+                                   );"""
         sql_create_devices_table = """CREATE TABLE IF NOT EXISTS devices (
-                                                   id integer PRIMARY KEY,
-                                                   device_name VARCHAR NOT NULL,
-                                                   mac_address VARCHAR UNIQUE                                             
-                                               );"""
+                                           id           INTEGER PRIMARY KEY,
+                                           device_name  VARCHAR,
+                                           mac_address  VARCHAR,
+                                           ip_address   VARCHAR NOT NULL,
+                                           measurement  VARCHAR,
+                                           UNIQUE(ip_address, measurement)                                             
+                                   );"""
+        sql_context_table = """CREATE TABLE IF NOT EXISTS context (
+                                   id                   INTEGER PRIMARY KEY CHECK (id = 1),
+                                   latest_capture_file  VARCHAR,
+                                   measurement          VARCHAR
+                               );"""
         conn = self._get_SQLite_connection()
         if conn:
             # Users table
@@ -229,6 +246,9 @@ class Database:
             # Devices table
             self.query_SQLiteDB(sql_create_devices_table)
             logger.debug("Table 'devices' created successfully.")
+            # Context table
+            self.query_SQLiteDB(sql_context_table)
+            logger.debug("Table 'context' created successfully.")
 
     def _get_InfluxDB_connection(self, **client_kwargs) -> Optional[influxdb.InfluxDBClient]:
         """create a database connection to a InfluxDB database server."""
@@ -238,12 +258,12 @@ class Database:
             client = influxdb.InfluxDBClient(**client_kwargs)
             version = client.ping()
             logger.debug(f"Connected to InfluxDB {version} at {self.influxdb_host}:{self.influxdb_port}.")
-            return client
+            return client if version else None
         except Exception as e:
             logger.debug(e)
             return None
 
-    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> list:
+    def _get_influxdb_credentials(self, user_id: int = 1, user_name: str = "") -> Optional[list]:
         """
         Get the credentials for the InfluxDB instance from the main SQLite database.
         """
@@ -292,6 +312,16 @@ class Database:
         """
         Check if the Databases are connected.
         """
+        if not self.influx_process:
+            logger.warning("InfluxDB process is not registered in this Database instance.")
+            return False
+
+        # Check if termination code is None, which means the process is still running.
+        if self.influx_process.poll() is not None:
+            logger.warning("InfluxDB process is not running.")
+            logger.debug(f"Return code for InfluxDB process is {self.influx_process.poll()}.")
+            return False
+
         influx_con = self._get_InfluxDB_connection()
         sqlite_con = self._get_SQLite_connection()
         if influx_con and sqlite_con:
@@ -307,22 +337,35 @@ class Database:
             logger.debug("Could not establish a connection to the InfluxDB database. Try running db.start_InfluxDB().")
         return False
 
-    def query_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None):
+    def get_influxdb_client(self) -> InfluxDBClient:
+        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
+        logger.debug(f"Creating InfluxDBClient with the following params: url={url}, org={org}, token={token}")
+        return InfluxDBClient(url=url, token=token, org=org)
+
+    def query_InfluxDB(
+        self, query: str, params: dict = None, bind_params: dict = None, df: bool = False
+    ) -> Union[TableList, pd.DataFrame]:
         """
         Queries the InfluxDB instance.
         """
-        user_id, token, bucket, org, url = self._get_influxdb_credentials(user_name=self.default_username)
-        client = self._get_InfluxDB_connection(token=token, org=org, url=url)
-        if client:
-            return client.query(query, params, bind_params)
+        if not params:
+            params = {}
+        client = self.get_influxdb_client()
+        query_api = client.query_api()
+        if df:
+            return query_api.query_data_frame(query, **params, params=bind_params)
+        return query_api.query(query, **params, params=bind_params)
 
-    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Optional[List]:
+    # TODO: Returning a list or a boolean is not very elegant, but we need to know if the query was successful,
+    #  while being able to return the results.
+    #  Should be refactored.
+    def query_SQLiteDB(self, query: str, params: Iterable = None) -> Union[List, bool]:
         """
         Queries the SQLite database.
         """
         conn = self._get_SQLite_connection()
         if not conn:
-            return
+            return False
         try:
             c = conn.cursor()
             if params:
@@ -332,17 +375,26 @@ class Database:
             res = c.fetchall()
             conn.commit()
             conn.close()
-            return res
-        except Error:
-            lines = traceback.format_exc().splitlines()
-            for line in lines:
-                logger.error(line)
-            logger.error(f"The supplied statements are: {params}")
+            return res if res else False
+        except Error as err:
+            # Do not send to error log when only the UNIQUE constraint is violated.
+            # Send to debug instead.
+            if isinstance(err, sqlite3.IntegrityError):
+                lines = traceback.format_exc().splitlines()
+                for line in lines:
+                    logger.debug(line)
+                logger.debug(f"The supplied statements are: {params}")
+            else:
+                lines = traceback.format_exc().splitlines()
+                for line in lines:
+                    logger.error(line)
+                logger.error(f"The supplied statements are: {params}")
+            return False
 
     def query(self, query: str, params: dict = None, bind_params: dict = None, db="influx") -> Optional[List]:
         """
         Convenience function for querying the SQLite and InfluxDB databases.
-        Use the db parameter to specify which database to query. db='i' for InfluxDB, db='s' for SQLite.
+        Use the db parameter to specify which database to query. db='influx' for InfluxDB, db='sqlite' for SQLite.
         Alternatively, use the query_SQLiteDB and query_InfluxDB functions directly.
         """
         if db == "influx":
@@ -356,7 +408,11 @@ class Database:
                 influx_process = subprocess.Popen(
                     self.influxdb_binary_path, stdout=influx_log, stderr=subprocess.STDOUT
                 )
-                logger.debug("InfluxDB started successfully.")
+                # Check if termination code is None, which means the process is still running.
+                if influx_process.poll() is None:
+                    logger.debug("InfluxDB started successfully.")
+                else:
+                    logger.debug("InfluxDB failed to start for unknown reasons.")
         except Exception as e:
             logger.debug(e)
             logger.error("Failed to start InfluxDB.")
@@ -369,21 +425,43 @@ class Database:
                 self.influx_process.kill()
             else:
                 self.influx_process.terminate()
-            logger.debug("InfluxDB stopped successfully.")
-            return True
+
+            sleep(0.5)
+            # Check if termination code is None, which means the process is still running.
+            if self.influx_process.poll() is None:
+                logger.debug("InfluxDB could not be stopped.")
+            else:
+                logger.debug("InfluxDB stopped successfully.")
+                return True
         else:
             logger.debug("No InfluxDB process found.")
+        return False
+
+    def stop(self, connections: List = None) -> bool:
+        """
+        Stops the InfluxDB process and closes the SQLite connection. Mainly wraps around stop_InfluxDB().
+        """
+        if connections:
+            for con in connections:
+                con.close()
+
+        # Try to stop the InfluxDB process, first with SIGTERM, then with SIGKILL.
+        if self.stop_InfluxDB() or self.stop_InfluxDB(kill=True):
+            logger.success("Databases stopped successfully.")
+            return True
+        else:
+            logger.error("Failed to stop databases.")
             return False
 
     def write_to_InfluxDB(
-        self,
-        data: Union[List[str], pd.DataFrame],
-        username: str = None,
-        bucket: str = None,
-        org: str = None,
-        token: str = None,
-        url: str = None,
-        **df_kwargs,
+            self,
+            data: Union[List[str], pd.DataFrame],
+            username: str = None,
+            bucket: str = None,
+            org: str = None,
+            token: str = None,
+            url: str = None,
+            **df_kwargs,
     ) -> bool:
         """
         The write_to_influxdb function writes data to an InfluxDB bucket.
@@ -437,7 +515,6 @@ class Database:
         org = org_ if not org else org
         url = url_ if not url else url
         bucket = bucket_ if not bucket else bucket
-
         try:
             with influxdb_client.InfluxDBClient(url=url, token=token, org=org) as client:
                 write_api = client.write_api(write_options=SYNCHRONOUS)
@@ -451,7 +528,7 @@ class Database:
                 # write the data sequence to the bucket
                 write_api.write(bucket=bucket, org=org, record=data, **df_kwargs)
                 client.close()
-        except Exception as e:
+        except Exception:
             lines = traceback.format_exc().splitlines()
             for line in lines:
                 logger.error(line)
@@ -463,80 +540,59 @@ class Database:
     ###### Devices ######
     #####################
 
-    def write_device(self, name, mac_address):
-        sql_write_device = """INSERT INTO devices (device_name, mac_address)
-                                VALUES (?,?);"""
-        self.query_SQLiteDB(sql_write_device, [name, mac_address])
+    def write_device(self, name, mac_address, ip_address, measurement):
+        sql_write_device = """INSERT INTO devices (device_name, mac_address, ip_address, measurement)
+                                VALUES (?,?,?,?);"""
+        try:
+            self.query_SQLiteDB(sql_write_device, [name, mac_address, ip_address, measurement])
+        except Exception:
+            return False
+        return True
 
     def get_all_devices(self):
         sql_get_devices = """SELECT device_name, mac_address FROM devices;"""
         devices = self.query_SQLiteDB(sql_get_devices)
         return devices
 
+    def get_device_ips_from_influxdb(self, measurement: str, bucket: str = None) -> pd.Series:
+        """Returns a list of all unique source IP addresses in the InfluxDB database."""
+        if not bucket:
+            bucket = self.influxdb_bucket
+        params = {
+            "_start": EARLIEST_TIMESTAMP,
+            "_stop": datetime.now(),
+            "_measurement_name": measurement,
+            "_bucket": bucket,
+        }
+        unique_query = """
+            from(bucket: _bucket)
+            |> range(start: _start, stop: _stop)
+            |> filter(fn: (r) => r["_measurement"] == _measurement_name)
+            |> keep(columns: ["_time", "src_ip"])                        
+            |> unique(column: "src_ip")         
+        """
+        with self.get_influxdb_client() as client:
+            res = client.query_api().query_data_frame(query=unique_query, params=params)
+            return res[res.src_ip != "nan"].src_ip
 
-# noinspection PyPep8Naming
-class DataLoader:
+
+def extract_devices(measurement: str) -> None:
+    """Extract devices from InfluxDB and write them to the devices table.
+
+    Parameters
+    ----------
+    measurement : str
+        The InfluxDB measurement for which to extract devices.
     """
-    Class for loading data from various sources into a pandas DataFrame.
-    """
-
-    @staticmethod
-    def from_InfluxDB(self, query: str, params: dict = None, bind_params: dict = None) -> Optional[List]:
-        """
-        Loads data from the InfluxDB database.
-        """
-        ...
-
-    @staticmethod
-    def from_csv(file_path: Union[Path, str], **kwargs) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a CSV file.
-        """
-        file_path = resolve_file_path(file_path)
-        if file_path:
-            return pd.read_csv(file_path, **kwargs)
-
-    @staticmethod
-    def from_pcap(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a pcap file.
-        """
-        file_path = resolve_file_path(file_path)
-        # Get the file size in Gigabyte
-        file_size = os.path.getsize(file_path) * 1e-9
-        spinner_text = "Reading file."
-        if file_size > 0.25:
-            spinner_text += f" This may take a while, since your file exceeds 250 MB (~{file_size:.2f} GB)."
-        spinner.text = spinner_text
-        spinner.start()
-        if file_path:
-            # Read pcap
-            cap = rdpcap(file_path.as_posix())
-            df = convert_Capture_to_DataFrame(cap)
-            if not df.empty:
-                return df
-
-    @staticmethod
-    def from_generator(generator: Generator) -> Optional[pd.DataFrame]:
-        """
-        Loads data from a generator.
-        """
-        ...
-
-    @staticmethod
-    def from_dict(data: dict) -> Optional[pd.DataFrame]:
-        """
-        Constructs a Dataset from data in memory.
-        """
-        ...
-
-    @staticmethod
-    def labels_from_json(file_path: Union[Path, str]) -> Optional[pd.DataFrame]:
-        """
-        Loads labels from a JSON file.
-        """
-        file_path = resolve_file_path(file_path)
-        if file_path:
-            return pd.read_json(file_path, orient="index")
+    db = Database()
+    try:
+        ips = db.get_device_ips_from_influxdb(measurement)
+    except Exception:
+        logger.error("Failed to get device ips from influxdb.")
+        return
+    for ip in ips:
+        # Write unique IPs to the database. The user can give them names afterwards.
+        if db.write_device("", "", ip, measurement):
+            logger.trace(f"Added {ip}, {measurement} to devices database.")
         else:
-            return None
+            logger.debug(f"Failed to add {ip} to devices database.")

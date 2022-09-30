@@ -4,45 +4,45 @@
 var grpc = require("@grpc/grpc-js");
 var devices_database_pb = require("./devices_database_pb.js");
 
-function serialize_SmartHomeBuddy_ClassifyRequest(arg) {
-  if (!(arg instanceof devices_database_pb.ClassifyRequest)) {
-    throw new Error("Expected argument of type SmartHomeBuddy.ClassifyRequest");
+function serialize_SmartHomeBuddy_IdentifyRequest(arg) {
+  if (!(arg instanceof devices_database_pb.IdentifyRequest)) {
+    throw new Error("Expected argument of type SmartHomeBuddy.IdentifyRequest");
   }
   return Buffer.from(arg.serializeBinary());
 }
 
-function deserialize_SmartHomeBuddy_ClassifyRequest(buffer_arg) {
-  return devices_database_pb.ClassifyRequest.deserializeBinary(
+function deserialize_SmartHomeBuddy_IdentifyRequest(buffer_arg) {
+  return devices_database_pb.IdentifyRequest.deserializeBinary(
     new Uint8Array(buffer_arg)
   );
 }
 
-function serialize_SmartHomeBuddy_ClassifyResponse(arg) {
-  if (!(arg instanceof devices_database_pb.ClassifyResponse)) {
+function serialize_SmartHomeBuddy_IdentifyResponse(arg) {
+  if (!(arg instanceof devices_database_pb.IdentifyResponse)) {
     throw new Error(
-      "Expected argument of type SmartHomeBuddy.ClassifyResponse"
+      "Expected argument of type SmartHomeBuddy.IdentifyResponse"
     );
   }
   return Buffer.from(arg.serializeBinary());
 }
 
-function deserialize_SmartHomeBuddy_ClassifyResponse(buffer_arg) {
-  return devices_database_pb.ClassifyResponse.deserializeBinary(
+function deserialize_SmartHomeBuddy_IdentifyResponse(buffer_arg) {
+  return devices_database_pb.IdentifyResponse.deserializeBinary(
     new Uint8Array(buffer_arg)
   );
 }
 
 var DevicesDatabaseService = (exports.DevicesDatabaseService = {
-  classifyDevices: {
-    path: "/SmartHomeBuddy.DevicesDatabase/ClassifyDevices",
+  identifyDevices: {
+    path: "/SmartHomeBuddy.DevicesDatabase/IdentifyDevices",
     requestStream: false,
     responseStream: false,
-    requestType: devices_database_pb.ClassifyRequest,
-    responseType: devices_database_pb.ClassifyResponse,
-    requestSerialize: serialize_SmartHomeBuddy_ClassifyRequest,
-    requestDeserialize: deserialize_SmartHomeBuddy_ClassifyRequest,
-    responseSerialize: serialize_SmartHomeBuddy_ClassifyResponse,
-    responseDeserialize: deserialize_SmartHomeBuddy_ClassifyResponse,
+    requestType: devices_database_pb.IdentifyRequest,
+    responseType: devices_database_pb.IdentifyResponse,
+    requestSerialize: serialize_SmartHomeBuddy_IdentifyRequest,
+    requestDeserialize: deserialize_SmartHomeBuddy_IdentifyRequest,
+    responseSerialize: serialize_SmartHomeBuddy_IdentifyResponse,
+    responseDeserialize: deserialize_SmartHomeBuddy_IdentifyResponse,
   },
 });
 

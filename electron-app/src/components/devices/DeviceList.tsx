@@ -1,13 +1,14 @@
 import * as React from "react";
 import { useState } from "react";
 import { Smartphone } from "@mui/icons-material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Device from "./Device";
 import Title from "../common/Title";
 import { queryAll } from "../../database/Database";
-import { Button } from "@mui/material";
+import { Box } from "@mui/material";
 
 const deviceList = [
   {
@@ -50,7 +51,7 @@ export default function DeviceList(props: any) {
     queryAll(sql)
       .then((rows) => {
         console.log("Received devices: " + rows.toString());
-        let devices = rows.map(
+        const devices = rows.map(
           (elem: { device_name: string; mac_address: string }) => {
             console.log(elem);
             // TODO Icon, status, and action are hard coded.
@@ -72,7 +73,22 @@ export default function DeviceList(props: any) {
   };
   return (
     <React.Fragment>
-      <Title {...props}>Devices</Title>
+      <Grid container>
+        <Grid item xs={6}>
+          <Title {...props}>Currently identified devices</Title>
+        </Grid>
+        <Grid item xs={6} sx={{ alignItems: "end" }}>
+          <Box
+            sx={{ display: "flex", justifyContent: "flex-end", ...props.sx }}
+          >
+            <RefreshIcon
+              onClick={queryDevices}
+              color="inherit"
+              sx={{ typography: "h5" }}
+            />
+          </Box>
+        </Grid>
+      </Grid>
       <Paper
         sx={{
           p: 2,
@@ -89,11 +105,6 @@ export default function DeviceList(props: any) {
           alignItems="center"
           spacing={2}
         >
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-              <Button onClick={queryDevices}>Load devices from database</Button>
-            </Paper>
-          </Grid>
           {devices.map((device, index) => {
             const { name, mac_address, icon, status, action } = device;
             return (
