@@ -9,6 +9,7 @@ import pandas as pd
 from loguru import logger
 from numba_progress import ProgressBar
 
+from .countermeasures import COUNTERMEASURES
 from .dataloader import DataLoader
 from .db import Database, extract_devices
 from .rpc.server import start_rpc_server
@@ -40,16 +41,26 @@ def run_rpc_server(db: Database):
         db.stop_InfluxDB()
 
 
-def read(db: Database, file_path: click.Path, file_type: str, measurement: str = "main"):
+def read(
+        db: Database, file_path: click.Path, file_type: str, measurement: str = "main", countermeasure_key: str = None
+):
     """Reads all the data from a capture file."""
+
+    # Retrieve countermeasure
+    if countermeasure := COUNTERMEASURES.get(countermeasure_key, None):
+        logger.info(f"Applying countermeasure: {countermeasure.__name__}")
+    elif countermeasure_key and not countermeasure:
+        logger.warning(f"Selected countermeasure {countermeasure_key} not found. No countermeasure applied.")
+
     logger.info(f"Reading {file_path} for measurement '{measurement}'.")
     if file_type == "pcap" or file_type == "pcapng":
-        packets = DataLoader.from_pcap(file_path)
+        packets = DataLoader.from_pcap(file_path, countermeasure)
         if isinstance(packets, pd.DataFrame) and not packets.empty:
+            # Save to database
             if db.write_to_InfluxDB(
-                packets,
-                data_frame_measurement_name=measurement,
-                data_frame_tag_columns=[
+                    packets,
+                    data_frame_measurement_name=measurement,
+                    data_frame_tag_columns=[
                     "src_address",
                     "src_ip",
                     "src_port",

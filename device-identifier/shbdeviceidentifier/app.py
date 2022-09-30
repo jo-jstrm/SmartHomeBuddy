@@ -11,6 +11,7 @@ from loguru import logger
 from pyfiglet import Figlet
 
 import shbdeviceidentifier.commands as commands
+from .countermeasures import COUNTERMEASURES
 from .db import Database
 from .utilities import get_capture_file_path, logger_wraps
 from .utilities.app_utilities import DATA_DIR, resolve_file_path
@@ -150,9 +151,18 @@ def start(ctx):
 @click.option(
     "--measurement", "-m", help="Name of the measurement in the InfluxDB. Defaults to `main`.", required=False
 )
+@click.option(
+    "--countermeasure",
+    "-c",
+    "countermeasure_key",
+    help="Name of the countermeasure to apply on the pcap before saving.",
+    type=click.Choice(COUNTERMEASURES.keys(), case_sensitive=True),
+    required=False,
+    default=None,
+)
 @pass_ctx
 @logger_wraps()
-def read(ctx, file_path: click.Path, file_type: str, measurement: str):
+def read(ctx, file_path: click.Path, file_type: str, measurement: str, countermeasure_key: str):
     """Reads all the data from a capture file."""
     file_path = get_capture_file_path(ctx, file_path)
     if not file_path:
@@ -161,7 +171,8 @@ def read(ctx, file_path: click.Path, file_type: str, measurement: str):
 
     if not measurement:
         measurement = ctx.measurement
-    commands.read(ctx.db, file_path, file_type, measurement)
+
+    commands.read(ctx.db, file_path, file_type, measurement, countermeasure_key)
 
 
 @app.command("read-labels")

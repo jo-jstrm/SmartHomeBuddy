@@ -380,10 +380,7 @@ class Database:
             # Do not send to error log when only the UNIQUE constraint is violated.
             # Send to debug instead.
             if isinstance(err, sqlite3.IntegrityError):
-                lines = traceback.format_exc().splitlines()
-                for line in lines:
-                    logger.debug(line)
-                logger.debug(f"The supplied statements are: {params}")
+                logger.debug(f"{err} for {params}")
             else:
                 lines = traceback.format_exc().splitlines()
                 for line in lines:
